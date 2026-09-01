@@ -1,0 +1,13 @@
+# .NET
+engine/bin/
+engine/obj/
+
+# Next / node
+picker/node_modules/
+picker/.next/
+picker/out/
+picker/.turbo/
+
+# divers
+*.user
+.DS_Store
