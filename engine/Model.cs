@@ -15,8 +15,13 @@ public sealed class ModInfo
     // lesquelles deviennent inutiles une fois la selection faite.
     public List<string> DeclaredDependencies { get; set; } = new();
 
-    // Racine(s) de contenu retenues : "." plus le dossier de version applicable.
+    // Racines de contenu retenues, lues dans LoadFolders.xml quand il existe.
     public List<string> ContentRoots { get; set; } = new();
+
+    // Celles qui ne se chargent que sous condition (IfModActive / IfModNotActive).
+    // Elles sont inventoriees quand meme : on veut voir tout ce que le mod peut
+    // apporter, quitte a signaler que c'est conditionnel.
+    public List<string> ConditionalRoots { get; set; } = new();
 
     // Vrai si aucune version supportee n'atteint la 1.6 : le mod est mort, donc
     // candidat a un portage public plutot qu'a une extraction privee.
@@ -71,6 +76,29 @@ public sealed class DefEntry
     public string File { get; set; } = "";
     public int Line { get; set; }
 
+    // Liens qui rattachent cette def a une autre. Un PawnKindDef sans sa race
+    // n'est rien, une recette sans son produit non plus : les afficher separement
+    // laisserait cocher l'un et ecarter l'autre.
+    public string? Race { get; set; }            // PawnKindDef -> ThingDef
+    public List<string> Products { get; set; } = new();   // RecipeDef -> ce qu'elle fabrique
+    public string? AddsHediff { get; set; }      // RecipeDef -> hediff pose
+
+    // Defs que celle-ci semble posseder : le hediff qu'un aliment procure, la
+    // pensee qu'il laisse. Le rattachement n'a lieu que si PERSONNE D'AUTRE ne les
+    // reclame — un hediff partage par cinq objets appartient aux cinq, donc a
+    // aucun, et les fusionner ferait un groupe absurde.
+    public List<string> Owns { get; set; } = new();
+
+    // Vrai quand ce defName existe deja dans le jeu : la def ne cree rien, elle
+    // REMPLACE celle du jeu. Un mod de retexture n'est fait que de celles-la.
+    // Sans ce drapeau, l'outil les presente comme du contenu neuf, alors qu'elles
+    // ne s'extraient pas — elles se disputent la def avec tout autre mod qui y
+    // touche, et le dernier charge gagne.
+    public bool OverridesVanilla { get; set; }
+
+    // Cle du groupe auquel cette def appartient. Une seule decision par groupe.
+    public string? GroupKey { get; set; }
+
     // Renseigne quand la def est gardee derriere un MayRequire / MayRequireAnyOf.
     public List<string> MayRequire { get; set; } = new();
 
@@ -106,6 +134,10 @@ public sealed class Inventory
     // XML illisible, About manquant... Remonte a l'interface plutot qu'ecrit sur
     // la sortie d'erreur, pour que rien ne se perde.
     public List<string> Problems { get; set; } = new();
+
+    // Combien de defs du mod remplacent une def du jeu. Un mod de retexture les a
+    // presque toutes ; un mod de contenu, aucune.
+    public int OverrideCount { get; set; }
 }
 
 // Une entree de la modlist active de RimWorld.

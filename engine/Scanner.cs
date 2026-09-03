@@ -43,6 +43,58 @@ public static class Scanner
         "researchPrerequisite",
     };
 
+    // Les trois listes qui suivent ne servent PAS a la fermeture — celle-ci reste
+    // volontairement permissive, mieux vaut tirer une def de trop qu'en oublier
+    // une. Elles servent au rapport « references non resolues », qui sans elles
+    // se noyait sous les libelles, les enums et les booleens.
+
+    // Prose et libelles. Un outil porte des libelles d'un seul mot — « barrel »,
+    // « stock » — qui ressemblent a s'y meprendre a des defName.
+    static readonly HashSet<string> FreeTextTags = new(StringComparer.Ordinal)
+    {
+        "label", "labelShort", "labelNoun", "labelPlural", "labelFemale", "labelMale",
+        "description", "descriptionShort", "baseDescription",
+        "title", "titleShort", "titleFemale", "titleShortFemale",
+        "jobString", "reportString", "verb", "gerund", "gerundLabel", "customLabel",
+        "spectatorsLabel", "spectatorGerund", "fuelLabel", "fuelGizmoLabel",
+        "outOfFuelMessage", "ingestCommandString", "ingestReportString",
+        "letterText", "letterLabel", "letterInfoText", "summary", "text",
+        "structureLabel", "GizmoLabel", "GizmoDescription", "beginLetterLabel", "beginLetter",
+    };
+
+    // Enumerations C# : « Item », « PassThroughOnly », « Adulthood »...
+    static readonly HashSet<string> EnumTags = new(StringComparer.Ordinal)
+    {
+        "category", "passability", "altitudeLayer", "drawerType", "tickerType",
+        "surfaceType", "techLevel", "slot", "impact", "drugCategory", "foodType",
+        "intelligence", "fleshType", "petness", "trainability", "shaderType",
+        "developmentalStageFilter", "linkType", "linkFlags", "toolCapacity",
+        "damageCategory", "graphicClass", "workType", "priorityInType",
+        "tradeability", "defaultPlacingRot", "snowCategory", "minQuality", "quality",
+        "name", "listOrder", "displayPriority", "pathCost", "defaultProjectile",
+    };
+
+    // Listes dont les entrees sont des etiquettes libres ou des noms courts de
+    // classes, jamais des defs.
+    static readonly HashSet<string> NonDefListParents = new(StringComparer.Ordinal)
+    {
+        "tags", "weaponTags", "tradeTags", "buildingTags", "thingSetMakerTags",
+        "spawnCategories", "exclusionTags", "defaultOutfitTags", "apparelTags",
+        "rulesStrings", "placeWorkers", "inspectorTabs", "specialDesignatorClasses",
+        "workTags", "disabledWorkTags", "requiredCapacities", "capacities",
+        "backstoryCategories", "alienbodytypes", "styleTags", "modExtensions",
+        "categories", "workDisables", "requiredWorkTags", "colorChannels", "bodyAddons",
+        "descriptionHyperlinks", "recipeUsers", "hiddenWhileUndiscovered",
+    };
+
+    static bool IsReportableDefRef(string tag, string? parentTag, string value)
+    {
+        if (FreeTextTags.Contains(tag) || EnumTags.Contains(tag)) return false;
+        if (parentTag is not null && NonDefListParents.Contains(parentTag)) return false;
+        if (value is "true" or "false" or "True" or "False") return false;
+        return true;
+    }
+
     public static Inventory ScanOne(string modPath)
     {
         var inv = new Inventory();
@@ -82,18 +134,31 @@ public static class Scanner
             }
             catch (Exception e) { Console.Error.WriteLine($"About illisible : {aboutPath} — {e.Message}"); }
         }
-        mod.ContentRoots = ContentRoots(path);
+        mod.ContentRoots = ContentRoots(path, mod.ConditionalRoots);
         return mod;
     }
 
-    // Un mod range son contenu a la racine, ou dans des dossiers de version, ou
-    // les deux. On retient la racine plus le dossier de version le plus eleve qui
-    // soit <= 1.6, ce que fait le jeu depuis la 1.5.
-    static List<string> ContentRoots(string path)
+    // Ou vit le contenu du mod.
+    //
+    // LoadFolders.xml FAIT AUTORITE quand il existe : un mod peut y nommer
+    // n'importe quel dossier, et beaucoup le font — « Content », « Common »,
+    // « 1.6/CE »... Deviner « la racine plus le dossier de version » suffit pour
+    // les mods simples et rate tout le reste, en silence : sans ce fichier,
+    // « more dozer » perdait toutes ses textures, rangees dans Content/Textures.
+    //
+    // Les dossiers conditionnels (IfModActive / IfModNotActive) sont RETENUS pour
+    // l'inventaire : on veut voir tout ce que le mod peut apporter. La condition
+    // est conservee a part, pour pouvoir l'afficher.
+    static List<string> ContentRoots(string path, List<string>? conditional = null)
     {
-        var roots = new List<string> { "." };
-        if (!Directory.Exists(path)) return roots;
+        if (!Directory.Exists(path)) return new List<string> { "." };
 
+        var fromFile = ReadLoadFolders(path, conditional);
+        if (fromFile.Count > 0) return fromFile;
+
+        // Pas de LoadFolders : la regle par defaut du jeu depuis la 1.5 — la
+        // racine, plus le dossier de version le plus eleve qui soit <= 1.6.
+        var roots = new List<string> { "." };
         var best = Directory.EnumerateDirectories(path)
             .Select(d => new DirectoryInfo(d).Name)
             .Where(n => Regex.IsMatch(n, @"^1\.\d+$"))
@@ -101,8 +166,45 @@ public static class Scanner
             .Where(t => t.minor <= 6)
             .OrderByDescending(t => t.minor)
             .FirstOrDefault();
-
         if (best.name is not null) roots.Add(best.name);
+        return roots;
+    }
+
+    static List<string> ReadLoadFolders(string modPath, List<string>? conditional)
+    {
+        var file = Directory.EnumerateFiles(modPath, "*.xml", SearchOption.TopDirectoryOnly)
+            .FirstOrDefault(f => string.Equals(Path.GetFileName(f), "LoadFolders.xml",
+                                              StringComparison.OrdinalIgnoreCase));
+        if (file is null) return new List<string>();
+
+        XDocument doc;
+        try { doc = XDocument.Load(file); }
+        catch { return new List<string>(); }
+        if (doc.Root is null) return new List<string>();
+
+        // Le bloc de version le plus eleve qui ne depasse pas 1.6.
+        var block = doc.Root.Elements()
+            .Select(e => (el: e, m: Regex.Match(e.Name.LocalName, @"^v?(\d+)\.(\d+)$")))
+            .Where(t => t.m.Success)
+            .Select(t => (t.el, major: int.Parse(t.m.Groups[1].Value), minor: int.Parse(t.m.Groups[2].Value)))
+            .Where(t => t.major < 1 || (t.major == 1 && t.minor <= 6))
+            .OrderByDescending(t => t.major).ThenByDescending(t => t.minor)
+            .Select(t => t.el)
+            .FirstOrDefault();
+        if (block is null) return new List<string>();
+
+        var roots = new List<string>();
+        foreach (var li in block.Elements("li"))
+        {
+            var v = li.Value.Trim();
+            if (v.Length == 0) continue;
+            var rel = v is "/" or "\\" ? "." : v.Replace('/', Path.DirectorySeparatorChar);
+            if (!Directory.Exists(Path.Combine(modPath, rel))) continue;
+            roots.Add(rel);
+
+            var cond = (string?)li.Attribute("IfModActive") ?? (string?)li.Attribute("IfModNotActive");
+            if (cond is not null) conditional?.Add($"{rel} ({li.Attributes().First().Name.LocalName} {cond})");
+        }
         return roots;
     }
 
@@ -152,6 +254,31 @@ public static class Scanner
         entry.TechLevel = ((string?)el.Element("techLevel"))?.Trim();
         entry.ArchitectCategory = ((string?)el.Element("designationCategory"))?.Trim();
 
+        // Liens de rattachement, lus nommement : la moisson generique ne dit pas
+        // de quelle balise vient une reference, et c'est justement la balise qui
+        // distingue « fabrique ceci » de « consomme cela ».
+        entry.Race = ((string?)el.Element("race"))?.Trim();
+        entry.AddsHediff = ((string?)el.Element("addsHediff"))?.Trim();
+        var products = el.Element("products");
+        if (products is not null)
+            entry.Products = products.Elements()
+                .Select(p => p.Name.LocalName == "li" ? p.Value.Trim() : p.Name.LocalName)
+                .Where(s => s.Length > 0).ToList();
+
+
+        // Ce que cette def semble posseder en propre. Balises lues nommement :
+        // la moisson generique ne dit pas de quelle balise vient une reference,
+        // et c'est la balise qui distingue « procure ce hediff » de « soigne ce
+        // hediff ».
+        foreach (var tag in new[] { "hediffDef", "thought", "tasteThought",
+                                    "specialThoughtDirect", "specialThoughtAsIngredient",
+                                    "memoryThought", "hediff" })
+            foreach (var n in el.Descendants(tag))
+            {
+                var v = n.Value.Trim();
+                if (v.Length > 0 && !n.HasElements) entry.Owns.Add(v);
+            }
+        entry.Owns = entry.Owns.Distinct(StringComparer.Ordinal).ToList();
         Harvest(el, entry.Refs);
         return entry;
     }
@@ -182,9 +309,17 @@ public static class Scanner
             if (SoundTags.Contains(tag)) { refs.Sounds.Add(v); continue; }
             if (ResearchTags.Contains(tag)) { refs.Research.Add(v); continue; }
 
-            if (tag == "li" && node.Parent?.Name.LocalName == "researchPrerequisites") { refs.Research.Add(v); continue; }
+            var parentTag = node.Parent?.Name.LocalName;
+            if (tag == "li" && parentTag == "researchPrerequisites") { refs.Research.Add(v); continue; }
 
-            if (LooksLikeDefName(v)) refs.Defs.Add(v);
+            if (!LooksLikeDefName(v)) continue;
+
+            // La fermeture prend tout : rater une reference livre un mod casse,
+            // en tirer une de trop ne coute qu'une def inutile.
+            refs.Defs.Add(v);
+
+            // Le rapport, lui, ne retient que ce qui peut vraiment etre une def.
+            if (IsReportableDefRef(tag, parentTag, v)) refs.StrictDefs.Add(v);
         }
         Dedupe(refs);
     }
@@ -197,6 +332,7 @@ public static class Scanner
     static void Dedupe(DefRefs r)
     {
         r.Defs = r.Defs.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();
+        r.StrictDefs = r.StrictDefs.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();
         r.Classes = r.Classes.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();
         r.Textures = r.Textures.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();
         r.Sounds = r.Sounds.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();

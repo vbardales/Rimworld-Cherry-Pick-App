@@ -69,3 +69,48 @@ td.pic img { width: 38px; height: 38px; object-fit: contain; image-rendering: pi
 .inh { opacity: .65; font-style: italic; }
 
 pre { background: var(--panel); padding: 10px; border-radius: 6px; overflow: auto; font-size: 12px; }
+
+/* --- les trois etats -------------------------------------------------- */
+/* Indetermine n'est pas « rien » : c'est « embarque, sans qu'on l'ait dit ».
+   Il doit donc se lire comme un etat neutre, pas comme une case vide. */
+.tri {
+  width: 24px; height: 24px; line-height: 1;
+  border: 1px solid var(--line); border-radius: 5px;
+  background: var(--bg); color: var(--dim);
+  font: 15px/1 "Segoe UI", system-ui, sans-serif; cursor: pointer;
+}
+.tri.undef { color: var(--dim); }
+.tri.in  { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.tri.out { border-color: var(--bad); color: var(--bad); font-weight: 700; }
+.tri:hover { border-color: var(--fg); }
+
+tr.row-in td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opacity: .55; }
+
+.tag.small { font-size: 10.5px; padding: 0 5px; }
+.tag.over { color: var(--warn, #8a5a00); border-color: var(--warn, #8a5a00); }
+@media (prefers-color-scheme: dark) { .tag.over { color: #e0a94a; border-color: #e0a94a; } }
+
+/* --- panneau de fermeture --------------------------------------------- */
+.panel {
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; margin: 0 0 16px; background: var(--panel);
+}
+.panel.busy { opacity: .6; }
+.panel .counts { font-size: 14px; }
+.panel .sep { color: var(--dim); margin: 0 6px; }
+.panel .block { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.panel .block.bad h3 { color: var(--bad); }
+.panel h3 { font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 4px; }
+.panel ul { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
+.panel li { margin: 2px 0; }
+.panel .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--dim); }
+
+/* Actions en bloc : marquer tout le mod, ou tout le filtre courant. */
+.bar.bulk { margin-top: -6px; gap: 8px; }
+.bar.bulk button {
+  padding: 4px 10px; border: 1px solid var(--line); border-radius: 5px;
+  background: var(--bg); color: var(--fg); font: inherit; font-size: 12.5px; cursor: pointer;
+}
+.bar.bulk button:hover { border-color: var(--accent); }
+.bar.bulk .sep { color: var(--line); }

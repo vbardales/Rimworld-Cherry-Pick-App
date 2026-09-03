@@ -19,9 +19,29 @@ public sealed class DependencyVerdict
     public List<string> Because { get; set; } = new();   // les classes qui la justifient
 }
 
+// Une def gardee reclame une def qu'on a explicitement ecartee.
+public sealed class Conflict
+{
+    public string Needed { get; set; } = "";        // la def ecartee
+    public string NeededBy { get; set; } = "";      // celle qui la reclame
+    public string Reason { get; set; } = "";        // parent, reference, recherche prealable
+}
+
 public sealed class ClosureResult
 {
-    public List<ClosureItem> Items { get; set; } = new();      // coche + entraine
+    // Trois etats par def :
+    //   indetermine  — non decide, donc embarque : c'est le defaut
+    //   embarque     — garde explicitement, avec tout ce qu'il entraine
+    //   non-embarque — ecarte explicitement
+    public int Kept { get; set; }
+    public int Excluded { get; set; }
+    public int Undetermined { get; set; }
+
+    // Une def gardee reclame une def ecartee. Chaque ligne est une erreur au
+    // chargement si on n'y touche pas.
+    public List<Conflict> Conflicts { get; set; } = new();
+
+    public List<ClosureItem> Items { get; set; } = new();      // embarque + entraine
     public List<string> Classes { get; set; } = new();         // classes C# requises
     public List<string> Textures { get; set; } = new();
     public List<string> Sounds { get; set; } = new();
@@ -53,8 +73,13 @@ public static class Closure
         Inventory inv,
         IEnumerable<string> pickedKeys,
         HashSet<string> vanillaDefNames,
-        Dictionary<string, (string name, HashSet<string> namespaces)>? dependencyNamespaces = null)
+        Dictionary<string, (string name, HashSet<string> namespaces)>? dependencyNamespaces = null,
+        IEnumerable<string>? excludedKeys = null)
     {
+        // Non decide vaut embarque : on part de tout, et on retire ce qui a ete
+        // explicitement ecarte. C'est le sens du travail — on taille dans un mod
+        // existant, on ne le reconstruit pas piece par piece.
+        var excluded = new HashSet<string>(excludedKeys ?? Enumerable.Empty<string>(), StringComparer.Ordinal);
         var byKey = inv.Defs.ToDictionary(d => d.Key, StringComparer.Ordinal);
 
         // Un meme nom peut designer une def concrete ou une base abstraite, et
@@ -87,6 +112,12 @@ public static class Closure
         {
             var (def, depth) = queue.Dequeue();
 
+            // Les references de cette def dont on accepte de dire qu'elles sont
+            // « non resolues » si elles ne mènent nulle part.
+            var strict = new HashSet<string>(def.Refs.StrictDefs, StringComparer.Ordinal);
+            strict.UnionWith(def.Refs.Research);
+            if (def.ParentName is { Length: > 0 } parentName) strict.Add(parentName);
+
             void Pull(string name, string reason)
             {
                 if (string.IsNullOrWhiteSpace(name)) return;
@@ -104,7 +135,12 @@ public static class Closure
                 }
 
                 // Ni dans le mod : soit le jeu la fournit, soit personne.
-                if (!vanillaDefNames.Contains(name)) unresolved.Add(name);
+                //
+                // On ne signale que les references issues de balises qui portent
+                // vraiment une def. Sur la liste permissive, ce rapport se noyait
+                // sous les libelles, les enums et les booleens — « true », « Item »,
+                // « barrel » — et devenait inutilisable.
+                if (!vanillaDefNames.Contains(name) && strict.Contains(name)) unresolved.Add(name);
             }
 
             Pull(def.ParentName ?? "", "parent");
@@ -118,8 +154,42 @@ public static class Closure
             .ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        // Ce que la selection finale exige en ressources.
-        var kept = chosen.Keys.Select(k => byKey[k]).ToList();
+        // Ce qui part reellement : tout, sauf ce qui a ete ecarte. Les defs
+        // « embarque » et leur fermeture y sont forcement, puisqu'on ne peut pas
+        // a la fois cocher et decocher la meme def.
+        var kept = inv.Defs.Where(d => !excluded.Contains(d.Key)).ToList();
+        result.Kept = kept.Count;
+        result.Excluded = excluded.Count;
+        result.Undetermined = kept.Count - chosen.Count;
+
+        // Une def gardee reclame une def ecartee : au chargement, la def gardee
+        // echouerait. C'est le seul endroit ou les trois etats se contredisent.
+        var excludedByName = new Dictionary<string, DefEntry>(StringComparer.Ordinal);
+        foreach (var key in excluded)
+            if (byKey.TryGetValue(key, out var d))
+            {
+                if (d.DefName is { Length: > 0 } dn) excludedByName[dn] = d;
+                if (d.AbstractName is { Length: > 0 } an) excludedByName[an] = d;
+            }
+
+        foreach (var d in kept)
+        {
+            void Check(string? name, string reason)
+            {
+                if (name is { Length: > 0 } && excludedByName.TryGetValue(name, out var victim))
+                    result.Conflicts.Add(new Conflict
+                    {
+                        Needed = victim.Display, NeededBy = d.Display, Reason = reason,
+                    });
+            }
+            Check(d.ParentName, "parent");
+            foreach (var r in d.Refs.Research) Check(r, "recherche prealable");
+            foreach (var r in d.Refs.StrictDefs) Check(r, "reference");
+        }
+        result.Conflicts = result.Conflicts
+            .GroupBy(c => (c.Needed, c.NeededBy, c.Reason)).Select(g => g.First())
+            .OrderBy(c => c.Needed, StringComparer.OrdinalIgnoreCase).ToList();
+
         result.Classes = kept.SelectMany(d => d.Refs.Classes).Distinct(StringComparer.Ordinal)
                              .OrderBy(s => s, StringComparer.Ordinal).ToList();
         result.Textures = kept.SelectMany(d => d.Refs.Textures).Distinct(StringComparer.Ordinal)

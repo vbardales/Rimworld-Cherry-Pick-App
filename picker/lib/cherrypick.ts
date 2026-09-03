@@ -72,19 +72,48 @@ export async function listMods(scope: "active" | "all"): Promise<ModRow[]> {
 // scan d'un gros mod prend plusieurs secondes.
 const CACHE = path.join(os.tmpdir(), "cherrypick-scans");
 
-export async function scanMod(id: string, modPath: string): Promise<unknown> {
+export async function scanMod(id: string, modPath: string, refresh = false): Promise<unknown> {
   await fs.mkdir(CACHE, { recursive: true });
   const safe = id.replace(/[^A-Za-z0-9._-]/g, "_");
   const file = path.join(CACHE, `${safe}.json`);
 
-  try {
-    const [cached, dir] = await Promise.all([fs.stat(file), fs.stat(modPath)]);
-    if (cached.mtimeMs >= dir.mtimeMs) return JSON.parse(await fs.readFile(file, "utf8"));
-  } catch {
-    // pas de cache, ou mod introuvable : on scanne
+  // Le cache est revalide par la date du DOSSIER du mod, or modifier un fichier
+  // dans un sous-dossier ne la change pas toujours. D'ou le rescan force : c'est
+  // le seul moyen sur de repartir des fichiers.
+  if (!refresh) {
+    try {
+      const [cached, dir] = await Promise.all([fs.stat(file), fs.stat(modPath)]);
+      if (cached.mtimeMs >= dir.mtimeMs) return JSON.parse(await fs.readFile(file, "utf8"));
+    } catch {
+      // pas de cache, ou mod introuvable : on scanne
+    }
   }
 
   const { stdout } = await run(DOTNET, [DLL, "scan", modPath], { maxBuffer: MAX, windowsHide: true });
   await fs.writeFile(file, stdout, "utf8");
   return JSON.parse(stdout);
+}
+
+// Etend une selection a tout ce qu'elle entraine.
+//
+// Les cles passent par un fichier, jamais par la ligne de commande : une
+// selection de plusieurs milliers de defs depasserait la limite de longueur
+// d'argument de Windows, et le mode de defaillance serait illisible.
+export async function closeMod(
+  modPath: string,
+  picked: string[],
+  excluded: string[],
+): Promise<unknown> {
+  await fs.mkdir(CACHE, { recursive: true });
+  const file = path.join(CACHE, `pick-${process.pid}-${Date.now()}.json`);
+  await fs.writeFile(file, JSON.stringify({ picked, excluded }), "utf8");
+  try {
+    const { stdout } = await run(DOTNET, [DLL, "close", modPath, "--pick-file", file, "--json"], {
+      maxBuffer: MAX,
+      windowsHide: true,
+    });
+    return JSON.parse(stdout);
+  } finally {
+    await fs.rm(file, { force: true });
+  }
 }

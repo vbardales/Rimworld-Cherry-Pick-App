@@ -87,6 +87,8 @@ int CmdScan(bool asHtml)
     Inherited.Resolve(inv, Path.Combine(gameDir, "Data"));
 
     TextureResolver.Resolve(inv);
+    Grouping.Resolve(inv);
+    Overrides.Mark(inv, VanillaIndex.Load(gameDir));
 
     var outPath = OptionValue("--out");
     var text = asHtml ? Viewer.Render(inv, json) : JsonSerializer.Serialize(inv, json);
@@ -117,6 +119,7 @@ int CmdClose()
     if (path is null) { Console.Error.WriteLine($"Mod introuvable : {target}"); return 1; }
 
     var picks = new List<string>();
+    var fileExcludes = new List<string>();
     if (OptionValue("--pick") is { } inline)
         picks.AddRange(inline.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
     if (OptionValue("--pick-file") is { } pf && File.Exists(pf))
@@ -124,14 +127,17 @@ int CmdClose()
         using var doc = JsonDocument.Parse(File.ReadAllText(pf));
         if (doc.RootElement.TryGetProperty("picked", out var arr))
             picks.AddRange(arr.EnumerateArray().Select(e => e.GetString() ?? "").Where(s => s.Length > 0));
+        if (doc.RootElement.TryGetProperty("excluded", out var exArr))
+            fileExcludes.AddRange(exArr.EnumerateArray().Select(e => e.GetString() ?? "").Where(s => s.Length > 0));
     }
-    if (picks.Count == 0) { Console.Error.WriteLine("Aucune def cochee."); return 2; }
 
     var inv = Scanner.ScanOne(path);
     Inherited.Resolve(inv, Path.Combine(gameDir, "Data"));
     TextureResolver.Resolve(inv);
+    Grouping.Resolve(inv);
 
     var vanilla = VanillaIndex.Load(gameDir);
+    Overrides.Mark(inv, vanilla);
 
     // Les espaces de noms de chaque dependance declaree, pour savoir laquelle
     // reste utile une fois la selection faite.
@@ -141,7 +147,11 @@ int CmdClose()
         if (installed.TryGetValue(pid, out var dep))
             deps[pid] = (dep.Name, AssemblyNamespaces.Of(dep.Path));
 
-    var closure = Closure.Compute(inv, picks, vanilla, deps);
+    var excludes = new List<string>(fileExcludes);
+    if (OptionValue("--exclude") is { } ex)
+        excludes.AddRange(ex.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+    var closure = Closure.Compute(inv, picks, vanilla, deps, excludes);
 
     var outPath = OptionValue("--out");
     var text = JsonSerializer.Serialize(closure, json);
@@ -153,7 +163,16 @@ int CmdClose()
 
 void PrintClosure(ClosureResult c, int pickedCount)
 {
-    Console.WriteLine($"{pickedCount} defs cochees  ->  {c.Items.Count} defs au total");
+    Console.WriteLine($"{c.Kept} defs embarquees  ({c.Excluded} ecartees, {c.Undetermined} indeterminees)");
+    if (pickedCount > 0)
+        Console.WriteLine($"{pickedCount} marquees explicitement  ->  {c.Items.Count} avec ce qu'elles entrainent");
+    if (c.Conflicts.Count > 0)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"  CONFLITS ({c.Conflicts.Count}) — une def gardee reclame une def ecartee :");
+        foreach (var k in c.Conflicts.Take(15))
+            Console.WriteLine($"    {k.Needed,-34} reclame par {k.NeededBy}  ({k.Reason})");
+    }
     Console.WriteLine();
     foreach (var g in c.Items.Where(i => i.Depth > 0).GroupBy(i => i.Reason))
     {

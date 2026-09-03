@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await scanMod(id, modPath));
+    const refresh = req.nextUrl.searchParams.get("refresh") === "1";
+    return NextResponse.json(await scanMod(id, modPath, refresh));
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
