@@ -164,10 +164,13 @@ re-port when the upstream moves, and the credit stays with its author.
 Which means the list holds the DROPPED defs, not the kept ones: a cherry-pick
 configuration and a mod generation are exactly each other's inverse.
 
-The key format is Cherry Picker's own, read from its assembly ():
-, or  for a type outside  and
-. That third segment is how it finds the assembly again — a third-party
-def such as  cannot be removed without it.
+The key format is Cherry Picker's own, read from its assembly
+(`DefUtility.ToKey`): `TypeName/defName`, or `TypeName/defName/Namespace` for a
+type outside `Verse` and `RimWorld`. That third segment is how it finds the
+assembly again — a third-party def such as
+`ItemAcceptedDef/DankPyon_SmokerFirstItem/ItemProcessor` cannot be removed
+without it. An abstract base carries no defName and cannot be removed at all; it
+produces nothing once its concrete defs are gone.
 
 Its settings file is global, one list for every mod, so a configuration is MERGED
 into it rather than written over it. The merge needs to know which keys belong to
