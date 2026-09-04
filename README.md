@@ -115,7 +115,10 @@ The classification lives in `data/mod-labels.json`, versioned with the rest: it
 is built over weeks, it cannot depend on a browser cache.
 
 The list controls — scope, sorting filter, label filter, search — are remembered
-across visits and across days, in the browser. They are not the work, so they do
+across visits and across days, in the browser. So is the selection made on a
+mod sheet, one entry per mod: deciding on a few hundred entries is an hour of
+work, and leaving the page used to throw it away, which meant the sheet could
+only be used in one sitting. They are not the work, so they do
 not belong in the file; but the scope and the sorting filter decide WHICH mods
 are missing from the list, and a list quietly showing the wrong set is worse than
 an empty one.

@@ -15,6 +15,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:18.873Z"
     },
+    "AndrewRaphaelLukasik.AllowDeadAnimals": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:40:59.652Z"
+    },
     "andromeda.milkyway": {
       "categories": [
         "engine"
@@ -225,6 +232,13 @@
       "works16": false,
       "updated": "2026-09-04T18:16:00.187Z"
     },
+    "Daemon976.PF.VFEC": {
+      "categories": [
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:39:46.439Z"
+    },
     "danzinagri.facialanimationcompatabilityproject": {
       "categories": [
         "engine"
@@ -238,6 +252,14 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:44.765Z"
+    },
+    "det.epochstallow": {
+      "categories": [
+        "furniture",
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:42:08.435Z"
     },
     "dev.soeur.imageopt": {
       "categories": [
@@ -968,6 +990,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:49:21.727Z"
     },
+    "RedRam.AllowPrisonersToEatCorpses": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:41:33.230Z"
+    },
     "reo.rimscent": {
       "categories": [
         "gameplay"
@@ -1095,6 +1124,14 @@
       "works16": true,
       "updated": "2026-09-04T18:22:32.118Z"
     },
+    "Tinda.Patches.EpochsTallow": {
+      "categories": [
+        "food",
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:42:16.579Z"
+    },
     "tolak.vtexe.ambrosiafix": {
       "categories": [
         "textures"
@@ -1117,6 +1154,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:47.497Z"
     },
+    "troopersmith1.Rotmeth": {
+      "categories": [
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:39:02.241Z"
+    },
     "tyinplop.toughnessskillmod": {
       "categories": [
         "gameplay"
@@ -1130,6 +1174,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:38.263Z"
+    },
+    "UnlimitedHugs.AllowTool": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:41:38.665Z"
     },
     "unlimitedhugs.hugslib": {
       "categories": [
@@ -1320,6 +1371,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:03.155Z"
+    },
+    "z4k97b.altarsinthroneroom": {
+      "categories": [
+        "ideology"
+      ],
+      "works16": true,
+      "updated": "2026-09-04T18:40:54.347Z"
     },
     "zal.heavyweaponsreloading": {
       "categories": [

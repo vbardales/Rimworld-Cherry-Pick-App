@@ -52,6 +52,16 @@ type State = "in" | "out";
 
 type Group = { key: string; anchor: Def; members: Def[]; overrides: boolean };
 
+// Where a mod's selection is kept, one key per mod.
+//
+// Deciding on a few hundred entries is an hour of work, and until now leaving the
+// page threw it away — so the sheet could only be used in one sitting, and going
+// back to the list to check something cost the lot.
+//
+// It stays in the browser rather than in data/: it is a work in progress, not a
+// result. What is worth keeping lands in an exported config.
+const KEEP = (packageId: string) => `cherrypick:pick:${packageId}`;
+
 const thumbOf = (defs: Def[]) => {
   const files = defs.flatMap((d) => d.TextureFiles);
   return (
@@ -82,6 +92,7 @@ export default function ModPage({
 
   const [rescanning, setRescanning] = useState(false);
   const [label, setLabel] = useState<ModLabel>(EMPTY);
+  const [restored, setRestored] = useState(false);
 
   // Read the mod again from its files.
   //
@@ -129,6 +140,38 @@ export default function ModPage({
       overrides: members.some((m) => m.OverridesVanilla),
     }));
   }, [inv]);
+
+  // The selection comes back once the groups are known, not before: a stored key
+  // is only meaningful against the entries that exist now. A mod that has moved on
+  // since — a def renamed, a group split — drops the marks that no longer point
+  // anywhere, rather than carrying an invisible selection that the counts would
+  // report but no row would show.
+  useEffect(() => {
+    if (groups.length === 0) return;
+    try {
+      const kept = JSON.parse(localStorage.getItem(KEEP(id)) ?? "[]");
+      const alive = new Set(groups.map((g) => g.key));
+      if (Array.isArray(kept)) {
+        setStates(new Map(
+          kept.filter((e: [string, State]) =>
+            Array.isArray(e) && alive.has(e[0]) && (e[1] === "in" || e[1] === "out")),
+        ));
+      }
+    } catch {
+      // nothing stored, or unreadable: an untouched mod is a valid starting point
+    }
+    setRestored(true);
+  }, [id, groups]);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      if (states.size === 0) localStorage.removeItem(KEEP(id));
+      else localStorage.setItem(KEEP(id), JSON.stringify([...states]));
+    } catch {
+      // private window, or storage refused: the sheet works, it just forgets
+    }
+  }, [restored, states, id]);
 
   const types = useMemo(() => [...new Set(inv?.Defs.map((d) => d.DefType) ?? [])].sort(), [inv]);
   const techs = useMemo(
