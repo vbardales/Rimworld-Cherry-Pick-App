@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
 import { CATEGORIES, EMPTY, type CategoryId, type ModLabel } from "@/lib/labels";
@@ -18,6 +18,14 @@ type ModRow = {
 
 type Sift = "all" | "todo" | "done" | "untagged";
 
+// Delai avant qu'un mod etiquete quitte la liste.
+//
+// Poser une categorie, c'est avoir regarde le mod : le marquer « trie » a la main
+// juste apres serait un deuxieme clic pour dire ce que le premier a deja dit. Mais
+// la ligne ne peut pas disparaitre a l'instant du clic — il faut le temps d'en
+// poser une deuxieme, et de se rendre compte qu'on s'est trompe de ligne.
+const HOLD_MS = 10_000;
+
 export default function Home() {
   const [scope, setScope] = useState<"active" | "all">("active");
   const [q, setQ] = useState("");
@@ -29,6 +37,12 @@ export default function Home() {
   const [labels, setLabels] = useState<Record<string, ModLabel>>({});
   const [sift, setSift] = useState<Sift>("all");
   const [only, setOnly] = useState<CategoryId[]>([]);
+
+  // Les mods en partance, et ceux deja partis. « Parti » ne vaut que pour
+  // l'affichage courant : le mod est trie, pas cache pour toujours.
+  const [leaving, setLeaving] = useState<string[]>([]);
+  const [gone, setGone] = useState<string[]>([]);
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   // Le classement se charge une fois : il ne depend ni de la portee ni de la
   // recherche, et il est minuscule a cote de la liste des mods.
@@ -58,13 +72,53 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [scope, q]);
 
-  const patchLabel = (packageId: string, label: ModLabel) =>
+  const cancelLeaving = useCallback((packageId: string) => {
+    const t = timers.current.get(packageId);
+    if (t) { clearTimeout(t); timers.current.delete(packageId); }
+    setLeaving((prev) => (prev.includes(packageId) ? prev.filter((x) => x !== packageId) : prev));
+  }, []);
+
+  // Une etiquette posee sort le mod de la liste apres un delai.
+  //
+  // Le depart se decide sur les ETIQUETTES, pas sur l'etat « trie » : c'est le
+  // serveur qui derive le tri des etiquettes, donc sa reponse revient toujours
+  // avec « trie », et lire ce drapeau annulait le depart aussitot apres l'avoir
+  // programme.
+  //
+  // Le delai repart a chaque clic : poser une deuxieme categorie, c'est qu'on n'a
+  // pas fini de decrire le mod, pas qu'on veut le voir partir plus vite.
+  const patchLabel = useCallback((packageId: string, label: ModLabel) => {
     setLabels((prev) => ({ ...prev, [packageId]: label }));
+
+    // Tout retirer annule le depart : c'est la seule facon de le faire, et elle
+    // suffit — un bouton d'annulation en bout de ligne decalerait les etiquettes.
+    if (label.categories.length === 0) { cancelLeaving(packageId); return; }
+
+    const t = timers.current.get(packageId);
+    if (t) clearTimeout(t);
+    setLeaving((prev) => (prev.includes(packageId) ? prev : [...prev, packageId]));
+    timers.current.set(packageId, setTimeout(() => {
+      timers.current.delete(packageId);
+      setLeaving((prev) => prev.filter((x) => x !== packageId));
+      setGone((prev) => (prev.includes(packageId) ? prev : [...prev, packageId]));
+    }, HOLD_MS));
+  }, [cancelLeaving]);
+
+  useEffect(() => {
+    const map = timers.current;
+    return () => { for (const t of map.values()) clearTimeout(t); map.clear(); };
+  }, []);
+
+  // Changer de vue remet les partis a l'affichage : ils sont tries, pas effaces,
+  // et une liste ou l'on ne peut plus revoir ce qu'on vient de classer serait un
+  // piege.
+  useEffect(() => { setGone([]); }, [scope, q, sift, only]);
 
   // Le filtre par etiquette porte sur ce que le serveur a deja renvoye : le tri
   // vit ici, pas dans le moteur, et la liste est deja bornee.
   const shown = useMemo(() => {
     return rows.filter((m) => {
+      if (gone.includes(m.PackageId)) return false;
       const l = labels[m.PackageId] ?? EMPTY;
       if (sift === "todo" && l.reviewed) return false;
       if (sift === "done" && !l.reviewed) return false;
@@ -75,7 +129,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, labels, sift, only]);
+  }, [rows, labels, sift, only, gone]);
 
   const tally = useMemo(() => {
     const done = rows.filter((m) => (labels[m.PackageId] ?? EMPTY).reviewed).length;
@@ -118,7 +172,7 @@ export default function Home() {
         <span className="tally">
           {busy
             ? "lecture..."
-            : `${shown.length} affiches — ${counts.matched} sur ${counts.total}`}
+            : `${shown.length} affiche${shown.length > 1 ? "s" : ""} — ${counts.matched} sur ${counts.total}`}
         </span>
       </div>
 
@@ -149,8 +203,12 @@ export default function Home() {
       <ul className="mods">
         {shown.map((m) => {
           const l = labels[m.PackageId] ?? EMPTY;
+          const due = leaving.includes(m.PackageId);
           return (
-            <li key={m.PackageId} className={l.reviewed ? "sorted" : ""}>
+            <li
+              key={m.PackageId}
+              className={`${l.reviewed ? "sorted" : ""}${due ? " leaving" : ""}`}
+            >
               <Link
                 href={`/mod/${encodeURIComponent(m.PackageId)}?path=${encodeURIComponent(m.Path)}`}
               >

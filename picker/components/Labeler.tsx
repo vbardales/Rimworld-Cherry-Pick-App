@@ -19,6 +19,9 @@ export function Labeler({
 }) {
   const [busy, setBusy] = useState(false);
 
+  // Une etiquette posee vaut tri : le bouton n'a plus rien a decider.
+  const tagged = label.categories.length > 0;
+
   const send = (patch: { categories?: CategoryId[]; reviewed?: boolean }) => {
     // Affichage optimiste : le disque repondra, mais la couleur ne doit pas
     // attendre l'aller-retour.
@@ -48,8 +51,13 @@ export function Labeler({
       <button
         type="button"
         className={`chip check${label.reviewed ? " on" : ""}`}
+        disabled={tagged}
         onClick={() => send({ reviewed: !label.reviewed })}
-        title={label.reviewed ? "trie — cliquer pour remettre a trier" : "marquer comme trie"}
+        title={
+          tagged ? "trie : au moins une etiquette est posee — les retirer pour le remettre a trier"
+            : label.reviewed ? "trie — cliquer pour remettre a trier"
+            : "marquer comme trie"
+        }
       >
         {label.reviewed ? "✓ trie" : "a trier"}
       </button>

@@ -41,7 +41,14 @@ export function writeLabel(
     const categories = patch.categories
       ? [...new Set(patch.categories.filter((c) => KNOWN.has(c)))]
       : cur.categories;
-    const reviewed = patch.reviewed ?? cur.reviewed;
+    // Poser une categorie, c'est avoir regarde le mod : le tri en decoule, il ne
+    // se declare pas separement. La regle est ici et pas dans l'interface — la
+    // liste et la fiche d'un mod la liraient chacune a sa facon, et finiraient par
+    // diverger.
+    //
+    // Consequence assumee : on ne peut pas dire « etiquete mais pas encore trie ».
+    // Pour remettre un mod a trier, on retire ses etiquettes.
+    const reviewed = (patch.reviewed ?? cur.reviewed) || categories.length > 0;
 
     const next: ModLabel = { categories, reviewed, updated: new Date().toISOString() };
 

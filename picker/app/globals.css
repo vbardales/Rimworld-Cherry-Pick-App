@@ -175,3 +175,9 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
    jeu, ou introuvable. La derniere seule justifie une couleur d'alerte. */
 .chain .core { color: var(--accent); }
 .chain .gone { color: var(--bad); text-decoration: underline dotted; }
+
+/* Une ligne etiquetee s'efface avant de quitter la liste : ce qui part doit se
+   voir partir, sinon la liste semble se vider toute seule. Rien n'est ajoute a la
+   ligne — un bouton d'annulation en bout de ligne pousserait les etiquettes au
+   moment precis ou l'on vise la suivante, et decocher suffit a annuler. */
+.mods li.leaving { opacity: .5; transition: opacity .4s ease; }
