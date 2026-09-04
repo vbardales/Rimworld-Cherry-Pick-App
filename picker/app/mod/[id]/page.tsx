@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
 import { EMPTY, type ModLabel } from "@/lib/labels";
 import { workshopId, workshopUrl } from "@/lib/steam";
+import { keyOf } from "@/lib/cherryKey";
 
 type Def = {
   Key: string;
@@ -94,6 +95,7 @@ export default function ModPage({
   const [label, setLabel] = useState<ModLabel>(EMPTY);
   const [restored, setRestored] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  const [applied, setApplied] = useState<string | null>(null);
 
   // Read the mod again from its files.
   //
@@ -214,6 +216,47 @@ export default function ModPage({
       return next;
     });
 
+  // Ce qu'on demande a Cherry Picker de retirer.
+  //
+  // Les defs ECARTEES, pas les gardees : on laisse le mod source charge tel quel
+  // et on enleve ce qu'on n'a pas voulu. L'indetermine vaut garde, donc ne figure
+  // pas ici — c'est la meme regle que partout ailleurs, vue de l'autre cote.
+  const toRemove = useMemo(() => {
+    const keys: string[] = [];
+    for (const g of groups) {
+      if (states.get(g.key) !== "out") continue;
+      for (const m of g.members) {
+        const k = keyOf(m.DefType, m.DefName);
+        if (k) keys.push(k);
+      }
+    }
+    return [...new Set(keys)].sort();
+  }, [groups, states]);
+
+  // Tout ce que CE mod pourrait faire retirer, ecarte ou non.
+  //
+  // Sert de perimetre a la fusion : le fichier de Cherry Picker est commun a tous
+  // les mods, et sans cette liste on ne saurait pas distinguer une entree qu'on
+  // vient de reprendre — donc a effacer — d'une cle posee en triant un autre mod.
+  const scope = useMemo(() => {
+    const keys = inv?.Defs.map((d) => keyOf(d.DefType, d.DefName)).filter(Boolean) as string[];
+    return [...new Set(keys ?? [])];
+  }, [inv]);
+
+  const applyToCherryPicker = () => {
+    setApplied(null);
+    fetch("/api/cherrypicker", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keys: toRemove, scope }),
+    })
+      .then((r) => r.json())
+      .then((d) => d.error
+        ? Promise.reject(new Error(d.error))
+        : setApplied(`${d.apres} cle(s) dans Cherry Picker (+${d.ajoutees}, -${d.retirees}) — sauvegarde ${d.backup}`))
+      .catch((e) => setError(String(e)));
+  };
+
   const filtered = shown.length !== groups.length;
 
   // A selection is PARTIAL as soon as one entry is dropped, or some undetermined
@@ -251,6 +294,10 @@ export default function ModPage({
       ),
       // Snapshot of the diagnosis at export time, for later reading. It is
       // recomputed every time the config is replayed.
+      // La liste destinee a Cherry Picker, telle qu'elle sera posee. Elle fait
+      // partie de la conf : c'est elle le resultat, le reste en est la
+      // justification.
+      cherryPicker: { aRetirer: toRemove },
       diagnostic: closure && {
         embarquees: closure.Kept,
         ecartees: closure.Excluded,
@@ -366,6 +413,10 @@ export default function ModPage({
           enregistrer la conf{partial ? "" : " (mod entier)"}
         </button>
         {saved && <span className="sub">ecrite dans data/configs/{saved}</span>}
+        <button onClick={applyToCherryPicker} disabled={toRemove.length === 0}>
+          appliquer dans Cherry Picker ({toRemove.length})
+        </button>
+        {applied && <span className="sub">{applied}</span>}
         <span className="sep">|</span>
         <span className="sub">le mod entier :</span>
         <button onClick={() => setAll(groups, "in")}>

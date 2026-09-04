@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "mode": "cherry-pick",
+  "source": {
+    "packageId": "Lava.MO.SpookyHalloweenExtravaganza",
+    "name": "Lava's Spooky Halloween Extravaganza (1.6)",
+    "path": "C:\\Program Files (x86)\\Steam\\steamapps\\workshop\\content\\294100\\3785375776",
+    "supportedVersions": [
+      "1.6"
+    ],
+    "deadBefore16": false,
+    "declaredDependencies": [
+      "oskarpotocki.vanillafactionsexpanded.core"
+    ]
+  },
+  "states": {
+    "FactionDef/Name=TheTwilightCarnvival": "in",
+    "ThingSetMakerDef/Lava_TwilightRaidLootMaker": "out",
+    "FactionDef/Lavas_TwilightCivil": "out",
+    "FactionDef/Lavas_TwilightFierce": "out",
+    "FactionDef/Lavas_TwilightSavage": "out",
+    "ItemProcessor.ItemAcceptedDef/DankPyon_CheesePressFirstItem": "in",
+    "ItemProcessor.ItemAcceptedDef/DankPyon_SmokerFirstItem": "in",
+    "ItemProcessor.ItemAcceptedDef/DankPyon_DryingRackFirstItem": "in",
+    "ItemProcessor.ItemAcceptedDef/DankPyon_HayRackFirstItem": "in",
+    "JobDef/DankPyon_Play_CupAndDice": "in",
+    "PawnKindDef/Name=Lavas_MedievalPawnKindBase": "in",
+    "PawnKindDef/Lavas_Medieval_Harlequin": "out",
+    "PawnKindDef/Lavas_Medieval_TwilightMerchant": "out",
+    "PawnKindDef/Lavas_Medieval_Gloamboy": "out",
+    "PawnKindDef/Lavas_Medieval_GloamboyRuff": "out",
+    "PawnKindDef/Lavas_Medieval_GloamboyAlpha": "out",
+    "PawnKindDef/Lavas_Medieval_Dusker": "out",
+    "PawnKindDef/Lavas_Twilight_MadamNight": "out",
+    "ThingDef/lavas_Jacko_lamp": "in",
+    "ThingDef/Lavas_Pumpkini": "in",
+    "ThingDef/Lavas_Widows_Dress": "in",
+    "ThingDef/Lavas_Skeleton_Tights": "in",
+    "ThingDef/Lavas_Harlequin": "in",
+    "ThingDef/Lavas_Gloamboys_Tailcoat": "in",
+    "ThingDef/Lavas_DevilTights": "in",
+    "ThingDef/Lavas_Gloamhat": "in",
+    "ThingDef/Lavas_WidowsVeil": "in",
+    "ThingDef/Lavas_CambionMask": "in",
+    "ThingDef/Lavas_HarlequinMask": "in",
+    "ThingDef/Lavas_DevilMask": "in",
+    "ThingDef/Lavas_SkullMask": "in",
+    "TraderKindDef/Lavas_Base_Medieval_Standard": "in",
+    "TraderKindDef/Lavas_Caravan_Medieval_BulkGoodsMerchant": "in",
+    "TraderKindDef/Lavas_Caravan_Medieval_ArtPatron": "in",
+    "TraderKindDef/Lavas_Caravan_Medieval_Armorsmith": "in",
+    "TraderKindDef/Lavas_Caravan_Medieval_Weaponsmith": "in",
+    "TraderKindDef/Lavas_Visitor_Medieval_Standard": "in",
+    "ThingDef/Lavas_MeleeWeapon_Bible": "in",
+    "ThingDef/lavas_MeleeWeapon_DevilFork": "in"
+  },
+  "diagnostic": {
+    "embarquees": 28,
+    "ecartees": 11,
+    "indeterminees": -4,
+    "conflits": 3,
+    "dependancesInutiles": [],
+    "patchsOrphelins": [],
+    "referencesNonResolues": [
+      "AnimalExotic",
+      "AnimalFarm",
+      "AnimalFighter",
+      "AnimalPet",
+      "AnimalUncommon",
+      "Artifact",
+      "DankPyon_DryingRack",
+      "DankPyon_HayRack",
+      "DankPyon_Presser",
+      "DankPyon_Smoker",
+      "Good",
+      "Medieval",
+      "tinker",
+      "tinkers"
+    ]
+  }
+}

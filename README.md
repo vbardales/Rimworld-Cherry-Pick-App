@@ -155,6 +155,27 @@ A saved configuration lands in `data/configs/cherrypick-<packageId>.json`,
 written straight into the repository rather than downloaded — a config filed
 beside the day's screenshots is one that never gets replayed.
 
+## The output is a Cherry Picker list
+
+Nothing is generated. The source mod stays loaded as it is, and Owlchemist's
+Cherry Picker is told to remove what was not wanted — nothing to copy, nothing to
+re-port when the upstream moves, and the credit stays with its author.
+
+Which means the list holds the DROPPED defs, not the kept ones: a cherry-pick
+configuration and a mod generation are exactly each other's inverse.
+
+The key format is Cherry Picker's own, read from its assembly ():
+, or  for a type outside  and
+. That third segment is how it finds the assembly again — a third-party
+def such as  cannot be removed without it.
+
+Its settings file is global, one list for every mod, so a configuration is MERGED
+into it rather than written over it. The merge needs to know which keys belong to
+the mod being sorted — otherwise an entry just taken back cannot be told from a
+key placed while sorting another mod. Every write makes a timestamped backup
+first, and RimWorld must be closed: it holds its settings in memory and writes
+them out on quit.
+
 To come: resource merging with an alternative display (style or `randomGraphics`
 depending on how many sources target the same def), and the generation of the mod
 itself.
