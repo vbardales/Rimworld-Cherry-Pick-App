@@ -8,6 +8,62 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:18.873Z"
     },
+    "andromeda.milkyway": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:50:46.048Z"
+    },
+    "astryl.modernhistorymenu": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:05.061Z"
+    },
+    "astryl.modernideologymenu": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:06.014Z"
+    },
+    "astryl.modernneedstab": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:08.026Z"
+    },
+    "astryl.modernnotifications": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:09.125Z"
+    },
+    "astryl.modernpawntabs": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:11.288Z"
+    },
+    "astryl.modernquestmenu": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:13.101Z"
+    },
+    "astryl.modernxenotypetab": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:14.886Z"
+    },
     "axolki.biotabplus": {
       "categories": [
         "engine"
@@ -63,6 +119,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:44.765Z"
+    },
+    "dev.soeur.imageopt": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:49:03.246Z"
     },
     "dimonsever000.factionlanguages": {
       "categories": [
@@ -120,12 +183,33 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:13.444Z"
     },
+    "jiopaba.fences": {
+      "categories": [
+        "textures"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:30.583Z"
+    },
     "kathanon.floatsubmenu": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:20.567Z"
+    },
+    "keyz182.keyzallowutilities": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:49:19.721Z"
+    },
+    "kota.inventorytab": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:49:07.259Z"
     },
     "kunogid.floatmenuforoperation": {
       "categories": [
@@ -245,12 +329,34 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:23.593Z"
     },
+    "memegoddess.medicaltab": {
+      "categories": [
+        "medical",
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:53.628Z"
+    },
     "mlie.dingongameloaded": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:47.410Z"
+    },
+    "mlie.logafterdeferror": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:49:24.267Z"
+    },
+    "mlie.mmdrumcanmod": {
+      "categories": [
+        "joy"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:50:49.667Z"
     },
     "nals.facialanimation": {
       "categories": [
@@ -273,6 +379,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:55.852Z"
     },
+    "nelim.foodcourt": {
+      "categories": [
+        "food"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:35.783Z"
+    },
     "nelim.geniusescraftfastpatched": {
       "categories": [
         "gameplay"
@@ -287,6 +400,37 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:56.544Z"
+    },
+    "nelim.joypreservation": {
+      "categories": [
+        "joy"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:39.446Z"
+    },
+    "nelim.joyrescue": {
+      "categories": [
+        "engine",
+        "joy"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:49:16.721Z"
+    },
+    "nelim.manyhappyreturns": {
+      "categories": [
+        "joy",
+        "gameplay"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:50:18.270Z"
+    },
+    "nelim.minchoconfectionery": {
+      "categories": [
+        "food",
+        "animals"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:48.717Z"
     },
     "nercury.assignanimalfood": {
       "categories": [
@@ -308,6 +452,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:27.332Z"
+    },
+    "r40x.loadingtracker": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:49:21.727Z"
     },
     "rosnok.fmi": {
       "categories": [
@@ -336,6 +487,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:46.137Z"
+    },
+    "superniquito.modoptionssort": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:50:59.460Z"
     },
     "syrchalis.processor.framework": {
       "categories": [
@@ -393,12 +551,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:40.113Z"
     },
+    "vopaga.hyperdrive": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:48:04.445Z"
+    },
     "vorsel.floatmenuperformanceoptimizer": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:18.751Z"
+    },
+    "windicevista.modernlog": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:07.015Z"
     },
     "wowgag.eventimagepopup": {
       "categories": [
@@ -407,12 +579,19 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:05.656Z"
     },
+    "yintx.deepseek.modernexpandmenu": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:51:03.155Z"
+    },
     "zetrith.prepatcher": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
-      "updated": "2026-09-04T17:46:10.312Z"
+      "updated": "2026-09-04T17:51:28.351Z"
     }
   }
 }

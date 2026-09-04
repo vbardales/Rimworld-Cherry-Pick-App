@@ -38,10 +38,9 @@ export default function Home() {
   const [sift, setSift] = useState<Sift>("all");
   const [only, setOnly] = useState<CategoryId[]>([]);
 
-  // Les mods en partance, et ceux deja partis. « Parti » ne vaut que pour
-  // l'affichage courant : le mod est trie, pas cache pour toujours.
+  // Les mods en sursis : etiquetes a l'instant, et momentanement exemptes du
+  // filtre courant.
   const [leaving, setLeaving] = useState<string[]>([]);
-  const [gone, setGone] = useState<string[]>([]);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   // Le classement se charge une fois : il ne depend ni de la portee ni de la
@@ -100,7 +99,6 @@ export default function Home() {
     timers.current.set(packageId, setTimeout(() => {
       timers.current.delete(packageId);
       setLeaving((prev) => prev.filter((x) => x !== packageId));
-      setGone((prev) => (prev.includes(packageId) ? prev : [...prev, packageId]));
     }, HOLD_MS));
   }, [cancelLeaving]);
 
@@ -109,16 +107,20 @@ export default function Home() {
     return () => { for (const t of map.values()) clearTimeout(t); map.clear(); };
   }, []);
 
-  // Changer de vue remet les partis a l'affichage : ils sont tries, pas effaces,
-  // et une liste ou l'on ne peut plus revoir ce qu'on vient de classer serait un
-  // piege.
-  useEffect(() => { setGone([]); }, [scope, q, sift, only]);
-
   // Le filtre par etiquette porte sur ce que le serveur a deja renvoye : le tri
   // vit ici, pas dans le moteur, et la liste est deja bornee.
   const shown = useMemo(() => {
     return rows.filter((m) => {
-      if (gone.includes(m.PackageId)) return false;
+      // Une ligne qu'on vient d'etiqueter reste visible dix secondes, puis le
+      // filtre reprend ses droits. C'est LUI qui decide du depart, pas le delai :
+      // sous « a trier » la ligne s'en va, puisqu'etiqueter vaut trier ; sous
+      // « tries » ou « tous » elle reste, et la faire disparaitre d'une vue ou
+      // elle a sa place serait absurde.
+      //
+      // Sans ce sursis, etiqueter sous « a trier » escamote la ligne au clic : le
+      // mod devient trie a l'instant meme, donc le filtre l'ecarte avant que le
+      // delai ait servi a quoi que ce soit.
+      if (leaving.includes(m.PackageId)) return true;
       const l = labels[m.PackageId] ?? EMPTY;
       if (sift === "todo" && l.reviewed) return false;
       if (sift === "done" && !l.reviewed) return false;
@@ -129,7 +131,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, labels, sift, only, gone]);
+  }, [rows, labels, sift, only, leaving]);
 
   const tally = useMemo(() => {
     const done = rows.filter((m) => (labels[m.PackageId] ?? EMPTY).reviewed).length;

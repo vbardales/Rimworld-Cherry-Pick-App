@@ -13,7 +13,7 @@
 // definition, et elle sait s'adapter au theme sombre.
 export type CategoryId =
   | "engine" | "gameplay" | "animals" | "joy" | "textures"
-  | "food" | "plants" | "factions" | "races";
+  | "food" | "plants" | "factions" | "races" | "medical";
 
 export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "engine",   label: "moteur/UI" },
@@ -25,6 +25,7 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "plants",   label: "plantes" },
   { id: "factions", label: "factions" },
   { id: "races",    label: "races" },
+  { id: "medical",  label: "medical" },
 ];
 
 export type ModLabel = {

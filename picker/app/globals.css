@@ -132,6 +132,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .labeler [data-cat=plants]   { --c: #2f7d4a; }
 .labeler [data-cat=factions] { --c: #b04a34; }
 .labeler [data-cat=races]    { --c: #8b5cc4; }
+.labeler [data-cat=medical]  { --c: #2e93b8; }
 @media (prefers-color-scheme: dark) {
   .labeler [data-cat=engine]   { --c: #f07ab0; }
   .labeler [data-cat=gameplay] { --c: #8ed97a; }
@@ -142,6 +143,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   .labeler [data-cat=plants]   { --c: #66c088; }
   .labeler [data-cat=factions] { --c: #e08a72; }
   .labeler [data-cat=races]    { --c: #bb92ea; }
+  .labeler [data-cat=medical]  { --c: #6fc9e6; }
 }
 
 /* Non posee, une etiquette reste grise : sur une liste de soixante-dix mods,
