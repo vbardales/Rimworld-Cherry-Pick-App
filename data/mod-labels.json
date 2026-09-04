@@ -559,6 +559,13 @@
       "works16": false,
       "updated": "2026-09-04T18:09:17.380Z"
     },
+    "nelim.theultimateinsult": {
+      "categories": [
+        "ideology"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:17:49.421Z"
+    },
     "nercury.assignanimalfood": {
       "categories": [
         "animals"
@@ -736,6 +743,13 @@
       "works16": false,
       "updated": "2026-09-04T18:12:44.085Z"
     },
+    "vanillaexpanded.skills": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:21:02.253Z"
+    },
     "vanillaexpanded.temperature": {
       "categories": [
         "furniture"
@@ -764,6 +778,13 @@
       "works16": false,
       "updated": "2026-09-04T18:15:58.573Z"
     },
+    "vanillaexpanded.vfearchitect": {
+      "categories": [
+        "structure"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:20:05.715Z"
+    },
     "vanillaexpanded.vfecore": {
       "categories": [
         "furniture"
@@ -777,6 +798,20 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:15:29.902Z"
+    },
+    "vanillaexpanded.vwe": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:20:13.396Z"
+    },
+    "vanillaexpanded.vwec": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:21:05.843Z"
     },
     "void.charactereditor": {
       "categories": [
