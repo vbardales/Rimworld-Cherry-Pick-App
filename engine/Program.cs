@@ -91,6 +91,7 @@ int CmdScan(bool asHtml)
     TextureResolver.Resolve(inv);
     Grouping.Resolve(inv);
     Overrides.Mark(inv, VanillaIndex.Load(gameDir));
+    Prefixes.Resolve(inv);
 
     var outPath = OptionValue("--out");
     var text = asHtml ? Viewer.Render(inv, json) : JsonSerializer.Serialize(inv, json);
@@ -140,6 +141,7 @@ int CmdClose()
 
     var vanilla = VanillaIndex.Load(gameDir);
     Overrides.Mark(inv, vanilla);
+    Prefixes.Resolve(inv);
 
     // The namespaces of each declared dependency, to know which one is still
     // useful once the selection is made.

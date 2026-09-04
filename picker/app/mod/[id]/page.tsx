@@ -24,6 +24,8 @@ type Def = {
   ArchitectCategoryFrom: string | null;
   GroupKey: string | null;
   OverridesVanilla: boolean;
+  DefNamePrefix: string | null;
+  ForeignPrefix: boolean;
   TextureFiles: string[];
   MissingTextures: string[];
   Refs: { Research: string[]; Classes: string[] };
@@ -36,6 +38,8 @@ type Inventory = {
   }[];
   Defs: Def[];
   OverrideCount: number;
+  OwnPrefix: string | null;
+  ForeignPrefixCount: number;
   Problems: string[];
 };
 
@@ -51,7 +55,7 @@ type Closure = {
 // it piece by piece.
 type State = "in" | "out";
 
-type Group = { key: string; anchor: Def; members: Def[]; overrides: boolean };
+type Group = { key: string; anchor: Def; members: Def[]; overrides: boolean; foreign: boolean };
 
 // Where a mod's selection is kept, one key per mod.
 //
@@ -141,6 +145,7 @@ export default function ModPage({
       anchor: members.find((m) => m.Key === key) ?? members[0],
       members,
       overrides: members.some((m) => m.OverridesVanilla),
+      foreign: members.some((m) => m.ForeignPrefix),
     }));
   }, [inv]);
 
@@ -369,6 +374,11 @@ export default function ModPage({
           {inv.OverrideCount > 0 && (
             <em className="tag over">{inv.OverrideCount} def(s) remplacent le jeu</em>
           )}
+          {inv.ForeignPrefixCount > 0 && (
+            <em className="tag foreign">
+              {inv.ForeignPrefixCount} def(s) hors du prefixe {inv.OwnPrefix}_
+            </em>
+          )}
           {workshopUrl(mod.Path) && (
             <a className="tag link" href={workshopUrl(mod.Path)!} target="_blank" rel="noreferrer noopener">
               🔍 Steam Workshop {workshopId(mod.Path)}
@@ -470,6 +480,14 @@ export default function ModPage({
                   <div className="name">
                     {d.Label || d.DefName || d.AbstractName}
                     {g.overrides && <em className="tag over">remplace le jeu</em>}
+                    {g.foreign && !g.overrides && (
+                      <em
+                        className="tag foreign"
+                        title={`nomme ${d.DefNamePrefix}_, alors que le mod nomme ${inv.OwnPrefix}_ — souvent du contenu qui appartient a un autre mod`}
+                      >
+                        prefixe {d.DefNamePrefix}_
+                      </em>
+                    )}
                   </div>
                   <div className="sub">
                     {d.DefName ?? `Name=${d.AbstractName}`}

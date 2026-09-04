@@ -123,6 +123,21 @@ not belong in the file; but the scope and the sorting filter decide WHICH mods
 are missing from the list, and a list quietly showing the wrong set is worse than
 an empty one.
 
+## Defs named after somebody else
+
+Modders prefix their defNames and are consistent about it, so the handful that
+break the pattern are worth a second look. On the Halloween mod, thirty-four defs
+out of thirty-nine started with Lavas and the five that did not all started with
+DankPyon_ — a JobDef copied verbatim from Medieval Overhaul, and four
+ItemAcceptedDefs left over from 1.5 whose class no longer exists anywhere.
+Nothing else in the tool pointed at them.
+
+It only fires where there is a convention to break: the dominant prefix must hold
+70% of the prefixed defs, and prefixes that extend one another count as one
+author. Both bounds come from a mod that must NOT be flagged — the Vanilla
+Expanded Framework is five subsystems in one folder and its biggest family covers
+58%, so it stays silent; and Lava_ among thirty-three Lavas_ is not an outsider.
+
 ## Inheritance
 
 Each def shows its parent chain to the root, not only its immediate parent. A mod

@@ -113,6 +113,12 @@ public sealed class DefEntry
     // touches it, and the last one loaded wins.
     public bool OverridesVanilla { get; set; }
 
+    // The part of the defName before the first underscore, and whether it differs
+    // from the mod's own. A def named after somebody else is almost never the
+    // author's content — see Prefixes.
+    public string? DefNamePrefix { get; set; }
+    public bool ForeignPrefix { get; set; }
+
     // Key of the group this def belongs to. One decision per group.
     public string? GroupKey { get; set; }
 
@@ -155,6 +161,11 @@ public sealed class Inventory
     // How many of the mod's defs replace a game def. A retexture mod has almost
     // all of them; a content mod, none.
     public int OverrideCount { get; set; }
+
+    // The naming prefix this mod uses for its own defs, and how many defs do not
+    // follow it.
+    public string? OwnPrefix { get; set; }
+    public int ForeignPrefixCount { get; set; }
 }
 
 // One entry of RimWorld's active modlist.

@@ -244,3 +244,9 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 /* "Works in 1.6": something observed in game, not a classification. It stands
    apart from the labels by wearing the tool's own colour. */
 .chip.v16 { --c: var(--accent); margin-right: 4px; }
+
+/* A def named after somebody else. Not an error — a place to look: on the
+   Halloween mod, the five defs outside its prefix were a duplicate of another
+   mod's and four leftovers from 1.5. */
+.tag.foreign { color: #9b5bb0; border-color: #9b5bb0; }
+@media (prefers-color-scheme: dark) { .tag.foreign { color: #d09ce0; border-color: #d09ce0; } }

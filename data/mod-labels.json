@@ -452,6 +452,16 @@
       "works16": false,
       "updated": "2026-09-04T18:28:03.075Z"
     },
+    "Lava.MO.SpookyHalloweenExtravaganza": {
+      "categories": [
+        "joy",
+        "food",
+        "furniture",
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T19:16:52.213Z"
+    },
     "llunak.fastmodaudioload": {
       "categories": [
         "engine"
@@ -562,6 +572,20 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:18.906Z"
+    },
+    "Mallow.Gloves": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T19:13:15.705Z"
+    },
+    "Mallow.Shoes.Socks": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T19:13:18.353Z"
     },
     "malteschulze.rimmsqol": {
       "categories": [
@@ -1062,6 +1086,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:10.680Z"
+    },
+    "rune1993.ShallowWaterFloorTile": {
+      "categories": [
+        "structure"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T19:17:04.030Z"
     },
     "sarg.alphaskills": {
       "categories": [
