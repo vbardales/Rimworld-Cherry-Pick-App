@@ -114,3 +114,64 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 }
 .bar.bulk button:hover { border-color: var(--accent); }
 .bar.bulk .sep { color: var(--line); }
+
+/* --- etiquettes de mod ------------------------------------------------ */
+/* Une couleur par categorie, definie ici et nulle part ailleurs : le composant
+   ne connait que l'identifiant, et le theme sombre se rattrape d'un seul bloc. */
+.labeler {
+  --c: var(--dim);
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+}
+.labeler.busy { opacity: .7; }
+.labeler [data-cat=engine]   { --c: #d4498a; }
+.labeler [data-cat=gameplay] { --c: #4f9c3e; }
+.labeler [data-cat=animals]  { --c: #a8801a; }
+.labeler [data-cat=joy]      { --c: #d1741f; }
+.labeler [data-cat=textures] { --c: #b0a01e; }
+.labeler [data-cat=food]     { --c: #4d5bd0; }
+.labeler [data-cat=plants]   { --c: #2f7d4a; }
+.labeler [data-cat=factions] { --c: #b04a34; }
+.labeler [data-cat=races]    { --c: #8b5cc4; }
+@media (prefers-color-scheme: dark) {
+  .labeler [data-cat=engine]   { --c: #f07ab0; }
+  .labeler [data-cat=gameplay] { --c: #8ed97a; }
+  .labeler [data-cat=animals]  { --c: #dfb845; }
+  .labeler [data-cat=joy]      { --c: #f0a055; }
+  .labeler [data-cat=textures] { --c: #e8dc72; }
+  .labeler [data-cat=food]     { --c: #8b95f0; }
+  .labeler [data-cat=plants]   { --c: #66c088; }
+  .labeler [data-cat=factions] { --c: #e08a72; }
+  .labeler [data-cat=races]    { --c: #bb92ea; }
+}
+
+/* Non posee, une etiquette reste grise : sur une liste de soixante-dix mods,
+   neuf couleurs allumees en permanence ne classent plus rien. */
+.chip {
+  font: inherit; font-size: 11.5px; line-height: 1.5;
+  padding: 1px 8px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--dim);
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--c); color: var(--c); }
+.chip.on {
+  border-color: var(--c); color: var(--c); font-weight: 600;
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+}
+.chip.check { --c: var(--accent); margin-right: 4px; }
+.labeler.compact .chip { font-size: 11px; padding: 0 6px; }
+
+/* Sur la liste, les etiquettes sont a droite et ne doivent pas ouvrir le mod :
+   elles vivent donc hors du lien, pas dedans. */
+.mods li { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
+.mods li > a { flex: 1 1 auto; min-width: 0; }
+.mods li > .labeler { flex: 0 0 auto; justify-content: flex-end; max-width: 52%; }
+.mods li.sorted > a .name { color: var(--dim); }
+
+/* Filtrer par etiquette : memes couleurs, meme lecture. */
+.bar .labeler { gap: 4px; }
+
+/* --- chaine d'heritage ------------------------------------------------- */
+/* Trois origines a distinguer d'un coup d'oeil : declaree ici, fournie par le
+   jeu, ou introuvable. La derniere seule justifie une couleur d'alerte. */
+.chain .core { color: var(--accent); }
+.chain .gone { color: var(--bad); text-decoration: underline dotted; }

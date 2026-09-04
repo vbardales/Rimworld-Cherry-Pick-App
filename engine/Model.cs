@@ -51,6 +51,19 @@ public sealed class DefRefs
     public List<string> Research { get; set; } = new();
 }
 
+// Un maillon de la chaine d'heritage d'une def.
+public sealed class ParentStep
+{
+    public string Name { get; set; } = "";
+
+    // D'ou vient ce parent : "mod" (declare ici), "jeu" (base du Core ou d'un
+    // DLC), ou "absent" — un parent nomme que personne ne fournit. Ce dernier
+    // cas n'est pas cosmetique : il vient d'une dependance qu'on n'a pas
+    // scannee, et c'est lui qui explique un niveau technologique ou une
+    // categorie Architecte restes vides.
+    public string Origin { get; set; } = "";
+}
+
 public sealed class DefEntry
 {
     public string Key { get; set; } = "";           // "ThingDef/BioForge" ou "ThingDef/Name=BuildingBase"
@@ -71,6 +84,12 @@ public sealed class DefEntry
     // technologique, presque toujours herite du parent.
     public string? ArchitectCategory { get; set; }
     public string? ArchitectCategoryFrom { get; set; }
+
+    // La chaine de parents, remontee jusqu'a sa racine. Une def de mod ne dit
+    // presque rien d'elle-meme : le cout, la taille, les stats, la categorie
+    // viennent de bases successives. Sans la chaine, on ne peut pas distinguer
+    // une valeur vraiment absente d'une valeur heritee de plus haut.
+    public List<ParentStep> ParentChain { get; set; } = new();
 
     public string Mod { get; set; } = "";
     public string File { get; set; } = "";

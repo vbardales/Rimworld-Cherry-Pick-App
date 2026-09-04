@@ -2,6 +2,8 @@
 
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { Labeler } from "@/components/Labeler";
+import { EMPTY, type ModLabel } from "@/lib/labels";
 
 type Def = {
   Key: string;
@@ -11,6 +13,9 @@ type Def = {
   IsAbstract: boolean;
   Label: string | null;
   ParentName: string | null;
+  // Optionnelle : un inventaire mis en cache avant que le moteur ne la calcule
+  // n'en a pas, et la fiche doit rester lisible sans forcer une relecture.
+  ParentChain?: { Name: string; Origin: string }[];
   TechLevel: string | null;
   TechLevelFrom: string | null;
   ArchitectCategory: string | null;
@@ -75,6 +80,7 @@ export default function ModPage({
   const [computing, setComputing] = useState(false);
 
   const [rescanning, setRescanning] = useState(false);
+  const [label, setLabel] = useState<ModLabel>(EMPTY);
 
   // Relire le mod depuis ses fichiers.
   //
@@ -96,6 +102,13 @@ export default function ModPage({
   }, [id, modPath]);
 
   useEffect(() => { load(false); }, [load]);
+
+  useEffect(() => {
+    fetch("/api/labels")
+      .then((r) => r.json())
+      .then((d) => setLabel(d.mods?.[id] ?? EMPTY))
+      .catch(() => { /* un tri illisible ne doit pas empecher la fiche */ });
+  }, [id]);
 
   const mod = inv?.Mods?.[0];
 
@@ -263,6 +276,11 @@ export default function ModPage({
         {mod.DeclaredDependencies.length > 0 && (
           <p className="sub">dependances declarees : {mod.DeclaredDependencies.join(", ")}</p>
         )}
+        <Labeler
+          packageId={mod.PackageId}
+          label={label}
+          onChange={(_, l) => setLabel(l)}
+        />
       </header>
 
       <div className="bar">
@@ -347,7 +365,7 @@ export default function ModPage({
                   </div>
                   <div className="sub">
                     {d.DefName ?? `Name=${d.AbstractName}`}
-                    {d.ParentName ? ` < ${d.ParentName}` : ""}
+                    <Chain d={d} />
                   </div>
                   {missing.length > 0 && (
                     <div className="miss">texture introuvable : {missing.join(", ")}</div>
@@ -387,6 +405,40 @@ export default function ModPage({
         </>
       )}
     </main>
+  );
+}
+
+// La chaine d'heritage d'une def, jusqu'a sa racine.
+//
+// Une def de mod ne declare presque rien : « BioForge » est une ligne de dix
+// balises, et tout le reste — cout, taille, stats, categorie — vient de
+// BuildingBase. Afficher le seul parent immediat laissait croire a une chaine
+// courte ; la montrer entiere dit ou aller chercher ce qu'on ne voit pas.
+//
+// Un maillon marque « absent » est le cas interessant : le parent est nomme mais
+// introuvable, donc defini dans une dependance qu'on n'a pas scannee. C'est
+// toujours l'explication d'un niveau technologique ou d'une categorie vides.
+function Chain({ d }: { d: Def }) {
+  const chain = d.ParentChain ?? (d.ParentName ? [{ Name: d.ParentName, Origin: "" }] : []);
+  if (chain.length === 0) return null;
+  return (
+    <span className="chain">
+      {chain.map((p, i) => (
+        <span key={i}>
+          {" < "}
+          <span
+            className={p.Origin === "absent" ? "gone" : p.Origin === "jeu" ? "core" : ""}
+            title={
+              p.Origin === "jeu" ? "base du jeu"
+                : p.Origin === "absent" ? "parent introuvable — defini dans une dependance non scannee"
+                : "base declaree dans ce mod"
+            }
+          >
+            {p.Name}
+          </span>
+        </span>
+      ))}
+    </span>
   );
 }
 

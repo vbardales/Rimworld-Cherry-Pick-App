@@ -44,6 +44,7 @@ qui parle a localhost. Les deux routes repondent 403 en dehors.
 ```
 engine/     moteur C# — lecture XML, heritage, fermeture des dependances
 picker/     interface Next — listing, inspection, selection
+data/       le classement de la modlist, en clair et versionne
 ```
 
 Le moteur porte toute l'analyse. L'interface n'orchestre que des appels.
@@ -71,12 +72,48 @@ Chaque regle vient d'un rate reel rencontre en extrayant des mods a la main :
 Les deux lignes en gras sont les plus utiles : elles signalent ce qu'on peut
 **retirer**, ce qu'aucune lecture du XML ne donne spontanement.
 
+## Classer la modlist
+
+Une modlist de cent quatre-vingts mods ne se tient pas de tete. Chaque mod porte
+donc deux marques, posees d'un clic depuis la liste :
+
+- **a trier / trie** — pas « garde » : seulement « regarde, je sais ce qu'il
+  fait ». C'est le tri qui fait avancer le travail, pas la decision d'extraire.
+- **des categories**, multiples : moteur/UI, gameplay, animaux, loisirs,
+  textures, nourriture, plantes, factions, races. Un mod de creatures apporte des
+  animaux *et* leurs textures ; un overhaul touche au gameplay *et* aux factions.
+
+Le classement vit dans `data/mod-labels.json`, versionne avec le reste : il se
+fait sur des semaines, il ne peut pas dependre du cache d'un navigateur.
+
+## Heritage
+
+Chaque def affiche sa chaine de parents jusqu'a la racine, pas seulement son
+parent immediat. Une def de mod ne declare presque rien — `KCSG_PowerConduit`
+tient son cout, sa taille et sa categorie de `PowerConduit`, qui les tient de
+`BuildingBase`.
+
+Trois origines, distinguees a la couleur :
+
+| Maillon | Sens |
+| --- | --- |
+| neutre | base declaree dans ce mod |
+| vert | base du jeu (Core ou DLC) |
+| **rouge pointille** | parent nomme mais introuvable |
+
+Le dernier cas est le renseignement utile : il dit que la base vit dans une
+dependance non scannee, et c'est toujours l'explication d'un niveau
+technologique ou d'une categorie Architecte restes vides. Les add-ons de Vanilla
+Vehicles Expanded en sont pleins — leurs tourelles heritent de
+`VehicleTurretBase`, qui appartient au Vehicle Framework.
+
 ## Etat
 
 Fait : listing des mods installes et actifs, inspection avec vignettes, niveau
 technologique resolu par heritage, categorie du menu Architecte, recherches
 liees, fermeture des dependances avec la raison de chaque ajout, detection des
-patchs orphelins et des dependances inutiles.
+patchs orphelins et des dependances inutiles, chaine d'heritage complete,
+classement de la modlist par etiquettes.
 
 A venir : la fermeture branchee dans l'interface, la fusion de ressources avec
 affichage alternatif (style ou `randomGraphics` selon le nombre de sources visant

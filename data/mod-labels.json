@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "mods": {
+    "brrainz.harmony": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": false,
+      "updated": "2026-09-04T17:36:09.930Z"
+    },
+    "ilyvion.loadingprogress": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": false,
+      "updated": "2026-09-04T17:36:20.690Z"
+    },
+    "zetrith.prepatcher": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": false,
+      "updated": "2026-09-04T17:36:05.573Z"
+    }
+  }
+}

@@ -42,7 +42,47 @@ public static class Inherited
             var (cat, catFrom) = Climb(d, byName, core, e => e.ArchitectCategory, c => c.DesignationCategory);
             d.ArchitectCategory = cat;
             d.ArchitectCategoryFrom = catFrom;
+
+            d.ParentChain = Chain(d, byName, core);
         }
+    }
+
+    // La chaine complete, pour affichage. Meme parcours que Climb, mais on ne
+    // s'arrete pas a la premiere valeur : on va jusqu'a la racine, et on note au
+    // passage qui fournit chaque maillon.
+    //
+    // Un maillon "absent" est le renseignement le plus utile de la liste : il dit
+    // que la def herite d'une base qu'on n'a pas sous la main, donc que tout ce
+    // qu'on affiche d'elle est possiblement incomplet.
+    static List<ParentStep> Chain(
+        DefEntry start,
+        Dictionary<string, DefEntry> byName,
+        Dictionary<string, CoreBase> core)
+    {
+        var steps = new List<ParentStep>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var parent = start.ParentName;
+
+        // Une boucle d'heritage est possible dans un mod mal ecrit : seen l'arrete.
+        while (!string.IsNullOrWhiteSpace(parent) && seen.Add(parent))
+        {
+            if (byName.TryGetValue(parent, out var p))
+            {
+                steps.Add(new ParentStep { Name = parent, Origin = "mod" });
+                parent = p.ParentName;
+            }
+            else if (core.TryGetValue(parent, out var cb))
+            {
+                steps.Add(new ParentStep { Name = parent, Origin = "jeu" });
+                parent = cb.ParentName;
+            }
+            else
+            {
+                steps.Add(new ParentStep { Name = parent, Origin = "absent" });
+                break;
+            }
+        }
+        return steps;
     }
 
     // Remonte la chaine ParentName jusqu'a trouver une valeur. Retourne aussi le
