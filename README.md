@@ -79,13 +79,14 @@ which no reading of the XML gives up on its own.
 A modlist of a hundred and eighty mods cannot be held in one's head. Each mod
 therefore carries labels, put on with one click from the list: engine/UI,
 gameplay, animals, joy, textures, food, plants, factions, races, medical,
-furniture, structure, apparel/hair, ideology, weapons/armour. A creature mod
+furniture, structure, apparel/hair, ideology, weapons/armour, vehicles. A
+creature mod
 brings animals *and* their textures; an overhaul touches gameplay *and*
 factions.
 
 One label is the common case, several the exception, and the exception costs
 nothing: the row waits ten seconds, and every further click restarts that wait.
-The labels sit on their own line under the name — at fifteen of them they need
+The labels sit on their own line under the name — at sixteen of them they need
 some eight hundred pixels, and sharing a line meant either wrapping rows, whose
 varying heights send clicks to the neighbouring mod, or truncating the name,
 which is the one thing on the row that identifies the mod.

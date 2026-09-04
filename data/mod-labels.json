@@ -1,6 +1,13 @@
 {
   "version": 1,
   "mods": {
+    "ai.improved.icons": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:13.992Z"
+    },
     "aiassistant.buildingtickoptimizer": {
       "categories": [
         "engine"
@@ -15,6 +22,27 @@
       "reviewed": true,
       "updated": "2026-09-04T17:50:46.048Z"
     },
+    "andromeda.nicehealthtab": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:15.427Z"
+    },
+    "andromeda.niceresearchtab": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:12.007Z"
+    },
+    "astryl.modernfactionmenu": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:01.410Z"
+    },
     "astryl.modernhistorymenu": {
       "categories": [
         "engine"
@@ -28,6 +56,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:06.014Z"
+    },
+    "astryl.modernlearningmenu": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:02.643Z"
     },
     "astryl.modernneedstab": {
       "categories": [
@@ -56,6 +91,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:13.101Z"
+    },
+    "astryl.modernsocialtab": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:03.923Z"
     },
     "astryl.modernxenotypetab": {
       "categories": [
@@ -91,6 +133,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:52:44.911Z"
+    },
+    "cedaro.material.submenu": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:59.875Z"
     },
     "ckvam.relationstab.separatebutton": {
       "categories": [
@@ -218,12 +267,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:13.444Z"
     },
+    "jia.relationstablanguage": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:24.648Z"
+    },
     "jiopaba.fences": {
       "categories": [
         "textures"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:30.583Z"
+    },
+    "kathanon.categorizedbillmenus": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:17.899Z"
     },
     "kathanon.floatsubmenu": {
       "categories": [
@@ -238,6 +301,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:55:16.184Z"
+    },
+    "kathanon.searchablemenus": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:30.542Z"
     },
     "keyz182.keyzallowutilities": {
       "categories": [
@@ -400,6 +470,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:51:53.628Z"
     },
+    "mlie.architectexpandedfences": {
+      "categories": [
+        "structure"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:08.703Z"
+    },
     "mlie.dingongameloaded": {
       "categories": [
         "engine"
@@ -435,12 +512,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:42.364Z"
     },
+    "nals.facialanimationexperimentals": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:01.901Z"
+    },
     "nanaloveyuki.ohyouaresofast": {
       "categories": [
         "engine"
       ],
       "works16": false,
       "updated": "2026-09-04T18:08:34.438Z"
+    },
+    "nebulae.nocrowdedcontextmenu": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:22.612Z"
     },
     "nelim.animasong": {
       "categories": [
@@ -455,6 +546,34 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:44:55.852Z"
+    },
+    "nelim.dandelionspatched": {
+      "categories": [
+        "plants"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:40.743Z"
+    },
+    "nelim.drumbathhygiene": {
+      "categories": [
+        "joy"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:46.548Z"
+    },
+    "nelim.fireworkstand": {
+      "categories": [
+        "joy"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:48.358Z"
+    },
+    "nelim.flavortextextended": {
+      "categories": [
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:58.020Z"
     },
     "nelim.foodcourt": {
       "categories": [
@@ -552,12 +671,33 @@
       "reviewed": true,
       "updated": "2026-09-04T17:54:24.256Z"
     },
+    "nelim.rimscent.extended": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:27.166Z"
+    },
+    "nelim.sharedjoysplus": {
+      "categories": [
+        "joy"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:36.407Z"
+    },
     "nelim.spittingimage": {
       "categories": [
         "engine"
       ],
       "works16": false,
       "updated": "2026-09-04T18:09:17.380Z"
+    },
+    "nelim.teatimerodentassets": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:09.999Z"
     },
     "nelim.theultimateinsult": {
       "categories": [
@@ -566,12 +706,26 @@
       "works16": false,
       "updated": "2026-09-04T18:17:49.421Z"
     },
+    "nelim.workstudio": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:21:45.552Z"
+    },
     "nercury.assignanimalfood": {
       "categories": [
         "animals"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:27.080Z"
+    },
+    "neronix17.retexture.charactereditor": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:20.258Z"
     },
     "ocarina.rimscent.incense": {
       "categories": [
@@ -594,12 +748,33 @@
       "works16": false,
       "updated": "2026-09-04T18:16:04.069Z"
     },
+    "oskarpotocki.vanillavehiclesexpandedtier3": {
+      "categories": [
+        "vehicles"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:25:25.145Z"
+    },
+    "oskarpotocki.vanillavehiclesexpandedupgrades": {
+      "categories": [
+        "vehicles"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:25:26.742Z"
+    },
     "owlchemist.cherrypicker": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:27.332Z"
+    },
+    "proxyer.optionalicons4ai": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:19.122Z"
     },
     "r40x.loadingtracker": {
       "categories": [
@@ -614,6 +789,13 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:08:47.934Z"
+    },
+    "reo.rimscent.perfumeexpansion": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:28.624Z"
     },
     "rnwb.library": {
       "categories": [
@@ -636,6 +818,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:10.680Z"
+    },
+    "sarg.alphaskills": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:04.780Z"
     },
     "scorpio.resourcedictionary": {
       "categories": [
@@ -679,6 +868,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:39.945Z"
     },
+    "sz.yaopt": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:21:58.778Z"
+    },
     "taranchuk.fastergameloading_steam": {
       "categories": [
         "engine"
@@ -692,6 +888,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:12.288Z"
+    },
+    "tikubonn.corpsetab": {
+      "categories": [
+        "engine"
+      ],
+      "works16": true,
+      "updated": "2026-09-04T18:22:32.118Z"
     },
     "tolak.vtexe.ambrosiafix": {
       "categories": [
@@ -799,6 +1002,13 @@
       "works16": false,
       "updated": "2026-09-04T18:15:29.902Z"
     },
+    "vanillaexpanded.vtexvariations": {
+      "categories": [
+        "textures"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:23:42.025Z"
+    },
     "vanillaexpanded.vwe": {
       "categories": [
         "armor"
@@ -812,6 +1022,20 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:21:05.843Z"
+    },
+    "vanillaexpanded.vwetb": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:21:41.017Z"
+    },
+    "viking.aiveci": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:22:16.363Z"
     },
     "void.charactereditor": {
       "categories": [
