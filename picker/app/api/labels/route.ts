@@ -16,9 +16,9 @@ export async function POST(req: NextRequest) {
     const packageId = String(body?.packageId ?? "").trim();
     if (!packageId) return NextResponse.json({ error: "packageId manquant" }, { status: 400 });
 
-    const patch: { categories?: CategoryId[]; reviewed?: boolean } = {};
+    const patch: { categories?: CategoryId[]; works16?: boolean } = {};
     if (Array.isArray(body.categories)) patch.categories = body.categories.map(String) as CategoryId[];
-    if (typeof body.reviewed === "boolean") patch.reviewed = body.reviewed;
+    if (typeof body.works16 === "boolean") patch.works16 = body.works16;
 
     return NextResponse.json({ packageId, label: await writeLabel(packageId, patch) });
   } catch (e) {

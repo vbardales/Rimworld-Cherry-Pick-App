@@ -3,20 +3,20 @@ using System.Xml.Linq;
 
 namespace CherryPick;
 
-// Lit UN mod de RimWorld et en dresse l'inventaire : les defs, ce que chacune
-// reference, et les fichiers de patch avec leurs cibles.
+// Reads ONE RimWorld mod and draws up its inventory: the defs, what each one
+// references, and the patch files with their targets.
 //
-// Le scan est toujours a la demande, mod par mod. On ne parcourt jamais le
-// dossier Workshop en entier : plusieurs milliers de mods y dorment, et seuls
-// ceux de la modlist active nous interessent.
+// The scan is always on demand, mod by mod. The Workshop folder is never walked
+// whole: several thousand mods sleep in there, and only those of the active
+// modlist are of interest.
 //
-// L'analyse passe par System.Xml.Linq et jamais par des expressions regulieres :
-// il faut lire des attributs (ParentName, Name, Class, MayRequire) autant que des
-// balises, et distinguer une def abstraite d'une def concrete. Un parsing textuel
-// se casse precisement sur ces cas-la.
+// Parsing goes through System.Xml.Linq and never through regular expressions:
+// attributes (ParentName, Name, Class, MayRequire) have to be read as much as
+// tags, and an abstract def told apart from a concrete one. Textual parsing
+// breaks on precisely those cases.
 public static class Scanner
 {
-    // Balises dont la valeur designe une classe C#.
+    // Tags whose value designates a C# class.
     static readonly HashSet<string> ClassTags = new(StringComparer.Ordinal)
     {
         "thingClass", "workerClass", "compClass", "driverClass", "giverClass",
@@ -43,13 +43,13 @@ public static class Scanner
         "researchPrerequisite",
     };
 
-    // Les trois listes qui suivent ne servent PAS a la fermeture — celle-ci reste
-    // volontairement permissive, mieux vaut tirer une def de trop qu'en oublier
-    // une. Elles servent au rapport « references non resolues », qui sans elles
-    // se noyait sous les libelles, les enums et les booleens.
+    // The three lists below do NOT serve the closure — that one stays deliberately
+    // permissive, better to pull one def too many than to miss one. They serve the
+    // "unresolved references" report, which without them drowned under labels,
+    // enums and booleans.
 
-    // Prose et libelles. Un outil porte des libelles d'un seul mot — « barrel »,
-    // « stock » — qui ressemblent a s'y meprendre a des defName.
+    // Prose and labels. A tool carries one-word labels — "barrel", "stock" — that
+    // look deceptively like defNames.
     static readonly HashSet<string> FreeTextTags = new(StringComparer.Ordinal)
     {
         "label", "labelShort", "labelNoun", "labelPlural", "labelFemale", "labelMale",
@@ -62,7 +62,7 @@ public static class Scanner
         "structureLabel", "GizmoLabel", "GizmoDescription", "beginLetterLabel", "beginLetter",
     };
 
-    // Enumerations C# : « Item », « PassThroughOnly », « Adulthood »...
+    // C# enumerations: "Item", "PassThroughOnly", "Adulthood"...
     static readonly HashSet<string> EnumTags = new(StringComparer.Ordinal)
     {
         "category", "passability", "altitudeLayer", "drawerType", "tickerType",
@@ -74,8 +74,7 @@ public static class Scanner
         "name", "listOrder", "displayPriority", "pathCost", "defaultProjectile",
     };
 
-    // Listes dont les entrees sont des etiquettes libres ou des noms courts de
-    // classes, jamais des defs.
+    // Lists whose entries are free-form tags or short class names, never defs.
     static readonly HashSet<string> NonDefListParents = new(StringComparer.Ordinal)
     {
         "tags", "weaponTags", "tradeTags", "buildingTags", "thingSetMakerTags",
@@ -108,7 +107,7 @@ public static class Scanner
         return inv;
     }
 
-    // About.xml : nom, packageId, versions, dependances declarees.
+    // About.xml: name, packageId, versions, declared dependencies.
     public static ModInfo ReadAbout(string path)
     {
         var mod = new ModInfo { Path = path, Id = new DirectoryInfo(path).Name };
@@ -138,17 +137,17 @@ public static class Scanner
         return mod;
     }
 
-    // Ou vit le contenu du mod.
+    // Where the mod's content lives.
     //
-    // LoadFolders.xml FAIT AUTORITE quand il existe : un mod peut y nommer
-    // n'importe quel dossier, et beaucoup le font — « Content », « Common »,
-    // « 1.6/CE »... Deviner « la racine plus le dossier de version » suffit pour
-    // les mods simples et rate tout le reste, en silence : sans ce fichier,
-    // « more dozer » perdait toutes ses textures, rangees dans Content/Textures.
+    // LoadFolders.xml IS AUTHORITATIVE when it exists: a mod can name any folder
+    // in it, and many do — "Content", "Common", "1.6/CE"... Guessing "the root
+    // plus the version folder" is enough for simple mods and misses everything
+    // else, silently: without this file, "more dozer" lost all its textures, which
+    // live in Content/Textures.
     //
-    // Les dossiers conditionnels (IfModActive / IfModNotActive) sont RETENUS pour
-    // l'inventaire : on veut voir tout ce que le mod peut apporter. La condition
-    // est conservee a part, pour pouvoir l'afficher.
+    // Conditional folders (IfModActive / IfModNotActive) are KEPT for the
+    // inventory: we want to see everything the mod can bring. The condition is
+    // stored separately, so it can be shown.
     static List<string> ContentRoots(string path, List<string>? conditional = null)
     {
         if (!Directory.Exists(path)) return new List<string> { "." };
@@ -156,8 +155,8 @@ public static class Scanner
         var fromFile = ReadLoadFolders(path, conditional);
         if (fromFile.Count > 0) return fromFile;
 
-        // Pas de LoadFolders : la regle par defaut du jeu depuis la 1.5 — la
-        // racine, plus le dossier de version le plus eleve qui soit <= 1.6.
+        // No LoadFolders: the game's default rule since 1.5 — the root, plus the
+        // highest version folder that is <= 1.6.
         var roots = new List<string> { "." };
         var best = Directory.EnumerateDirectories(path)
             .Select(d => new DirectoryInfo(d).Name)
@@ -182,7 +181,7 @@ public static class Scanner
         catch { return new List<string>(); }
         if (doc.Root is null) return new List<string>();
 
-        // Le bloc de version le plus eleve qui ne depasse pas 1.6.
+        // The highest version block that does not exceed 1.6.
         var block = doc.Root.Elements()
             .Select(e => (el: e, m: Regex.Match(e.Name.LocalName, @"^v?(\d+)\.(\d+)$")))
             .Where(t => t.m.Success)
@@ -254,9 +253,9 @@ public static class Scanner
         entry.TechLevel = ((string?)el.Element("techLevel"))?.Trim();
         entry.ArchitectCategory = ((string?)el.Element("designationCategory"))?.Trim();
 
-        // Liens de rattachement, lus nommement : la moisson generique ne dit pas
-        // de quelle balise vient une reference, et c'est justement la balise qui
-        // distingue « fabrique ceci » de « consomme cela ».
+        // Tying links, read by name: the generic harvest does not say which tag a
+        // reference came from, and the tag is precisely what tells "makes this"
+        // from "consumes that".
         entry.Race = ((string?)el.Element("race"))?.Trim();
         entry.AddsHediff = ((string?)el.Element("addsHediff"))?.Trim();
         var products = el.Element("products");
@@ -266,10 +265,9 @@ public static class Scanner
                 .Where(s => s.Length > 0).ToList();
 
 
-        // Ce que cette def semble posseder en propre. Balises lues nommement :
-        // la moisson generique ne dit pas de quelle balise vient une reference,
-        // et c'est la balise qui distingue « procure ce hediff » de « soigne ce
-        // hediff ».
+        // What this def appears to own outright. Tags read by name: the generic
+        // harvest does not say which tag a reference came from, and the tag is what
+        // tells "grants this hediff" from "cures this hediff".
         foreach (var tag in new[] { "hediffDef", "thought", "tasteThought",
                                     "specialThoughtDirect", "specialThoughtAsIngredient",
                                     "memoryThought", "hediff" })
@@ -283,9 +281,9 @@ public static class Scanner
         return entry;
     }
 
-    // Parcourt le sous-arbre d'une def et classe tout ce qui ressemble a une
-    // reference. Les valeurs sont gardees telles quelles : c'est la fermeture qui
-    // decidera si « Steel » designe une def du jeu, du mod, ou rien du tout.
+    // Walks a def's subtree and sorts everything that looks like a reference.
+    // Values are kept as they are: it is the closure that will decide whether
+    // "Steel" designates a def of the game, of the mod, or nothing at all.
     static void Harvest(XElement el, DefRefs refs)
     {
         foreach (var node in el.DescendantsAndSelf())
@@ -295,8 +293,8 @@ public static class Scanner
             var cls = (string?)node.Attribute("Class");
             if (!string.IsNullOrWhiteSpace(cls) && cls.Contains('.')) refs.Classes.Add(cls.Trim());
 
-            // Une balise du type <ItemProcessor.CombinationDef> porte elle aussi
-            // un espace de noms, et designe donc une classe.
+            // A tag of the <ItemProcessor.CombinationDef> kind carries a namespace
+            // too, and therefore designates a class.
             if (tag.Contains('.') && node != el) refs.Classes.Add(tag);
 
             if (node.HasElements) continue;
@@ -314,11 +312,11 @@ public static class Scanner
 
             if (!LooksLikeDefName(v)) continue;
 
-            // La fermeture prend tout : rater une reference livre un mod casse,
-            // en tirer une de trop ne coute qu'une def inutile.
+            // The closure takes everything: missing a reference ships a broken mod,
+            // pulling one too many costs only a useless def.
             refs.Defs.Add(v);
 
-            // Le rapport, lui, ne retient que ce qui peut vraiment etre une def.
+            // The report, on the other hand, keeps only what can really be a def.
             if (IsReportableDefRef(tag, parentTag, v)) refs.StrictDefs.Add(v);
         }
         Dedupe(refs);
@@ -339,9 +337,9 @@ public static class Scanner
         r.Research = r.Research.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();
     }
 
-    // Les patchs ne declarent rien mais visent des defs. Un patch dont la cible
-    // n'est pas retenue par la selection est un orphelin — le defaut exact qui a
-    // fait echouer deux operations de Medieval Homestead au chargement.
+    // Patches declare nothing but they target defs. A patch whose target is not
+    // kept by the selection is an orphan — the exact defect that made two Medieval
+    // Homestead operations fail at load.
     static void ScanPatches(Inventory inv, ModInfo mod, string patchDir)
     {
         if (!Directory.Exists(patchDir)) return;

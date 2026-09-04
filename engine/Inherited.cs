@@ -2,34 +2,33 @@ using System.Xml.Linq;
 
 namespace CherryPick;
 
-// Resout les champs qu'une def tient de ses parents.
+// Resolves the fields a def gets from its parents.
 //
-// Deux d'entre eux comptent pour le picker et ne sont presque jamais declares sur
-// la def elle-meme :
+// Two of them matter to the picker and are almost never declared on the def
+// itself:
 //
-//   techLevel            — le niveau de progression (Neolithic, Medieval,
-//                          Industrial, Spacer...) affiche a cote de chaque objet
-//   designationCategory  — pour un batiment, l'onglet du menu Architecte ou il
-//                          apparait
+//   techLevel            — the progression level (Neolithic, Medieval,
+//                          Industrial, Spacer...) shown next to every object
+//   designationCategory  — for a building, the Architect menu tab it shows up in
 //
-// Les deux descendent en general d'une base abstraite : un meuble ne dit pas
-// « Furniture », c'est BuildingBase ou FurnitureBase qui le dit. Lire seulement la
-// def laisserait donc les deux colonnes vides sur la quasi-totalite du contenu,
-// ce qui reviendrait a ne pas les afficher.
+// Both usually come down from an abstract base: a piece of furniture does not say
+// "Furniture", BuildingBase or FurnitureBase says it. Reading the def alone would
+// therefore leave both columns empty on virtually all content, which would amount
+// to not showing them at all.
 //
-// La chaine de parents traverse les frontieres de mods : la plupart des defs
-// heritent de bases du jeu. On indexe donc aussi les defs abstraites du Core, sans
-// quoi tout ce qui derive de BuildingBase resterait sans reponse.
+// The parent chain crosses mod boundaries: most defs inherit from bases of the
+// game. So the abstract defs of Core are indexed too, without which everything
+// deriving from BuildingBase would stay unanswered.
 public static class Inherited
 {
     public static void Resolve(Inventory inv, string? gameDataDir = null)
     {
-        // Index des defs abstraites disponibles, par attribut Name.
+        // Index of the available abstract defs, by Name attribute.
         var byName = new Dictionary<string, DefEntry>(StringComparer.Ordinal);
         foreach (var d in inv.Defs)
             if (d.AbstractName is { Length: > 0 } n) byName[n] = d;
 
-        // Les bases du jeu, si on les a sous la main.
+        // The bases of the game, if we have them at hand.
         var core = gameDataDir is null ? new Dictionary<string, CoreBase>(StringComparer.Ordinal)
                                        : LoadCoreBases(gameDataDir);
 
@@ -47,13 +46,12 @@ public static class Inherited
         }
     }
 
-    // La chaine complete, pour affichage. Meme parcours que Climb, mais on ne
-    // s'arrete pas a la premiere valeur : on va jusqu'a la racine, et on note au
-    // passage qui fournit chaque maillon.
+    // The full chain, for display. Same walk as Climb, but we do not stop at the
+    // first value: we go to the root, noting on the way who provides each link.
     //
-    // Un maillon "absent" est le renseignement le plus utile de la liste : il dit
-    // que la def herite d'une base qu'on n'a pas sous la main, donc que tout ce
-    // qu'on affiche d'elle est possiblement incomplet.
+    // A "missing" link is the most useful piece of information in the list: it
+    // says the def inherits from a base we do not have at hand, hence that
+    // everything shown about it may be incomplete.
     static List<ParentStep> Chain(
         DefEntry start,
         Dictionary<string, DefEntry> byName,
@@ -63,7 +61,7 @@ public static class Inherited
         var seen = new HashSet<string>(StringComparer.Ordinal);
         var parent = start.ParentName;
 
-        // Une boucle d'heritage est possible dans un mod mal ecrit : seen l'arrete.
+        // An inheritance loop is possible in a badly written mod: seen stops it.
         while (!string.IsNullOrWhiteSpace(parent) && seen.Add(parent))
         {
             if (byName.TryGetValue(parent, out var p))
@@ -73,21 +71,21 @@ public static class Inherited
             }
             else if (core.TryGetValue(parent, out var cb))
             {
-                steps.Add(new ParentStep { Name = parent, Origin = "jeu" });
+                steps.Add(new ParentStep { Name = parent, Origin = "game" });
                 parent = cb.ParentName;
             }
             else
             {
-                steps.Add(new ParentStep { Name = parent, Origin = "absent" });
+                steps.Add(new ParentStep { Name = parent, Origin = "missing" });
                 break;
             }
         }
         return steps;
     }
 
-    // Remonte la chaine ParentName jusqu'a trouver une valeur. Retourne aussi le
-    // nom de la def qui l'a fournie, pour que l'interface puisse dire « herite de
-    // BuildingBase » plutot que de laisser croire a une valeur propre.
+    // Climbs the ParentName chain until a value is found. Also returns the name of
+    // the def that provided it, so the interface can say "inherited from
+    // BuildingBase" rather than let a value pass for the def's own.
     static (string? value, string? from) Climb(
         DefEntry start,
         Dictionary<string, DefEntry> byName,
@@ -116,7 +114,7 @@ public static class Inherited
                 parent = cb.ParentName;
                 continue;
             }
-            break;      // parent hors de portee : on s'arrete sans inventer
+            break;      // parent out of reach: stop rather than invent
         }
         return (null, null);
     }
@@ -128,9 +126,9 @@ public static class Inherited
         public string? DesignationCategory;
     }
 
-    // Ne lit que les defs ABSTRAITES du jeu — celles qui portent un attribut Name
-    // et servent de socle. Les defs concretes du Core ne nous apprennent rien sur
-    // l'heritage d'un mod, et les ignorer garde ce chargement leger.
+    // Reads only the ABSTRACT defs of the game — the ones carrying a Name
+    // attribute and serving as a base. Concrete Core defs teach us nothing about a
+    // mod's inheritance, and ignoring them keeps this load light.
     static Dictionary<string, CoreBase> LoadCoreBases(string gameDataDir)
     {
         var map = new Dictionary<string, CoreBase>(StringComparer.Ordinal);

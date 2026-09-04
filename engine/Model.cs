@@ -1,49 +1,48 @@
 namespace CherryPick;
 
-// Un mod source scanne. Plusieurs peuvent finir dans une meme extraction :
-// certaines en fusionnent (Animal Ark en agrege seize). Mais le scan reste
-// toujours mod par mod, a la demande.
+// A scanned source mod. Several of them can end up in one extraction: some merge
+// (Animal Ark aggregates sixteen). But the scan itself stays mod by mod, on
+// demand.
 public sealed class ModInfo
 {
-    public string Id { get; set; } = "";            // nom du dossier : identifiant Workshop, ou nom local
+    public string Id { get; set; } = "";            // folder name: Workshop id, or local name
     public string Name { get; set; } = "";
     public string PackageId { get; set; } = "";
     public string Path { get; set; } = "";
     public List<string> SupportedVersions { get; set; } = new();
 
-    // Dependances declarees dans About.xml. Le picker doit pouvoir dire
-    // lesquelles deviennent inutiles une fois la selection faite.
+    // Dependencies declared in About.xml. The picker has to be able to say which
+    // ones become useless once the selection is made.
     public List<string> DeclaredDependencies { get; set; } = new();
 
-    // Racines de contenu retenues, lues dans LoadFolders.xml quand il existe.
+    // Content roots kept, read from LoadFolders.xml when there is one.
     public List<string> ContentRoots { get; set; } = new();
 
-    // Celles qui ne se chargent que sous condition (IfModActive / IfModNotActive).
-    // Elles sont inventoriees quand meme : on veut voir tout ce que le mod peut
-    // apporter, quitte a signaler que c'est conditionnel.
+    // The ones that only load under a condition (IfModActive / IfModNotActive).
+    // They are inventoried all the same: we want to see everything the mod can
+    // bring, even if that means flagging it as conditional.
     public List<string> ConditionalRoots { get; set; } = new();
 
-    // Vrai si aucune version supportee n'atteint la 1.6 : le mod est mort, donc
-    // candidat a un portage public plutot qu'a une extraction privee.
+    // True when no supported version reaches 1.6: the mod is dead, hence a
+    // candidate for a public port rather than a private extraction.
     public bool DeadBefore16 { get; set; }
 }
 
-// Ce qu'une def reference. Chaque liste alimente la fermeture des dependances.
+// What a def references. Each list feeds the dependency closure.
 public sealed class DefRefs
 {
-    // Jetons ayant la forme d'un defName. Volontairement permissif : mieux vaut
-    // tirer une def de trop dans la fermeture que d'en oublier une et livrer un
-    // mod casse.
+    // Tokens shaped like a defName. Deliberately permissive: better to pull one
+    // def too many into the closure than to miss one and ship a broken mod.
     public List<string> Defs { get; set; } = new();
 
-    // Le sous-ensemble venant de balises qui portent VRAIMENT une reference de
-    // def. Sert au rapport « references non resolues » : sur la liste permissive,
-    // ce rapport se noyait sous les libelles, les enums et les booleens — `true`,
-    // `Item`, `barrel`, `stock` — et devenait illisible, donc inutile.
+    // The subset coming from tags that REALLY carry a def reference. Feeds the
+    // "unresolved references" report: on the permissive list that report drowned
+    // under labels, enums and booleans — `true`, `Item`, `barrel`, `stock` — and
+    // became unreadable, therefore useless.
     public List<string> StrictDefs { get; set; } = new();
 
-    // Classes C# qualifiees : Class=, thingClass, compClass, workerClass, et les
-    // balises personnalisees du type <ItemProcessor.CombinationDef>.
+    // Qualified C# classes: Class=, thingClass, compClass, workerClass, and the
+    // custom tags of the <ItemProcessor.CombinationDef> kind.
     public List<string> Classes { get; set; } = new();
 
     public List<string> Textures { get; set; } = new();
@@ -51,95 +50,94 @@ public sealed class DefRefs
     public List<string> Research { get; set; } = new();
 }
 
-// Un maillon de la chaine d'heritage d'une def.
+// One link in a def's inheritance chain.
 public sealed class ParentStep
 {
     public string Name { get; set; } = "";
 
-    // D'ou vient ce parent : "mod" (declare ici), "jeu" (base du Core ou d'un
-    // DLC), ou "absent" — un parent nomme que personne ne fournit. Ce dernier
-    // cas n'est pas cosmetique : il vient d'une dependance qu'on n'a pas
-    // scannee, et c'est lui qui explique un niveau technologique ou une
-    // categorie Architecte restes vides.
+    // Where this parent comes from: "mod" (declared here), "game" (a Core or DLC
+    // base), or "missing" — a parent that is named but that nobody provides. That
+    // last case is not cosmetic: it comes from a dependency we did not scan, and
+    // it is what explains an empty tech level or Architect category.
     public string Origin { get; set; } = "";
 }
 
 public sealed class DefEntry
 {
-    public string Key { get; set; } = "";           // "ThingDef/BioForge" ou "ThingDef/Name=BuildingBase"
+    public string Key { get; set; } = "";           // "ThingDef/BioForge" or "ThingDef/Name=BuildingBase"
     public string DefType { get; set; } = "";
     public string? DefName { get; set; }
-    public string? AbstractName { get; set; }       // attribut Name=
+    public string? AbstractName { get; set; }       // Name= attribute
     public bool IsAbstract { get; set; }
     public string? Label { get; set; }
     public string? ParentName { get; set; }
 
-    // Niveau de progression affiche dans le picker : Neolithic, Medieval,
-    // Industrial, Spacer... Souvent absent de la def elle-meme et herite du
-    // parent, d'ou le champ resolu separement.
+    // Progression level shown in the picker: Neolithic, Medieval, Industrial,
+    // Spacer... Often absent from the def itself and inherited from the parent,
+    // hence the separately resolved field.
     public string? TechLevel { get; set; }
-    public string? TechLevelFrom { get; set; }        // def dont il est herite, si herite
+    public string? TechLevelFrom { get; set; }        // def it is inherited from, if inherited
 
-    // Pour un batiment : ou il apparait dans le menu Architecte. Comme le niveau
-    // technologique, presque toujours herite du parent.
+    // For a building: where it shows up in the Architect menu. Like the tech
+    // level, almost always inherited from the parent.
     public string? ArchitectCategory { get; set; }
     public string? ArchitectCategoryFrom { get; set; }
 
-    // La chaine de parents, remontee jusqu'a sa racine. Une def de mod ne dit
-    // presque rien d'elle-meme : le cout, la taille, les stats, la categorie
-    // viennent de bases successives. Sans la chaine, on ne peut pas distinguer
-    // une valeur vraiment absente d'une valeur heritee de plus haut.
+    // The parent chain, climbed to its root. A mod def says almost nothing about
+    // itself: cost, size, stats and category all come from successive bases.
+    // Without the chain, a value that is genuinely absent cannot be told apart
+    // from one inherited higher up.
     public List<ParentStep> ParentChain { get; set; } = new();
 
     public string Mod { get; set; } = "";
     public string File { get; set; } = "";
     public int Line { get; set; }
 
-    // Liens qui rattachent cette def a une autre. Un PawnKindDef sans sa race
-    // n'est rien, une recette sans son produit non plus : les afficher separement
-    // laisserait cocher l'un et ecarter l'autre.
+    // Links tying this def to another. A PawnKindDef without its race is nothing,
+    // and neither is a recipe without its product: showing them separately would
+    // let one be ticked while the other is dropped.
     public string? Race { get; set; }            // PawnKindDef -> ThingDef
-    public List<string> Products { get; set; } = new();   // RecipeDef -> ce qu'elle fabrique
-    public string? AddsHediff { get; set; }      // RecipeDef -> hediff pose
+    public List<string> Products { get; set; } = new();   // RecipeDef -> what it makes
+    public string? AddsHediff { get; set; }      // RecipeDef -> hediff it applies
 
-    // Defs que celle-ci semble posseder : le hediff qu'un aliment procure, la
-    // pensee qu'il laisse. Le rattachement n'a lieu que si PERSONNE D'AUTRE ne les
-    // reclame — un hediff partage par cinq objets appartient aux cinq, donc a
-    // aucun, et les fusionner ferait un groupe absurde.
+    // Defs this one appears to own: the hediff a food grants, the thought it
+    // leaves. The tie is only made if NOBODY ELSE claims them — a hediff shared by
+    // five items belongs to all five, therefore to none, and merging them would
+    // build an absurd group.
     public List<string> Owns { get; set; } = new();
 
-    // Vrai quand ce defName existe deja dans le jeu : la def ne cree rien, elle
-    // REMPLACE celle du jeu. Un mod de retexture n'est fait que de celles-la.
-    // Sans ce drapeau, l'outil les presente comme du contenu neuf, alors qu'elles
-    // ne s'extraient pas — elles se disputent la def avec tout autre mod qui y
-    // touche, et le dernier charge gagne.
+    // True when this defName already exists in the game: the def creates nothing,
+    // it REPLACES the game's own. A retexture mod is made of these and nothing
+    // else. Without this flag the tool presents them as new content, when in fact
+    // they do not extract — they fight over the def with every other mod that
+    // touches it, and the last one loaded wins.
     public bool OverridesVanilla { get; set; }
 
-    // Cle du groupe auquel cette def appartient. Une seule decision par groupe.
+    // Key of the group this def belongs to. One decision per group.
     public string? GroupKey { get; set; }
 
-    // Renseigne quand la def est gardee derriere un MayRequire / MayRequireAnyOf.
+    // Set when the def is kept behind a MayRequire / MayRequireAnyOf.
     public List<string> MayRequire { get; set; } = new();
 
     public DefRefs Refs { get; set; } = new();
 
-    // Fichiers de texture reellement trouves sur disque, et chemins qui ne
-    // resolvent nulle part — ces derniers signalent un dessin manquant.
+    // Texture files actually found on disk, and paths that resolve nowhere — the
+    // latter flag a missing drawing.
     public List<string> TextureFiles { get; set; } = new();
     public List<string> MissingTextures { get; set; } = new();
 
-    // Confort d'affichage : le libelle s'il existe, sinon le defName.
+    // Display convenience: the label if there is one, else the defName.
     public string Display => string.IsNullOrWhiteSpace(Label) ? (DefName ?? AbstractName ?? Key) : Label!;
 }
 
-// Un fichier de patch. Il ne declare aucune def mais en vise, et un patch dont la
-// cible n'est pas retenue est un orphelin : c'est ce defaut qui a fait echouer
-// deux operations de Medieval Homestead au chargement.
+// A patch file. It declares no def but targets some, and a patch whose target is
+// not kept is an orphan: that is the defect that made two Medieval Homestead
+// operations fail at load.
 public sealed class PatchEntry
 {
     public string Mod { get; set; } = "";
     public string File { get; set; } = "";
-    public List<string> TargetDefs { get; set; } = new();     // defName= lus dans les xpath
+    public List<string> TargetDefs { get; set; } = new();     // defName= read from the xpaths
     public List<string> Classes { get; set; } = new();
     public List<string> GuardedByMods { get; set; } = new();  // PatchOperationFindMod
 }
@@ -150,24 +148,24 @@ public sealed class Inventory
     public List<DefEntry> Defs { get; set; } = new();
     public List<PatchEntry> Patches { get; set; } = new();
 
-    // XML illisible, About manquant... Remonte a l'interface plutot qu'ecrit sur
-    // la sortie d'erreur, pour que rien ne se perde.
+    // Unreadable XML, missing About... Reported to the interface rather than
+    // written to stderr, so that nothing gets lost.
     public List<string> Problems { get; set; } = new();
 
-    // Combien de defs du mod remplacent une def du jeu. Un mod de retexture les a
-    // presque toutes ; un mod de contenu, aucune.
+    // How many of the mod's defs replace a game def. A retexture mod has almost
+    // all of them; a content mod, none.
     public int OverrideCount { get; set; }
 }
 
-// Une entree de la modlist active de RimWorld.
+// One entry of RimWorld's active modlist.
 public sealed class ActiveMod
 {
     public string PackageId { get; set; } = "";
     public string Name { get; set; } = "";
     public string Path { get; set; } = "";
-    public string Source { get; set; } = "";        // workshop, local, ou officiel
+    public string Source { get; set; } = "";        // workshop, local, or official
     public bool Found { get; set; }
-    public bool Active { get; set; }        // present dans ModsConfig.xml
+    public bool Active { get; set; }        // present in ModsConfig.xml
     public List<string> SupportedVersions { get; set; } = new();
     public bool DeadBefore16 { get; set; }
 }

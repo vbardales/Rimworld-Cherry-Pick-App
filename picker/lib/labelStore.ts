@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import type { CategoryId, LabelStore, ModLabel } from "./labels";
 import { CATEGORIES } from "./labels";
 
-// Le classement d'une modlist se fait sur des semaines, mod par mod. Il ne peut
-// donc pas vivre dans le navigateur : un vidage de cache effacerait le tri, et
-// il ne suivrait pas d'une machine a l'autre. Il vit dans le depot, en clair, et
-// se relit sans l'outil.
+// Classifying a modlist takes weeks, one mod at a time. So it cannot live in the
+// browser: clearing site data would wipe it, and it would not follow from one
+// machine to another. It lives in the repository, in plain text, and can be read
+// back without the tool.
 const FILE = path.resolve(process.cwd(), "..", "data", "mod-labels.json");
 
 const KNOWN = new Set<string>(CATEGORIES.map((c) => c.id));
@@ -16,50 +16,45 @@ export async function readStore(): Promise<LabelStore> {
     const raw = JSON.parse(await fs.readFile(FILE, "utf8"));
     if (raw && typeof raw === "object" && raw.mods) return { version: 1, mods: raw.mods };
   } catch {
-    // fichier absent au premier lancement, ou illisible : on repart d'un tri vide
-    // plutot que de refuser de servir la page.
+    // File missing on first run, or unreadable: start from an empty
+    // classification rather than refuse to serve the page.
   }
   return { version: 1, mods: {} };
 }
 
-// Une ecriture relit toujours le fichier juste avant : deux onglets ouverts sur
-// la liste, et un enregistrement fait a partir d'un etat perime effacerait le
-// classement fait dans l'autre.
+// A write always re-reads the file first: with two tabs open on the list, a save
+// made from a stale state would wipe the classification done in the other.
 //
-// Les ecritures sont serialisees par cette chaine de promesses. Elles sont rares
-// — un clic humain — mais deux clics rapproches suffiraient a en perdre un.
+// Writes are serialized by this promise chain. They are rare — a human click —
+// but two clicks close together would be enough to lose one.
 let queue: Promise<unknown> = Promise.resolve();
 
 export function writeLabel(
   packageId: string,
-  patch: { categories?: CategoryId[]; reviewed?: boolean },
+  patch: { categories?: CategoryId[]; works16?: boolean },
 ): Promise<ModLabel> {
   const task = queue.then(async () => {
     const store = await readStore();
-    const cur: ModLabel = store.mods[packageId] ?? { categories: [], reviewed: false, updated: "" };
+    const cur: ModLabel = store.mods[packageId] ?? { categories: [], updated: "" };
+    const works16 = patch.works16 ?? cur.works16 ?? false;
 
     const categories = patch.categories
       ? [...new Set(patch.categories.filter((c) => KNOWN.has(c)))]
       : cur.categories;
-    // Poser une categorie, c'est avoir regarde le mod : le tri en decoule, il ne
-    // se declare pas separement. La regle est ici et pas dans l'interface — la
-    // liste et la fiche d'un mod la liraient chacune a sa facon, et finiraient par
-    // diverger.
+    const next: ModLabel = { categories, works16, updated: new Date().toISOString() };
+
+    // A mod with no label has no business in the file: it is simply unsorted, like
+    // the thousands that never appeared in it. Keeping it would grow the
+    // classification by an empty entry on every cancelled click.
     //
-    // Consequence assumee : on ne peut pas dire « etiquete mais pas encore trie ».
-    // Pour remettre un mod a trier, on retire ses etiquettes.
-    const reviewed = (patch.reviewed ?? cur.reviewed) || categories.length > 0;
-
-    const next: ModLabel = { categories, reviewed, updated: new Date().toISOString() };
-
-    // Un mod sans etiquette et non trie n'a rien a faire dans le fichier : le
-    // garder ferait grossir le tri d'entrees vides a chaque clic annule.
-    if (categories.length === 0 && !reviewed) delete store.mods[packageId];
+    // Unless it carries the 1.6 flag: that is not a classification but the result
+    // of a test in game, and losing it would cost running the test again.
+    if (categories.length === 0 && !works16) delete store.mods[packageId];
     else store.mods[packageId] = next;
 
     await fs.mkdir(path.dirname(FILE), { recursive: true });
-    // Ecriture atomique : une coupure au milieu laisserait un JSON tronque, donc
-    // tout le classement illisible au prochain demarrage.
+    // Atomic write: a cut in the middle would leave truncated JSON, hence the
+    // whole classification unreadable at next start.
     const tmp = `${FILE}.${process.pid}.tmp`;
     const ordered = Object.fromEntries(Object.entries(store.mods).sort(([a], [b]) => a.localeCompare(b)));
     await fs.writeFile(tmp, JSON.stringify({ version: 1, mods: ordered }, null, 2), "utf8");

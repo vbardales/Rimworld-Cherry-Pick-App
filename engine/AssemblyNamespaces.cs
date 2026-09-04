@@ -3,20 +3,20 @@ using System.Reflection.PortableExecutable;
 
 namespace CherryPick;
 
-// Quels espaces de noms C# chaque mod apporte.
+// Which C# namespaces each mod brings.
 //
-// Sert a repondre a une question precise : « une fois la selection faite, cette
-// dependance declaree sert-elle encore a quelque chose ? » Sans cette carte on
-// ne pourrait que deviner. Avec elle, la reponse est factuelle : si aucune
-// classe retenue n'appartient a un espace de noms de ce mod, il ne sert plus.
+// It answers one precise question: "once the selection is made, is this declared
+// dependency still good for anything?" Without this map we could only guess. With
+// it the answer is factual: if no kept class belongs to a namespace of that mod,
+// it is no longer needed.
 //
-// C'est ce qui est arrive trois fois cette semaine sans qu'on le voie tout de
-// suite — Rabbie Gear a perdu Humanoid Alien Races, Burn Barrel a perdu Harmony
-// et le Vanilla Expanded Framework.
+// That is what happened three times in one week without being noticed straight
+// away — Rabbie Gear lost Humanoid Alien Races, Burn Barrel lost Harmony and the
+// Vanilla Expanded Framework.
 //
-// La lecture passe par System.Reflection.Metadata : on lit les metadonnees du
-// PE sans charger l'assemblage. Charger une DLL compilee pour RimWorld dans ce
-// processus echouerait de toute facon, ses references etant introuvables.
+// Reading goes through System.Reflection.Metadata: the PE metadata is read
+// without loading the assembly. Loading a DLL compiled against RimWorld into this
+// process would fail anyway, its references being nowhere to be found.
 public static class AssemblyNamespaces
 {
     public static HashSet<string> Of(string modPath)
@@ -40,9 +40,9 @@ public static class AssemblyNamespaces
                     if (ns.Length == 0) continue;
                     namespaces.Add(ns);
 
-                    // On retient aussi la racine : une def qui cite
-                    // VEF.AnimalBehaviours.CompX doit pouvoir se rattacher au mod
-                    // qui fournit VEF, meme si l'espace de noms exact differe.
+                    // The root is kept too: a def naming
+                    // VEF.AnimalBehaviours.CompX must be able to tie back to the
+                    // mod providing VEF, even if the exact namespace differs.
                     var dot = ns.IndexOf('.');
                     if (dot > 0) namespaces.Add(ns[..dot]);
                 }
@@ -52,7 +52,7 @@ public static class AssemblyNamespaces
         return namespaces;
     }
 
-    // L'espace de noms d'une classe qualifiee, racine comprise.
+    // The namespace of a qualified class, root included.
     public static (string root, string ns) Split(string qualifiedClass)
     {
         var lastDot = qualifiedClass.LastIndexOf('.');

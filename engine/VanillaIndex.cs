@@ -3,17 +3,17 @@ using System.Xml.Linq;
 
 namespace CherryPick;
 
-// Tous les defName livres par le jeu — Core et DLC officiels.
+// Every defName shipped by the game — Core and official DLC.
 //
-// Sans cet index, la fermeture ne saurait pas distinguer trois cas qui se
-// ressemblent dans le XML :
+// Without this index the closure could not tell apart three cases that look alike
+// in the XML:
 //
-//   « Steel »        -> def du jeu, rien a embarquer
-//   « BioForge »     -> def du mod, a tirer dans la selection
-//   « VFEP_Rum »     -> ne resout nulle part : dependance manquante, ou coquille
+//   "Steel"        -> a game def, nothing to take along
+//   "BioForge"     -> a mod def, to pull into the selection
+//   "VFEP_Rum"     -> resolves nowhere: missing dependency, or typo
 //
-// C'est le troisieme cas qui compte : c'est lui qui produit les erreurs au
-// chargement, et il est invisible tant qu'on n'a pas les deux autres listes.
+// The third case is the one that matters: it is what produces load errors, and it
+// stays invisible until the other two lists are at hand.
 public static class VanillaIndex
 {
     sealed class Cache
@@ -69,7 +69,7 @@ public static class VanillaIndex
 
         foreach (var file in Directory.EnumerateFiles(dataDir, "*.xml", SearchOption.AllDirectories))
         {
-            // Les traductions officielles contiennent des DefInjected, pas des defs.
+            // Official translations hold DefInjected, not defs.
             if (file.Contains($"{Path.DirectorySeparatorChar}Languages{Path.DirectorySeparatorChar}",
                               StringComparison.OrdinalIgnoreCase)) continue;
 

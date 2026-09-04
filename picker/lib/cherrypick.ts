@@ -6,28 +6,28 @@ import os from "node:os";
 
 const run = promisify(execFile);
 
-// Le moteur reste le binaire C# : il porte toute l'analyse XML, deja eprouvee.
-// Next n'est que l'interface et l'orchestration.
-// picker/ et engine/ sont voisins a la racine du depot.
+// The engine stays the C# binary: it carries the whole XML analysis, already
+// proven. Next is only the interface and the orchestration.
+// picker/ and engine/ sit side by side at the root of the repository.
 const ROOT = path.resolve(process.cwd(), "..");
 
-// On invoque `dotnet cherrypick.dll`, jamais un exe.
+// We invoke `dotnet cherrypick.dll`, never an exe.
 //
-// Un apphost fraichement compile n'est pas signe, et Smart App Control le bloque.
-// dotnet.exe, lui, est signe par Microsoft. Le csproj met donc UseAppHost a false :
-// aucun exe n'est produit.
+// A freshly compiled apphost is unsigned, and Smart App Control blocks it.
+// dotnet.exe, on the other hand, is signed by Microsoft. So the csproj sets
+// UseAppHost to false: no exe is produced at all.
 //
-// Ne jamais desactiver Smart App Control pour contourner ce genre de blocage :
-// sous Windows 11 on ne peut plus le reactiver sans reinstaller le systeme.
+// Never disable Smart App Control to work around that kind of block: under
+// Windows 11 it cannot be turned back on without reinstalling the system.
 export const DLL = path.join(ROOT, "engine", "bin", "Release", "net8.0", "cherrypick.dll");
 export const DOTNET = process.env.DOTNET_PATH ?? "dotnet";
 
 export const GAME_DIR =
   process.env.RIMWORLD_DIR ?? "C:\\Program Files (x86)\\Steam\\steamapps\\common\\RimWorld";
 
-// Les seules racines dont on acceptera de servir un fichier. Sans cette liste,
-// la route des textures serait une lecture arbitraire de disque offerte a tout
-// ce qui parle a localhost.
+// The only roots a file will ever be served from. Without this list, the texture
+// route would be arbitrary disk reading offered to anything that can talk to
+// localhost.
 export function allowedRoots(): string[] {
   const steamapps = path.resolve(GAME_DIR, "..", "..");
   return [
@@ -56,8 +56,8 @@ export type ModRow = {
   DeadBefore16: boolean;
 };
 
-// Le tampon de sortie par defaut d'execFile est trop petit : l'inventaire d'un
-// gros mod depasse largement le megaoctet.
+// execFile's default output buffer is too small: a big mod's inventory goes well
+// past a megabyte.
 const MAX = 256 * 1024 * 1024;
 
 export async function listMods(scope: "active" | "all"): Promise<ModRow[]> {
@@ -67,9 +67,9 @@ export async function listMods(scope: "active" | "all"): Promise<ModRow[]> {
   return JSON.parse(stdout);
 }
 
-// L'inventaire d'un mod est mis en cache sur disque et revalide par la date de
-// modification du dossier : rescanner a chaque affichage serait inutile, et le
-// scan d'un gros mod prend plusieurs secondes.
+// A mod's inventory is cached on disk and revalidated against the folder's
+// modification date: rescanning on every display would be pointless, and scanning
+// a big mod takes several seconds.
 const CACHE = path.join(os.tmpdir(), "cherrypick-scans");
 
 export async function scanMod(id: string, modPath: string, refresh = false): Promise<unknown> {
@@ -77,15 +77,15 @@ export async function scanMod(id: string, modPath: string, refresh = false): Pro
   const safe = id.replace(/[^A-Za-z0-9._-]/g, "_");
   const file = path.join(CACHE, `${safe}.json`);
 
-  // Le cache est revalide par la date du DOSSIER du mod, or modifier un fichier
-  // dans un sous-dossier ne la change pas toujours. D'ou le rescan force : c'est
-  // le seul moyen sur de repartir des fichiers.
+  // The cache is revalidated against the mod FOLDER's date, but changing a file in
+  // a subfolder does not always change it. Hence the forced rescan: it is the only
+  // sure way to start again from the files.
   if (!refresh) {
     try {
       const [cached, dir] = await Promise.all([fs.stat(file), fs.stat(modPath)]);
       if (cached.mtimeMs >= dir.mtimeMs) return JSON.parse(await fs.readFile(file, "utf8"));
     } catch {
-      // pas de cache, ou mod introuvable : on scanne
+      // no cache, or mod not found: scan it
     }
   }
 
@@ -94,11 +94,11 @@ export async function scanMod(id: string, modPath: string, refresh = false): Pro
   return JSON.parse(stdout);
 }
 
-// Etend une selection a tout ce qu'elle entraine.
+// Extends a selection to everything it pulls in.
 //
-// Les cles passent par un fichier, jamais par la ligne de commande : une
-// selection de plusieurs milliers de defs depasserait la limite de longueur
-// d'argument de Windows, et le mode de defaillance serait illisible.
+// The keys go through a file, never through the command line: a selection of
+// several thousand defs would blow past Windows' argument length limit, and the
+// failure mode would be unreadable.
 export async function closeMod(
   modPath: string,
   picked: string[],

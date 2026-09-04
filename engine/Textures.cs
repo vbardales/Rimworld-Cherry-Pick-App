@@ -1,19 +1,18 @@
 namespace CherryPick;
 
-// Resout un chemin de texture de def en fichiers reels sur disque.
+// Resolves a def's texture path into real files on disk.
 //
-// RimWorld ne pointe jamais un fichier : il pointe un prefixe, et compose le nom
-// final selon le cas. Un meme <texPath> peut donc donner
+// RimWorld never points at a file: it points at a prefix, and composes the final
+// name case by case. One same <texPath> can therefore yield
 //
-//   Chose.png                                  objet simple
-//   Chose_north.png, _south.png, _east.png     Graphic_Multi
-//   Chose_Thin_south.png, _Male_south.png...   vetement porte, par morphologie
-//   Chose/ChoseA.png, ChoseB.png...            Graphic_Random, dossier de variantes
+//   Thing.png                                  simple item
+//   Thing_north.png, _south.png, _east.png     Graphic_Multi
+//   Thing_Thin_south.png, _Male_south.png...   worn apparel, per body type
+//   Thing/ThingA.png, ThingB.png...            Graphic_Random, folder of variants
 //
-// Le picker doit montrer une vignette, et surtout savoir dire « cette texture
-// n'existe pas » : c'est ainsi qu'on aurait vu tout de suite que les tenues de
-// Rabbie n'existaient qu'en _Thin et _Child, donc invisibles sur la plupart des
-// colons.
+// The picker must show a thumbnail, and above all be able to say "this texture
+// does not exist": that is how we would have seen at once that the Rabbie outfits
+// only existed in _Thin and _Child, hence invisible on most colonists.
 public static class TextureResolver
 {
     public static void Resolve(Inventory inv)
@@ -46,7 +45,7 @@ public static class TextureResolver
 
         foreach (var root in roots)
         {
-            // Un dossier portant exactement ce nom : toutes ses images comptent.
+            // A folder named exactly that: all of its images count.
             var asDir = Path.Combine(root, rel);
             if (Directory.Exists(asDir))
             {
@@ -60,8 +59,8 @@ public static class TextureResolver
 
             foreach (var f in Directory.EnumerateFiles(dir, stem + "*.png", SearchOption.TopDirectoryOnly))
             {
-                // stem* attraperait « Bed » pour « BedDouble ». On n'accepte que
-                // le nom exact ou le nom suivi d'un souligne.
+                // stem* would catch "Bed" for "BedDouble". Only the exact name, or
+                // the name followed by an underscore, is accepted.
                 var name = Path.GetFileNameWithoutExtension(f);
                 if (name.Length == stem.Length || name[stem.Length] == '_') found.Add(f);
             }
@@ -70,7 +69,7 @@ public static class TextureResolver
         return found;
     }
 
-    // La vignette a montrer : de face si l'orientation existe, sinon la premiere.
+    // The thumbnail to show: front view if that orientation exists, else the first.
     public static string? Thumb(DefEntry d)
     {
         if (d.TextureFiles.Count == 0) return null;

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listMods } from "@/lib/cherrypick";
 
-// La modlist active, ou tout ce qui est installe. Avec plus de cinq mille mods
-// sur disque, le filtrage se fait ici et non dans le navigateur.
+// The active modlist, or everything installed. With more than five thousand mods
+// on disk, filtering happens here and not in the browser.
 export async function GET(req: NextRequest) {
   const scope = req.nextUrl.searchParams.get("scope") === "all" ? "all" : "active";
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim().toLowerCase();

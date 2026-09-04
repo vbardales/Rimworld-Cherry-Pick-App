@@ -1,19 +1,19 @@
 namespace CherryPick;
 
-// Marque les defs qui ne creent rien mais remplacent une def du jeu.
+// Flags the defs that create nothing but replace a def of the game.
 //
-// La distinction change tout pour ce qu'on peut faire d'un mod :
+// The distinction changes everything about what can be done with a mod:
 //
-//   un mod de CONTENU ajoute des defs nouvelles     -> on peut en extraire une partie
-//   un mod de RETEXTURE redefinit des defs du jeu   -> il n'y a rien a extraire, et il
-//                                                      se dispute chaque def avec les
-//                                                      autres mods qui y touchent, le
-//                                                      dernier charge l'emportant
+//   a CONTENT mod adds new defs           -> part of it can be extracted
+//   a RETEXTURE mod redefines game defs   -> there is nothing to extract, and it
+//                                            fights over every def with the other
+//                                            mods that touch it, the last one
+//                                            loaded winning
 //
-// Sans ce drapeau les deux se ressemblent. Le mod « Maidnoid » declare quinze
-// ThingDef d'apparence ordinaire, mais tous portent les defName du jeu —
-// Mech_Lancer, Mech_Scyther, Mech_Pikeman... Il ne remplace en realite que des
-// fichiers PNG, ce qui explique aussi qu'aucune de ses defs ne declare de texture.
+// Without this flag the two look alike. The "Maidnoid" mod declares fifteen
+// ordinary-looking ThingDefs, but every one of them carries a defName of the
+// game — Mech_Lancer, Mech_Scyther, Mech_Pikeman... All it really replaces are
+// PNG files, which also explains why none of its defs declares a texture.
 public static class Overrides
 {
     public static void Mark(Inventory inv, HashSet<string> vanillaDefNames)
@@ -21,8 +21,8 @@ public static class Overrides
         var count = 0;
         foreach (var d in inv.Defs)
         {
-            // Les bases abstraites comptent : deux mods qui declarent le meme
-            // Name= se disputent l'heritage aussi surement que deux defName.
+            // Abstract bases count: two mods declaring the same Name= fight over
+            // inheritance just as surely as two defNames do.
             var name = d.DefName ?? d.AbstractName;
             if (name is not { Length: > 0 }) continue;
             if (!vanillaDefNames.Contains(name)) continue;

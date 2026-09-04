@@ -1,27 +1,27 @@
 namespace CherryPick;
 
-// Reconcilie en une seule entree les defs qui decrivent une meme chose.
+// Reconciles into a single entry the defs that describe one and the same thing.
 //
-// Un mod ne declare presque jamais un objet en une seule def. Une creature, c'est
-// une race et sa recette d'apparition ; un implant, c'est un objet, le hediff
-// qu'il pose, la recette qui l'installe et celle qui le retire. Les afficher
-// separement donne des doublons apparents — chez Marro, « berserker mind worm »
-// sort deux fois, « fungal growth » aussi — et laisse surtout cocher l'un en
-// ecartant l'autre, ce qui produit un mod incoherent.
+// A mod almost never declares an object in a single def. A creature is a race
+// plus its spawn recipe; an implant is an item, the hediff it applies, the recipe
+// that installs it and the one that removes it. Showing them separately produces
+// apparent duplicates — in Marro, "berserker mind worm" comes out twice, and so
+// does "fungal growth" — and above all it allows ticking one while dropping the
+// other, which yields an incoherent mod.
 //
-// Trois liens seulement, tous surs. On ne devine pas :
+// Three links only, all of them certain. We do not guess:
 //
-//   meme defName sur plusieurs types   FungalGrowth est a la fois HediffDef et ThingDef
-//   PawnKindDef -> sa race             un PawnKind sans sa race ne represente rien
-//   RecipeDef -> ce qu'elle produit    ou le hediff qu'elle pose
+//   same defName on several types   FungalGrowth is both a HediffDef and a ThingDef
+//   PawnKindDef -> its race         a PawnKind without its race represents nothing
+//   RecipeDef -> what it produces   or the hediff it applies
 //
-// Volontairement PAS de regroupement par prefixe de nom ni par ingredient : une
-// recette qui consomme de l'acier n'appartient pas au groupe de l'acier.
+// Deliberately NO grouping by name prefix or by ingredient: a recipe that
+// consumes steel does not belong to steel's group.
 public static class Grouping
 {
     public static void Resolve(Inventory inv)
     {
-        // Union-find : les liens arrivent dans le desordre et se chainent.
+        // Union-find: the links arrive out of order and chain together.
         var parent = new Dictionary<string, string>(StringComparer.Ordinal);
 
         string Find(string k)
@@ -39,13 +39,13 @@ public static class Grouping
 
         foreach (var d in inv.Defs) Find(d.Key);
 
-        // Une def se retrouve par son nom, quel que soit son type.
+        // A def is found by its name, whatever its type.
         //
-        // Comparaison INSENSIBLE A LA CASSE, contrairement au reste de l'outil :
-        // RimWorld distingue la casse pour resoudre une reference, mais les auteurs
-        // sont inconstants. Chez Marro, le hediff s'appelle BerserkerMindWorm et
-        // l'objet BerserkerMindworm — deux defName differents pour le jeu, une seule
-        // chose pour qui regarde la liste.
+        // CASE-INSENSITIVE comparison, unlike the rest of the tool: RimWorld is
+        // case-sensitive when resolving a reference, but authors are inconsistent.
+        // In Marro the hediff is called BerserkerMindWorm and the item
+        // BerserkerMindworm — two different defNames to the game, one single thing
+        // to whoever reads the list.
         var byName = new Dictionary<string, List<DefEntry>>(StringComparer.OrdinalIgnoreCase);
         foreach (var d in inv.Defs)
         {
@@ -55,12 +55,12 @@ public static class Grouping
             list.Add(d);
         }
 
-        // 1. Meme defName, types differents.
+        // 1. Same defName, different types.
         foreach (var list in byName.Values)
             for (var i = 1; i < list.Count; i++)
                 Union(list[0].Key, list[i].Key);
 
-        // 2. et 3. Rattachements explicites.
+        // 2. and 3. Explicit ties.
         foreach (var d in inv.Defs)
         {
             void LinkTo(string? name)
@@ -78,15 +78,15 @@ public static class Grouping
             }
         }
 
-        // 4. Possession exclusive.
+        // 4. Exclusive ownership.
         //
-        // Un aliment declare le hediff qu'il procure et la pensee qu'il laisse.
-        // Chez « axolotleggmilktea », quatre defs decrivent une seule boisson :
-        // l'objet, sa recette, son hediff et sa pensee.
+        // A food declares the hediff it grants and the thought it leaves. In
+        // "axolotleggmilktea", four defs describe a single drink: the item, its
+        // recipe, its hediff and its thought.
         //
-        // Mais on ne rattache que ce qui n'est reclame QUE PAR UNE def. Un hediff
-        // partage par cinq objets appartient aux cinq, donc a aucun : les unir
-        // fabriquerait un groupe absurde reunissant cinq choses distinctes.
+        // But we only tie what is claimed BY ONE def alone. A hediff shared by
+        // five items belongs to all five, therefore to none: uniting them would
+        // build an absurd group gathering five distinct things.
         var claims = new Dictionary<string, List<DefEntry>>(StringComparer.OrdinalIgnoreCase);
         foreach (var d in inv.Defs)
             foreach (var owned in d.Owns)
@@ -97,15 +97,15 @@ public static class Grouping
 
         foreach (var (name, claimants) in claims)
         {
-            if (claimants.Count != 1) continue;                  // partage : on ne touche pas
+            if (claimants.Count != 1) continue;                  // shared: leave it alone
             if (!byName.TryGetValue(name, out var targets)) continue;
             var target = targets[0];
-            if (target.Key == claimants[0].Key) continue;        // une def ne se possede pas
+            if (target.Key == claimants[0].Key) continue;        // a def does not own itself
             Union(claimants[0].Key, target.Key);
         }
 
-        // La cle du groupe est celle de son representant le plus parlant : on
-        // prefere un ThingDef, puis la def qui porte un libelle.
+        // The group key is that of its most telling representative: a ThingDef is
+        // preferred, then the def that carries a label.
         var members = inv.Defs.GroupBy(d => Find(d.Key), StringComparer.Ordinal);
         foreach (var g in members)
         {

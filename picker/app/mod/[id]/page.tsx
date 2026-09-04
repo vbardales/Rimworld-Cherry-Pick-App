@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
 import { EMPTY, type ModLabel } from "@/lib/labels";
+import { workshopId, workshopUrl } from "@/lib/steam";
 
 type Def = {
   Key: string;
@@ -13,8 +14,8 @@ type Def = {
   IsAbstract: boolean;
   Label: string | null;
   ParentName: string | null;
-  // Optionnelle : un inventaire mis en cache avant que le moteur ne la calcule
-  // n'en a pas, et la fiche doit rester lisible sans forcer une relecture.
+  // Optional: an inventory cached before the engine computed it has none, and the
+  // sheet must stay readable without forcing a re-read.
   ParentChain?: { Name: string; Origin: string }[];
   TechLevel: string | null;
   TechLevelFrom: string | null;
@@ -45,8 +46,8 @@ type Closure = {
   Dependencies: { PackageId: string; StillNeeded: boolean; Because: string[] }[];
 };
 
-// Indetermine vaut embarque : on taille dans un mod existant, on ne le rebatit
-// pas piece par piece.
+// Undetermined counts as taken: we carve into an existing mod, we do not rebuild
+// it piece by piece.
 type State = "in" | "out";
 
 type Group = { key: string; anchor: Def; members: Def[]; overrides: boolean };
@@ -82,12 +83,11 @@ export default function ModPage({
   const [rescanning, setRescanning] = useState(false);
   const [label, setLabel] = useState<ModLabel>(EMPTY);
 
-  // Relire le mod depuis ses fichiers.
+  // Read the mod again from its files.
   //
-  // L'inventaire est mis en cache et revalide par la date du DOSSIER du mod, or
-  // modifier un fichier dans un sous-dossier ne la change pas toujours. Sans ce
-  // bouton, on peut travailler longtemps sur un inventaire perime sans s'en
-  // apercevoir.
+  // The inventory is cached and revalidated against the mod FOLDER's date, but
+  // changing a file in a subfolder does not always change it. Without this button,
+  // one can work for a long time on a stale inventory without noticing.
   const load = useCallback((refresh: boolean) => {
     if (!modPath) { setError("chemin du mod manquant"); return; }
     setRescanning(refresh);
@@ -107,13 +107,13 @@ export default function ModPage({
     fetch("/api/labels")
       .then((r) => r.json())
       .then((d) => setLabel(d.mods?.[id] ?? EMPTY))
-      .catch(() => { /* un tri illisible ne doit pas empecher la fiche */ });
+      .catch(() => { /* an unreadable classification must not block the sheet */ });
   }, [id]);
 
   const mod = inv?.Mods?.[0];
 
-  // Une entree par groupe : les defs qui decrivent une meme chose ne doivent pas
-  // pouvoir etre decidees separement.
+  // One entry per group: defs describing one same thing must not be decidable
+  // separately.
   const groups = useMemo<Group[]>(() => {
     if (!inv) return [];
     const byGroup = new Map<string, Def[]>();
@@ -157,10 +157,9 @@ export default function ModPage({
       return next;
     });
 
-  // Marquer en bloc. « Tout embarquer » n'a pas le meme sens qu'un mod laisse
-  // indetermine : le resultat est identique, mais l'un est une decision et
-  // l'autre une absence de decision. C'est ce qui distingue un portage integral
-  // d'un cherry-pick qu'on n'a pas fini.
+  // Marking in bulk. "Take everything" does not mean the same as a mod left
+  // undetermined: the result is identical, but one is a decision and the other the
+  // absence of one. That is what tells a full port from an unfinished cherry-pick.
   const setAll = (targets: Group[], value: State | null) =>
     setStates((prev) => {
       const next = new Map(prev);
@@ -173,13 +172,13 @@ export default function ModPage({
 
   const filtered = shown.length !== groups.length;
 
-  // Une selection est PARTIELLE des qu'une entree est ecartee, ou qu'il reste de
-  // l'indetermine alors qu'on a commence a trancher.
+  // A selection is PARTIAL as soon as one entry is dropped, or some undetermined
+  // remains after we started deciding.
   //
-  // La distinction porte la sortie : prendre le mod entier, c'est un portage, et
-  // le resultat est le mod lui-meme. N'en prendre qu'une partie, c'est un
-  // cherry-pick, et le resultat est une CONFIGURATION — qu'on rejoue quand le mod
-  // source bouge, au lieu d'un instantane qu'il faudrait refaire a la main.
+  // The distinction carries the output: taking the whole mod is a port, and the
+  // result is the mod itself. Taking only part of it is a cherry-pick, and the
+  // result is a CONFIGURATION — replayed when the source mod moves, instead of a
+  // snapshot that would have to be redone by hand.
   const partial =
     groups.length > 0 &&
     (states.size < groups.length || [...states.values()].some((s) => s === "out"));
@@ -197,17 +196,17 @@ export default function ModPage({
         deadBefore16: mod.DeadBefore16,
         declaredDependencies: mod.DeclaredDependencies,
       },
-      // Les etats explicites seulement. L'indetermine ne s'ecrit pas : c'est le
-      // defaut, et le figer ici ferait mentir la conf le jour ou le mod source
-      // gagne des defs.
+      // Explicit states only. Undetermined is not written down: it is the default,
+      // and freezing it here would make the config lie the day the source mod gains
+      // new defs.
       states: Object.fromEntries(
         [...states].flatMap(([groupKey, s]) => {
           const g = groups.find((x) => x.key === groupKey);
           return g ? g.members.map((m) => [m.Key, s] as const) : [];
         }),
       ),
-      // Instantane du diagnostic au moment de l'export, pour relecture. Il sera
-      // recalcule a chaque rejeu de la conf.
+      // Snapshot of the diagnosis at export time, for later reading. It is
+      // recomputed every time the config is replayed.
       diagnostic: closure && {
         embarquees: closure.Kept,
         ecartees: closure.Excluded,
@@ -226,8 +225,8 @@ export default function ModPage({
     URL.revokeObjectURL(a.href);
   };
 
-  // La fermeture coute un appel au moteur : on la calcule apres une pause, pas a
-  // chaque clic.
+  // The closure costs a call to the engine: it is computed after a pause, not on
+  // every click.
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recompute = useCallback(() => {
     if (!modPath || !inv) return;
@@ -268,9 +267,15 @@ export default function ModPage({
         <p className="sub">
           <em className="tag">{mod.PackageId}</em>
           {mod.SupportedVersions.length > 0 && <em className="tag">{mod.SupportedVersions.join(" ")}</em>}
-          {mod.DeadBefore16 && <em className="tag dead">mort avant 1.6</em>}
+          {mod.DeadBefore16 && !label.works16 && <em className="tag dead">mort avant 1.6</em>}
+          {mod.DeadBefore16 && label.works16 && <em className="tag act">tourne en 1.6</em>}
           {inv.OverrideCount > 0 && (
             <em className="tag over">{inv.OverrideCount} def(s) remplacent le jeu</em>
+          )}
+          {workshopUrl(mod.Path) && (
+            <a className="tag link" href={workshopUrl(mod.Path)!} target="_blank" rel="noreferrer noopener">
+              🔍 Steam Workshop {workshopId(mod.Path)}
+            </a>
           )}
         </p>
         {mod.DeclaredDependencies.length > 0 && (
@@ -280,6 +285,7 @@ export default function ModPage({
           packageId={mod.PackageId}
           label={label}
           onChange={(_, l) => setLabel(l)}
+          dead={mod.DeadBefore16}
         />
       </header>
 
@@ -408,16 +414,16 @@ export default function ModPage({
   );
 }
 
-// La chaine d'heritage d'une def, jusqu'a sa racine.
+// A def's inheritance chain, all the way to its root.
 //
-// Une def de mod ne declare presque rien : « BioForge » est une ligne de dix
-// balises, et tout le reste — cout, taille, stats, categorie — vient de
-// BuildingBase. Afficher le seul parent immediat laissait croire a une chaine
-// courte ; la montrer entiere dit ou aller chercher ce qu'on ne voit pas.
+// A mod def declares almost nothing: "BioForge" is ten tags long, and all the
+// rest — cost, size, stats, category — comes from BuildingBase. Showing only the
+// immediate parent suggested a short chain; showing the whole of it says where to
+// go looking for what is not displayed.
 //
-// Un maillon marque « absent » est le cas interessant : le parent est nomme mais
-// introuvable, donc defini dans une dependance qu'on n'a pas scannee. C'est
-// toujours l'explication d'un niveau technologique ou d'une categorie vides.
+// A link marked "missing" is the interesting case: the parent is named but
+// nowhere to be found, hence defined in a dependency we did not scan. It is
+// always the explanation for an empty tech level or category.
 function Chain({ d }: { d: Def }) {
   const chain = d.ParentChain ?? (d.ParentName ? [{ Name: d.ParentName, Origin: "" }] : []);
   if (chain.length === 0) return null;
@@ -427,10 +433,10 @@ function Chain({ d }: { d: Def }) {
         <span key={i}>
           {" < "}
           <span
-            className={p.Origin === "absent" ? "gone" : p.Origin === "jeu" ? "core" : ""}
+            className={p.Origin === "missing" ? "gone" : p.Origin === "game" ? "core" : ""}
             title={
-              p.Origin === "jeu" ? "base du jeu"
-                : p.Origin === "absent" ? "parent introuvable — defini dans une dependance non scannee"
+              p.Origin === "game" ? "base du jeu"
+                : p.Origin === "missing" ? "parent introuvable — defini dans une dependance non scannee"
                 : "base declaree dans ce mod"
             }
           >

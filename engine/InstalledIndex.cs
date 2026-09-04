@@ -2,23 +2,23 @@ using System.Text.Json;
 
 namespace CherryPick;
 
-// Index packageId -> dossier, avec cache sur disque.
+// packageId -> folder index, with an on-disk cache.
 //
-// Construire cet index demande de lire un About.xml par mod installe. Avec un
-// Workshop bien garni cela prend une vingtaine de secondes, ce qui est
-// inacceptable pour une commande qu'on lance a chaque fois. Le resultat est donc
-// mis en cache et revalide par la date de modification de chaque About.xml :
-// seuls les dossiers apparus ou modifies depuis sont relus.
+// Building this index means reading one About.xml per installed mod. With a
+// well-stocked Workshop that takes some twenty seconds, which is unacceptable for
+// a command run every time. The result is therefore cached and revalidated
+// against each About.xml's modification date: only folders that appeared or
+// changed since are read again.
 //
-// Le cache ne remplace pas la regle « on ne scanne pas le Workshop » : il ne
-// contient que les metadonnees d'About, jamais les defs. Le contenu d'un mod
-// n'est lu que lorsqu'on l'ouvre.
+// The cache does not replace the "we do not scan the Workshop" rule: it holds
+// About metadata only, never defs. A mod's content is read only when it is
+// opened.
 public static class InstalledIndex
 {
     sealed class Entry
     {
         public string Path { get; set; } = "";
-        public long Stamp { get; set; }              // date de modification de About.xml
+        public long Stamp { get; set; }              // About.xml modification date
         public string PackageId { get; set; } = "";
         public string Name { get; set; } = "";
         public List<string> SupportedVersions { get; set; } = new();
@@ -75,8 +75,8 @@ public static class InstalledIndex
 
                 fresh.Add(entry);
 
-                // Premier trouve gagne : Data, puis Mods, puis Workshop — l'ordre
-                // dans lequel RimWorld lui-meme resout un packageId.
+                // First found wins: Data, then Mods, then Workshop — the order in
+                // which RimWorld itself resolves a packageId.
                 if (!index.ContainsKey(entry.PackageId))
                 {
                     index[entry.PackageId] = new ModInfo
@@ -86,9 +86,9 @@ public static class InstalledIndex
                         PackageId = entry.PackageId,
                         Name = entry.Name,
                         SupportedVersions = entry.SupportedVersions,
-                        // Une liste vide n'est pas un mod mort : les DLC officiels
-                        // ne declarent aucune version. Sans cette garde, Core et
-                        // Royalty seraient signales comme perimes.
+                        // An empty list is not a dead mod: the official DLC
+                        // declare no version at all. Without this guard, Core and
+                        // Royalty would be reported as outdated.
                         DeadBefore16 = entry.SupportedVersions.Count > 0
                                        && !entry.SupportedVersions.Contains("1.6"),
                     };
@@ -110,7 +110,7 @@ public static class InstalledIndex
             if (cache is null || cache.Version != 1) return map;
             foreach (var e in cache.Entries) map[e.Path] = e;
         }
-        catch { /* cache illisible : on rebatit, sans bruit */ }
+        catch { /* unreadable cache: rebuild it, quietly */ }
         return map;
     }
 

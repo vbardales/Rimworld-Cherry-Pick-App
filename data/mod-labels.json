@@ -78,6 +78,20 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:11.946Z"
     },
+    "ccj.nlfaloadfix": {
+      "categories": [
+        "textures"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:52:44.911Z"
+    },
+    "ckvam.relationstab.separatebutton": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:55:13.813Z"
+    },
     "codex.rimworldautotranslator": {
       "categories": [
         "engine"
@@ -155,6 +169,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:20.628Z"
     },
+    "ferny.nomodlistonloading": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:52:46.909Z"
+    },
     "fluffy.animaltab": {
       "categories": [
         "animals"
@@ -196,6 +217,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:20.567Z"
+    },
+    "kathanon.resizabletablecolumns": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:55:16.184Z"
     },
     "keyz182.keyzallowutilities": {
       "categories": [
@@ -432,6 +460,41 @@
       "reviewed": true,
       "updated": "2026-09-04T17:51:48.717Z"
     },
+    "nelim.neckaccessory": {
+      "categories": [
+        "furniture"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:54:21.267Z"
+    },
+    "nelim.notableneeded": {
+      "categories": [
+        "gameplay"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:52:49.283Z"
+    },
+    "nelim.perfectlygenericitempatched": {
+      "categories": [
+        "textures"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:54:55.491Z"
+    },
+    "nelim.readingbonusandbookshelfpatched": {
+      "categories": [
+        "gameplay"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:55:08.141Z"
+    },
+    "nelim.repossessedfurniture": {
+      "categories": [
+        "furniture"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:54:24.256Z"
+    },
     "nercury.assignanimalfood": {
       "categories": [
         "animals"
@@ -459,6 +522,14 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:49:21.727Z"
+    },
+    "romyashi.perfumes": {
+      "categories": [
+        "gameplay",
+        "furniture"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:55:01.825Z"
     },
     "rosnok.fmi": {
       "categories": [
@@ -543,6 +614,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:29.975Z"
+    },
+    "v1024.playerlogwarning": {
+      "categories": [
+        "engine"
+      ],
+      "reviewed": true,
+      "updated": "2026-09-04T17:55:04.527Z"
     },
     "void.charactereditor": {
       "categories": [

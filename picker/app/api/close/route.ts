@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { closeMod, isUnderAllowedRoot } from "@/lib/cherrypick";
 
-// Ce qu'une selection entraine, et ce qu'elle contredit.
+// What a selection pulls in, and what it contradicts.
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body?.path) return NextResponse.json({ error: "path est requis" }, { status: 400 });

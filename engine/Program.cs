@@ -2,13 +2,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using CherryPick;
 
-// cherrypick — inventaire et extraction selective de mods RimWorld.
+// cherrypick — inventory and selective extraction of RimWorld mods.
 //
-//   cherrypick list                       la modlist active, resolue en dossiers
-//   cherrypick scan <packageId|chemin>    l'inventaire d'UN mod, en JSON
+//   cherrypick list                       the active modlist, resolved to folders
+//   cherrypick scan <packageId|path>      the inventory of ONE mod, as JSON
 //
-// Rien ne parcourt le Workshop en entier : « list » ne lit que les About.xml, et
-// « scan » ne lit que le mod demande.
+// Nothing walks the whole Workshop: "list" reads About.xml files only, and "scan"
+// reads only the mod asked for.
+//
+// Output stays in French: it is an interface, like the web one.
 
 const string GameDirDefault = @"C:\Program Files (x86)\Steam\steamapps\common\RimWorld";
 
@@ -46,8 +48,8 @@ int CmdList()
     var cfg = ModList.FindModsConfig();
     if (cfg is null) { Console.Error.WriteLine("ModsConfig.xml introuvable."); return 1; }
 
-    // Par defaut la modlist active. Avec --all, tout ce qui est installe : c'est
-    // le meme index, l'un n'est qu'un filtre de l'autre.
+    // The active modlist by default. With --all, everything installed: it is the
+    // same index, one being only a filter of the other.
     var mods = args.Contains("--all")
         ? ModList.All(gameDir, cfg)
         : ModList.Resolve(gameDir, cfg);
@@ -82,8 +84,8 @@ int CmdScan(bool asHtml)
 
     var inv = Scanner.ScanOne(path);
     inv.Mods[0].DeadBefore16 = !inv.Mods[0].SupportedVersions.Contains("1.6");
-    // Les bases abstraites du jeu : sans elles, techLevel et categorie Architecte
-    // resteraient vides sur presque tout, puisque les mods en heritent.
+    // The abstract bases of the game: without them, techLevel and Architect
+    // category would stay empty on almost everything, since mods inherit them.
     Inherited.Resolve(inv, Path.Combine(gameDir, "Data"));
 
     TextureResolver.Resolve(inv);
@@ -104,7 +106,7 @@ string? OptionValue(string name)
     return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
 }
 
-// Etend une selection a tout ce dont elle a besoin, et dit pourquoi.
+// Extends a selection to everything it needs, and says why.
 int CmdClose()
 {
     if (args.Length < 2) { Console.Error.WriteLine("Usage : cherrypick close <packageId|chemin> --pick a,b,c | --pick-file f.json"); return 2; }
@@ -139,8 +141,8 @@ int CmdClose()
     var vanilla = VanillaIndex.Load(gameDir);
     Overrides.Mark(inv, vanilla);
 
-    // Les espaces de noms de chaque dependance declaree, pour savoir laquelle
-    // reste utile une fois la selection faite.
+    // The namespaces of each declared dependency, to know which one is still
+    // useful once the selection is made.
     var deps = new Dictionary<string, (string, HashSet<string>)>(StringComparer.OrdinalIgnoreCase);
     var installed = ModList.IndexInstalled(ModList.ModRoots(gameDir));
     foreach (var pid in inv.Mods[0].DeclaredDependencies)

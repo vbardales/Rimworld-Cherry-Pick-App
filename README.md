@@ -1,120 +1,133 @@
 # Rimworld Cherry Pick App
 
-Inspecter un mod RimWorld, choisir ce qu'on en garde, et voir ce que ce choix
-entraine — avant d'extraire quoi que ce soit.
+Inspect a RimWorld mod, choose what to keep from it, and see what that choice
+pulls in — before extracting anything.
 
-L'outil repond a une question que le XML ne repond pas tout seul : **si je garde
-cette arme, de quoi d'autre ai-je besoin ?** Sur un cas reel, cocher les quatre
-armes a distance de *Marro* en tire dix-sept : les projectiles, l'etabli qui les
-fabrique, la matiere premiere, les recherches prealables et les bases abstraites.
+The tool answers a question the XML does not answer on its own: **if I keep this
+weapon, what else do I need?** On a real case, ticking the four ranged weapons of
+*Marro* pulls in seventeen more: the projectiles, the workbench that makes them,
+the raw material, the prerequisite research and the abstract bases.
 
-## Demarrer
+## Getting started
 
 ```bash
 dotnet build engine/CherryPick.csproj -c Release
 cd picker && npm install && npm run dev
 ```
 
-Puis http://localhost:3000
+Then http://localhost:3000
 
-## Pourquoi ca tourne en local, et pas ailleurs
+The interface is in French; the code, the documentation and the commit messages
+are in English.
 
-L'application lit le dossier du jeu, le dossier Workshop et des PNG sur le
-disque. Une page servie depuis un serveur distant s'execute dans le navigateur du
-visiteur, qui n'a acces a rien de tout cela. **Un domaine peut heberger la
-presentation et le telechargement, pas l'outil.**
+## Why it runs locally, and nowhere else
 
-## Deux pieges de la plateforme, deja contournes
+The application reads the game folder, the Workshop folder and PNG files on disk.
+A page served from a remote server runs in the visitor's browser, which has
+access to none of that. **A domain can host the presentation and the download,
+not the tool.**
 
-**Smart App Control bloque un exe non signe.** Le projet C# met donc
-`UseAppHost` a `false` : aucun executable n'est produit, et le picker invoque
-`dotnet cherrypick.dll`, `dotnet.exe` etant signe par Microsoft. **Ne jamais
-desactiver Smart App Control pour contourner ce genre de blocage** : sous
-Windows 11 on ne peut plus le reactiver sans reinstaller le systeme.
+## Two platform traps, already worked around
 
-**Les textures passent par `/api/texture`, jamais par `file://`.** Depuis une
-page `http://localhost`, tous les navigateurs bloquent
-`<img src="file:///...">`. Et le garde-fou de chemin n'est pas decoratif :
-`isUnderAllowedRoot` verifie que tout fichier demande vit sous une racine de mods
-connue, faute de quoi la route servirait n'importe quel fichier de la machine a
-qui parle a localhost. Les deux routes repondent 403 en dehors.
+**Smart App Control blocks an unsigned exe.** So the C# project sets
+`UseAppHost` to `false`: no executable is produced, and the picker invokes
+`dotnet cherrypick.dll`, `dotnet.exe` being signed by Microsoft. **Never disable
+Smart App Control to work around that kind of block**: under Windows 11 it cannot
+be turned back on without reinstalling the system.
+
+**Textures go through `/api/texture`, never through `file://`.** From an
+`http://localhost` page, every browser blocks `<img src="file:///...">`. And the
+path guard is not decorative: `isUnderAllowedRoot` checks that any requested file
+lives under a known mods root, failing which the route would serve any file on
+the machine to whoever can talk to localhost. Both routes answer 403 outside.
 
 ## Structure
 
 ```
-engine/     moteur C# — lecture XML, heritage, fermeture des dependances
-picker/     interface Next — listing, inspection, selection
-data/       le classement de la modlist, en clair et versionne
+engine/     C# engine — XML reading, inheritance, dependency closure
+picker/     Next interface — listing, inspection, selection
+data/       the modlist classification, in plain text and versioned
 ```
 
-Le moteur porte toute l'analyse. L'interface n'orchestre que des appels.
+The engine carries the whole analysis. The interface only orchestrates calls.
 
 ```
-cherrypick list [--all] [--json]     la modlist active, ou tout ce qui est installe
-cherrypick scan <mod>                l'inventaire d'un mod, en JSON
-cherrypick view <mod>                le meme, en page HTML autonome
-cherrypick close <mod> --pick a,b    ce qu'une selection entraine
+cherrypick list [--all] [--json]     the active modlist, or everything installed
+cherrypick scan <mod>                a mod's inventory, as JSON
+cherrypick view <mod>                the same, as a standalone HTML page
+cherrypick close <mod> --pick a,b    what a selection pulls in
 ```
 
-## Ce que la fermeture calcule
+## What the closure computes
 
-Chaque regle vient d'un rate reel rencontre en extrayant des mods a la main :
+Every rule comes from a real miss met while extracting mods by hand:
 
-| Regle | Le cas qui l'a imposee |
+| Rule | The case that forced it |
 | --- | --- |
-| `ParentName`, transitif | bases abstraites oubliees, defs qui ne chargent pas |
-| references de defs | une arme tire son etabli, qui tire sa matiere premiere |
-| recherches et leurs prealables | vingt-six projets enchaines dans un seul mod |
-| **patchs orphelins** | deux operations sans cible faisaient echouer le chargement |
-| **dependances devenues inutiles** | une extraction avait perdu sa dependance a HAR sans qu'on le voie |
-| references non resolues | ni dans le mod ni dans le jeu : dependance manquante ou coquille |
+| `ParentName`, transitive | forgotten abstract bases, defs that fail to load |
+| def references | a weapon pulls its workbench, which pulls its raw material |
+| research and its prerequisites | twenty-six projects chained in a single mod |
+| **orphan patches** | two operations with no target made the load fail |
+| **dependencies gone useless** | an extraction had lost its HAR dependency unnoticed |
+| unresolved references | neither in the mod nor in the game: missing dependency or typo |
 
-Les deux lignes en gras sont les plus utiles : elles signalent ce qu'on peut
-**retirer**, ce qu'aucune lecture du XML ne donne spontanement.
+The two rules in bold are the most useful: they point at what can be **removed**,
+which no reading of the XML gives up on its own.
 
-## Classer la modlist
+## Classifying the modlist
 
-Une modlist de cent quatre-vingts mods ne se tient pas de tete. Chaque mod porte
-donc deux marques, posees d'un clic depuis la liste :
+A modlist of a hundred and eighty mods cannot be held in one's head. Each mod
+therefore carries labels, put on with one click from the list: engine/UI,
+gameplay, animals, joy, textures, food, plants, factions, races, medical,
+furniture, apparel/hair. A creature mod brings animals *and* their textures; an
+overhaul touches gameplay *and* factions.
 
-- **a trier / trie** — pas « garde » : seulement « regarde, je sais ce qu'il
-  fait ». C'est le tri qui fait avancer le travail, pas la decision d'extraire.
-- **des categories**, multiples : moteur/UI, gameplay, animaux, loisirs,
-  textures, nourriture, plantes, factions, races. Un mod de creatures apporte des
-  animaux *et* leurs textures ; un overhaul touche au gameplay *et* aux factions.
+**One label is enough to call a mod sorted** — not "kept", only "looked at, and I
+now know what it does". That is what moves the work forward; deciding to extract
+comes later, and only for a fraction of them. Sorting is not a separate field but
+a reading of the labels, so removing the last one puts the mod back in the queue
+with nothing else to undo.
 
-Le classement vit dans `data/mod-labels.json`, versionne avec le reste : il se
-fait sur des semaines, il ne peut pas dependre du cache d'un navigateur.
+A freshly labelled row leaves the list ten seconds later — but only where the
+filter says it should. Under "to sort" it goes; under "sorted" or "both" it
+stays. The delay only postpones the filter's effect, it does not override it.
 
-## Heritage
+A mod that declares no 1.6 version also gets a **works in 1.6** button. RimWorld
+refuses to load what About.xml does not announce, but most content mods carry
+over unchanged. The flag keeps the record of the test in game, so an already
+verified mod does not read as dead on every pass through the list.
 
-Chaque def affiche sa chaine de parents jusqu'a la racine, pas seulement son
-parent immediat. Une def de mod ne declare presque rien — `KCSG_PowerConduit`
-tient son cout, sa taille et sa categorie de `PowerConduit`, qui les tient de
-`BuildingBase`.
+The classification lives in `data/mod-labels.json`, versioned with the rest: it
+is built over weeks, it cannot depend on a browser cache.
 
-Trois origines, distinguees a la couleur :
+## Inheritance
 
-| Maillon | Sens |
+Each def shows its parent chain to the root, not only its immediate parent. A mod
+def declares almost nothing — `KCSG_PowerConduit` gets its cost, its size and its
+category from `PowerConduit`, which gets them from `BuildingBase`.
+
+Three origins, told apart by colour:
+
+| Link | Meaning |
 | --- | --- |
-| neutre | base declaree dans ce mod |
-| vert | base du jeu (Core ou DLC) |
-| **rouge pointille** | parent nomme mais introuvable |
+| neutral | base declared in this mod |
+| green | base of the game (Core or DLC) |
+| **dotted red** | parent named but nowhere to be found |
 
-Le dernier cas est le renseignement utile : il dit que la base vit dans une
-dependance non scannee, et c'est toujours l'explication d'un niveau
-technologique ou d'une categorie Architecte restes vides. Les add-ons de Vanilla
-Vehicles Expanded en sont pleins — leurs tourelles heritent de
-`VehicleTurretBase`, qui appartient au Vehicle Framework.
+The last case is the useful piece of information: it says the base lives in a
+dependency that was not scanned, and it is always the explanation for an empty
+tech level or Architect category. The Vanilla Vehicles Expanded add-ons are full
+of them — their turrets inherit from `VehicleTurretBase`, which belongs to the
+Vehicle Framework.
 
-## Etat
+## State
 
-Fait : listing des mods installes et actifs, inspection avec vignettes, niveau
-technologique resolu par heritage, categorie du menu Architecte, recherches
-liees, fermeture des dependances avec la raison de chaque ajout, detection des
-patchs orphelins et des dependances inutiles, chaine d'heritage complete,
-classement de la modlist par etiquettes.
+Done: listing of installed and active mods, inspection with thumbnails, tech
+level resolved through inheritance, Architect menu category, linked research,
+dependency closure with the reason for every addition, detection of orphan
+patches and useless dependencies, full inheritance chain, modlist classification
+by labels, links to the Steam Workshop pages.
 
-A venir : la fermeture branchee dans l'interface, la fusion de ressources avec
-affichage alternatif (style ou `randomGraphics` selon le nombre de sources visant
-la meme cible), et la generation du mod.
+To come: resource merging with an alternative display (style or `randomGraphics`
+depending on how many sources target the same def), and the generation of the mod
+itself.

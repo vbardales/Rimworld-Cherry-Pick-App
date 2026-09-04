@@ -8,10 +8,10 @@
     <AssemblyName>cherrypick</AssemblyName>
     <RootNamespace>CherryPick</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <!-- Pas d'apphost : l'exe produit serait un binaire non signe, que Smart App
-         Control bloque. On passe par dotnet.exe, signe par Microsoft, qui charge
-         la DLL. Ne jamais desactiver Smart App Control pour contourner : sous
-         Windows 11 on ne peut plus le reactiver sans reinstaller le systeme. -->
+    <!-- No apphost: the produced exe would be an unsigned binary, which Smart App
+         Control blocks. We go through dotnet.exe, signed by Microsoft, which loads
+         the DLL. Never disable Smart App Control to work around this: under
+         Windows 11 it cannot be turned back on without reinstalling the system. -->
     <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 

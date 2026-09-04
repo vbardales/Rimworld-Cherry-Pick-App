@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-// Pas de police distante : l'outil doit demarrer sans reseau, puisqu'il ne sert
-// qu'a lire des fichiers locaux.
+// No remote font: the tool has to start with no network, since all it does is
+// read local files.
 export const metadata: Metadata = {
   title: "cherrypick",
   description: "Inspecter un mod RimWorld et choisir ce qu'on en garde.",

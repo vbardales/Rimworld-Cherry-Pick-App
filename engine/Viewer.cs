@@ -3,20 +3,21 @@ using System.Text.Json;
 
 namespace CherryPick;
 
-// Produit une page HTML autonome pour parcourir l'inventaire d'un mod.
+// Produces a standalone HTML page for browsing a mod's inventory.
 //
-// Les donnees sont EMBARQUEES dans la page, pas chargees a cote : un fichier
-// ouvert en file:// ne peut pas faire de fetch vers un autre fichier, le
-// navigateur le bloque. Les images, elles, restent des chemins file:// vers les
-// vraies textures du mod — les recopier en base64 ferait des pages de plusieurs
-// dizaines de megaoctets.
+// The data is EMBEDDED in the page, not loaded alongside it: a file opened over
+// file:// cannot fetch another file, the browser blocks it. Images, on the other
+// hand, stay file:// paths to the mod's real textures — copying them in as base64
+// would make pages tens of megabytes long.
+//
+// The page itself stays in French: it is an interface, like the web one.
 public static class Viewer
 {
     public static string Render(Inventory inv, JsonSerializerOptions json)
     {
         var mod = inv.Mods.FirstOrDefault() ?? new ModInfo();
 
-        // On n'envoie a la page que ce qu'elle affiche.
+        // Only what the page displays is sent to it.
         var rows = inv.Defs.Select(d => new
         {
             key = d.Key,
@@ -61,8 +62,8 @@ public static class Viewer
     {
         if (path is null) return null;
         var p = path.Replace('\\', '/');
-        // Uri.EscapeDataString mangerait les separateurs ; on n'encode que ce qui
-        // gene reellement dans un chemin Windows.
+        // Uri.EscapeDataString would eat the separators; only what really gets in
+        // the way inside a Windows path is encoded.
         p = p.Replace("%", "%25").Replace("#", "%23").Replace("?", "%3F").Replace(" ", "%20");
         return "file:///" + p;
     }
@@ -229,7 +230,7 @@ function row(d) {
   return tr;
 }
 
-// Une valeur heritee est affichee en retrait : elle ne vient pas de la def.
+// An inherited value is shown set back: it does not come from the def itself.
 function cell(value, from) {
   const td = el('td','col');
   if (!value) { td.textContent = ''; return td; }

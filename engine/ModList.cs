@@ -2,11 +2,11 @@ using System.Xml.Linq;
 
 namespace CherryPick;
 
-// Resout la modlist ACTIVE de RimWorld en dossiers sur disque.
+// Resolves RimWorld's ACTIVE modlist into folders on disk.
 //
-// C'est le seul point d'entree du picker : on ne parcourt jamais les milliers de
-// mods du Workshop. On part de ModsConfig.xml, on ne resout que ce qui y figure,
-// et le contenu d'un mod n'est lu que lorsqu'on l'ouvre.
+// This is the picker's only entry point: the thousands of Workshop mods are never
+// walked. We start from ModsConfig.xml, resolve only what is listed there, and a
+// mod's content is read only when it is opened.
 public static class ModList
 {
     static readonly string[] ConfigCandidates =
@@ -34,8 +34,8 @@ public static class ModList
         return active.Elements("li").Select(e => e.Value.Trim()).Where(s => s.Length > 0).ToList();
     }
 
-    // Les trois emplacements ou RimWorld cherche un mod, dans l'ordre ou il les
-    // consulte. Le dossier Mods du jeu contient aussi nos jonctions NTFS.
+    // The three places RimWorld looks for a mod, in the order it consults them.
+    // The game's Mods folder also holds our NTFS junctions.
     public static List<string> ModRoots(string gameDir) => new()
     {
         Path.Combine(gameDir, "Data"),
@@ -53,9 +53,9 @@ public static class ModList
             : Path.Combine(steamapps.FullName, "workshop", "content", "294100");
     }
 
-    // Construit l'index packageId -> dossier en ne lisant que les About.xml, ce
-    // qui reste rapide meme avec beaucoup de mods installes : un fichier par
-    // dossier, aucune def parcourue.
+    // Builds the packageId -> folder index by reading About.xml files only, which
+    // stays fast even with many mods installed: one file per folder, not a single
+    // def walked.
     public static Dictionary<string, ModInfo> IndexInstalled(IEnumerable<string> roots, bool refresh = false)
         => InstalledIndex.Build(roots, refresh);
 
@@ -87,10 +87,10 @@ public static class ModList
         return result;
     }
 
-    // Tous les mods installes, actifs ou non. Meme index que Resolve : ce dernier
-    // n'en est qu'un filtre sur ModsConfig.xml. Le picker doit pouvoir inspecter
-    // un mod qui n'est pas charge — c'est meme le cas courant quand on cherche
-    // quoi extraire.
+    // Every installed mod, active or not. Same index as Resolve, which is only a
+    // filter of it against ModsConfig.xml. The picker must be able to inspect a
+    // mod that is not loaded — that is even the common case when looking for
+    // something to extract.
     public static List<ActiveMod> All(string gameDir, string modsConfigPath)
     {
         var active = new HashSet<string>(ReadActivePackageIds(modsConfigPath), StringComparer.OrdinalIgnoreCase);

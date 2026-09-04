@@ -2,12 +2,11 @@ import { NextRequest } from "next/server";
 import fs from "node:fs/promises";
 import { isUnderAllowedRoot } from "@/lib/cherrypick";
 
-// Sert une texture depuis le disque.
+// Serves a texture from disk.
 //
-// Indispensable : depuis une page http://localhost, tous les navigateurs
-// bloquent <img src="file:///...">. Et le garde-fou de chemin n'est pas
-// decoratif — sans lui, cette route lirait n'importe quel fichier de la machine
-// pour quiconque parle a localhost.
+// Indispensable: from an http://localhost page, every browser blocks
+// <img src="file:///...">. And the path guard is not decorative — without it this
+// route would read any file on the machine for whoever can talk to localhost.
 export async function GET(req: NextRequest) {
   const f = req.nextUrl.searchParams.get("f");
   if (!f) return new Response("f est requis", { status: 400 });

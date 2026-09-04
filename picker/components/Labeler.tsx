@@ -3,31 +3,31 @@
 import { useState } from "react";
 import { CATEGORIES, type CategoryId, type ModLabel } from "@/lib/labels";
 
-// Les etiquettes d'un mod, cliquables. Le meme composant sert dans la liste et
-// sur la fiche : le classement doit pouvoir se faire d'un coup d'oeil sur la
-// liste, sans ouvrir chaque mod, et se corriger une fois le mod ouvert.
+// A mod's labels, clickable. The same component serves the list and the mod
+// sheet: sorting has to be doable at a glance from the list, without opening
+// every mod, and correctable once a mod is open.
 //
-// L'enregistrement part au clic, sans bouton « valider » : un tri qu'il faut
-// penser a sauvegarder est un tri qu'on perd.
+// Saving happens on the click, with no "apply" button: a classification you have
+// to remember to save is one you lose.
 export function Labeler({
-  packageId, label, onChange, compact = false,
+  packageId, label, onChange, compact = false, dead = false,
 }: {
   packageId: string;
   label: ModLabel;
   onChange: (packageId: string, label: ModLabel) => void;
   compact?: boolean;
+  // The mod declares no version >= 1.6. Only such a mod deserves the button:
+  // offering "works in 1.6" on a mod that already declares it teaches nothing.
+  dead?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
 
-  // Une etiquette posee vaut tri : le bouton n'a plus rien a decider.
-  const tagged = label.categories.length > 0;
-
-  const send = (patch: { categories?: CategoryId[]; reviewed?: boolean }) => {
-    // Affichage optimiste : le disque repondra, mais la couleur ne doit pas
-    // attendre l'aller-retour.
+  const send = (patch: { categories?: CategoryId[]; works16?: boolean }) => {
+    // Optimistic display: the disk will answer, but the colour must not wait for
+    // the round trip.
     onChange(packageId, {
       categories: patch.categories ?? label.categories,
-      reviewed: patch.reviewed ?? label.reviewed,
+      works16: patch.works16 ?? label.works16,
       updated: new Date().toISOString(),
     });
     setBusy(true);
@@ -48,19 +48,20 @@ export function Labeler({
 
   return (
     <div className={`labeler${compact ? " compact" : ""}${busy ? " busy" : ""}`}>
-      <button
-        type="button"
-        className={`chip check${label.reviewed ? " on" : ""}`}
-        disabled={tagged}
-        onClick={() => send({ reviewed: !label.reviewed })}
-        title={
-          tagged ? "trie : au moins une etiquette est posee — les retirer pour le remettre a trier"
-            : label.reviewed ? "trie — cliquer pour remettre a trier"
-            : "marquer comme trie"
-        }
-      >
-        {label.reviewed ? "✓ trie" : "a trier"}
-      </button>
+      {dead && (
+        <button
+          type="button"
+          className={`chip v16${label.works16 ? " on" : ""}`}
+          onClick={() => send({ works16: !label.works16 })}
+          title={
+            label.works16
+              ? "verifie en 1.6 — cliquer pour retirer"
+              : "le mod n'annonce pas la 1.6 : marquer qu'il y tourne quand meme"
+          }
+        >
+          {label.works16 ? "✓ 1.6" : "1.6 ?"}
+        </button>
+      )}
       {CATEGORIES.map((c) => {
         const on = label.categories.includes(c.id);
         return (

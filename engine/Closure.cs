@@ -1,14 +1,14 @@
 namespace CherryPick;
 
-// Pourquoi une def s'est retrouvee dans la selection.
+// Why a def ended up in the selection.
 public sealed class ClosureItem
 {
     public string Key { get; set; } = "";
     public string Label { get; set; } = "";
     public string DefType { get; set; } = "";
-    public string Reason { get; set; } = "";     // parent, reference, recherche prealable
-    public string Via { get; set; } = "";        // la def qui l'a tiree
-    public int Depth { get; set; }               // 0 = coche a la main
+    public string Reason { get; set; } = "";     // parent, reference, research prerequisite
+    public string Via { get; set; } = "";        // the def that pulled it in
+    public int Depth { get; set; }               // 0 = ticked by hand
 }
 
 public sealed class DependencyVerdict
@@ -16,57 +16,57 @@ public sealed class DependencyVerdict
     public string PackageId { get; set; } = "";
     public string Name { get; set; } = "";
     public bool StillNeeded { get; set; }
-    public List<string> Because { get; set; } = new();   // les classes qui la justifient
+    public List<string> Because { get; set; } = new();   // the classes that justify it
 }
 
-// Une def gardee reclame une def qu'on a explicitement ecartee.
+// A kept def requires a def that was explicitly dropped.
 public sealed class Conflict
 {
-    public string Needed { get; set; } = "";        // la def ecartee
-    public string NeededBy { get; set; } = "";      // celle qui la reclame
-    public string Reason { get; set; } = "";        // parent, reference, recherche prealable
+    public string Needed { get; set; } = "";        // the dropped def
+    public string NeededBy { get; set; } = "";      // the one requiring it
+    public string Reason { get; set; } = "";        // parent, reference, research prerequisite
 }
 
 public sealed class ClosureResult
 {
-    // Trois etats par def :
-    //   indetermine  — non decide, donc embarque : c'est le defaut
-    //   embarque     — garde explicitement, avec tout ce qu'il entraine
-    //   non-embarque — ecarte explicitement
+    // Three states per def:
+    //   undetermined — undecided, therefore taken along: this is the default
+    //   taken        — explicitly kept, with everything it pulls in
+    //   dropped      — explicitly left out
     public int Kept { get; set; }
     public int Excluded { get; set; }
     public int Undetermined { get; set; }
 
-    // Une def gardee reclame une def ecartee. Chaque ligne est une erreur au
-    // chargement si on n'y touche pas.
+    // A kept def requires a dropped def. Every line here is a load error if
+    // nothing is done about it.
     public List<Conflict> Conflicts { get; set; } = new();
 
-    public List<ClosureItem> Items { get; set; } = new();      // embarque + entraine
-    public List<string> Classes { get; set; } = new();         // classes C# requises
+    public List<ClosureItem> Items { get; set; } = new();      // taken + pulled in
+    public List<string> Classes { get; set; } = new();         // required C# classes
     public List<string> Textures { get; set; } = new();
     public List<string> Sounds { get; set; } = new();
 
-    // References qui ne resolvent ni dans le mod, ni dans le jeu : dependance
-    // manquante, ou coquille. C'est la liste a lire en premier.
+    // References resolving neither in the mod nor in the game: a missing
+    // dependency, or a typo. This is the list to read first.
     public List<string> Unresolved { get; set; } = new();
 
-    // Patchs dont plus aucune cible n'est retenue. Les garder produirait
-    // exactement l'echec de chargement rencontre sur Medieval Homestead.
+    // Patches none of whose targets are kept any more. Keeping them would produce
+    // exactly the load failure met on Medieval Homestead.
     public List<PatchEntry> OrphanPatches { get; set; } = new();
     public List<PatchEntry> KeptPatches { get; set; } = new();
 
     public List<DependencyVerdict> Dependencies { get; set; } = new();
 }
 
-// Etend une selection a tout ce dont elle a besoin pour fonctionner.
+// Extends a selection to everything it needs in order to work.
 //
-// Les regles viennent chacune d'un raté reel, pas d'une liste theorique :
+// Every rule comes from a real miss, not from a theoretical list:
 //
-//   ParentName            l'auto-mortier d'Ancients, les sols de Rabbie
-//   references de defs    Marro : une arme tire le BioForge, qui tire la marroflesh
-//   recherches            Rabbie : 26 projets enchaines
-//   patchs orphelins      Medieval Homestead : deux operations sans cible
-//   dependances inutiles  Rabbie Gear a perdu HAR, Burn Barrel a perdu VEF
+//   ParentName            the Ancients auto-mortar, the Rabbie floors
+//   def references        Marro: a weapon pulls the BioForge, which pulls marroflesh
+//   research              Rabbie: 26 projects chained together
+//   orphan patches        Medieval Homestead: two operations with no target
+//   useless dependencies  Rabbie Gear lost HAR, Burn Barrel lost VEF
 public static class Closure
 {
     public static ClosureResult Compute(
@@ -76,14 +76,14 @@ public static class Closure
         Dictionary<string, (string name, HashSet<string> namespaces)>? dependencyNamespaces = null,
         IEnumerable<string>? excludedKeys = null)
     {
-        // Non decide vaut embarque : on part de tout, et on retire ce qui a ete
-        // explicitement ecarte. C'est le sens du travail — on taille dans un mod
-        // existant, on ne le reconstruit pas piece par piece.
+        // Undecided counts as taken: we start from everything and remove what was
+        // explicitly dropped. That is the meaning of the work — we carve into an
+        // existing mod, we do not rebuild it piece by piece.
         var excluded = new HashSet<string>(excludedKeys ?? Enumerable.Empty<string>(), StringComparer.Ordinal);
         var byKey = inv.Defs.ToDictionary(d => d.Key, StringComparer.Ordinal);
 
-        // Un meme nom peut designer une def concrete ou une base abstraite, et
-        // le XML ne dit pas laquelle : on indexe les deux.
+        // One same name can designate a concrete def or an abstract base, and the
+        // XML does not say which: both are indexed.
         var byName = new Dictionary<string, DefEntry>(StringComparer.Ordinal);
         foreach (var d in inv.Defs)
         {
@@ -112,8 +112,8 @@ public static class Closure
         {
             var (def, depth) = queue.Dequeue();
 
-            // Les references de cette def dont on accepte de dire qu'elles sont
-            // « non resolues » si elles ne mènent nulle part.
+            // The references of this def that we accept to call "unresolved" when
+            // they lead nowhere.
             var strict = new HashSet<string>(def.Refs.StrictDefs, StringComparer.Ordinal);
             strict.UnionWith(def.Refs.Research);
             if (def.ParentName is { Length: > 0 } parentName) strict.Add(parentName);
@@ -134,12 +134,12 @@ public static class Closure
                     return;
                 }
 
-                // Ni dans le mod : soit le jeu la fournit, soit personne.
+                // Not in the mod either: the game provides it, or nobody does.
                 //
-                // On ne signale que les references issues de balises qui portent
-                // vraiment une def. Sur la liste permissive, ce rapport se noyait
-                // sous les libelles, les enums et les booleens — « true », « Item »,
-                // « barrel » — et devenait inutilisable.
+                // Only references coming from tags that really carry a def are
+                // reported. On the permissive list this report drowned under
+                // labels, enums and booleans — "true", "Item", "barrel" — and
+                // became unusable.
                 if (!vanillaDefNames.Contains(name) && strict.Contains(name)) unresolved.Add(name);
             }
 
@@ -154,16 +154,16 @@ public static class Closure
             .ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        // Ce qui part reellement : tout, sauf ce qui a ete ecarte. Les defs
-        // « embarque » et leur fermeture y sont forcement, puisqu'on ne peut pas
-        // a la fois cocher et decocher la meme def.
+        // What actually ships: everything except what was dropped. The "taken"
+        // defs and their closure are necessarily in it, since one cannot both tick
+        // and untick the same def.
         var kept = inv.Defs.Where(d => !excluded.Contains(d.Key)).ToList();
         result.Kept = kept.Count;
         result.Excluded = excluded.Count;
         result.Undetermined = kept.Count - chosen.Count;
 
-        // Une def gardee reclame une def ecartee : au chargement, la def gardee
-        // echouerait. C'est le seul endroit ou les trois etats se contredisent.
+        // A kept def requires a dropped def: at load, the kept def would fail.
+        // This is the only place where the three states contradict each other.
         var excludedByName = new Dictionary<string, DefEntry>(StringComparer.Ordinal);
         foreach (var key in excluded)
             if (byKey.TryGetValue(key, out var d))
@@ -198,9 +198,9 @@ public static class Closure
                             .OrderBy(s => s, StringComparer.Ordinal).ToList();
         result.Unresolved = unresolved.OrderBy(s => s, StringComparer.Ordinal).ToList();
 
-        // Un patch survit si au moins une de ses cibles est retenue, ou s'il ne
-        // vise aucune def nommee — auquel cas on ne peut pas trancher, et le
-        // garder est le choix sur.
+        // A patch survives if at least one of its targets is kept, or if it names
+        // no def at all — in which case we cannot decide, and keeping it is the
+        // safe choice.
         var keptNames = new HashSet<string>(
             kept.SelectMany(d => new[] { d.DefName, d.AbstractName }).Where(s => s is { Length: > 0 })!,
             StringComparer.Ordinal);
@@ -212,8 +212,8 @@ public static class Closure
             if (relevant) result.KeptPatches.Add(p); else result.OrphanPatches.Add(p);
         }
 
-        // Une dependance declaree n'est encore utile que si une classe retenue
-        // lui appartient.
+        // A declared dependency is still useful only if a kept class belongs
+        // to it.
         if (dependencyNamespaces is not null)
         {
             foreach (var (pid, (name, namespaces)) in dependencyNamespaces)

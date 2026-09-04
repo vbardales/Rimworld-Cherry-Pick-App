@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
-import { CATEGORIES, EMPTY, type CategoryId, type ModLabel } from "@/lib/labels";
+import { CATEGORIES, EMPTY, isSorted, type CategoryId, type ModLabel } from "@/lib/labels";
+import { workshopUrl } from "@/lib/steam";
 
 type ModRow = {
   PackageId: string;
@@ -16,14 +17,14 @@ type ModRow = {
   DeadBefore16: boolean;
 };
 
-type Sift = "all" | "todo" | "done" | "untagged";
+type Sift = "all" | "todo" | "done";
 
-// Delai avant qu'un mod etiquete quitte la liste.
+// How long a labelled mod stays before leaving the list.
 //
-// Poser une categorie, c'est avoir regarde le mod : le marquer « trie » a la main
-// juste apres serait un deuxieme clic pour dire ce que le premier a deja dit. Mais
-// la ligne ne peut pas disparaitre a l'instant du clic — il faut le temps d'en
-// poser une deuxieme, et de se rendre compte qu'on s'est trompe de ligne.
+// Picking a category means the mod has been looked at, so marking it "sorted" by
+// hand right after would be a second click saying what the first already said.
+// But the row cannot vanish on the click itself — there has to be time to add a
+// second label, and to notice one was put on the wrong row.
 const HOLD_MS = 10_000;
 
 export default function Home() {
@@ -38,23 +39,23 @@ export default function Home() {
   const [sift, setSift] = useState<Sift>("all");
   const [only, setOnly] = useState<CategoryId[]>([]);
 
-  // Les mods en sursis : etiquetes a l'instant, et momentanement exemptes du
-  // filtre courant.
+  // Mods on reprieve: just labelled, and momentarily exempt from the current
+  // filter.
   const [leaving, setLeaving] = useState<string[]>([]);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
-  // Le classement se charge une fois : il ne depend ni de la portee ni de la
-  // recherche, et il est minuscule a cote de la liste des mods.
+  // The classification loads once: it depends neither on the scope nor on the
+  // search, and it is tiny next to the list of mods.
   useEffect(() => {
     fetch("/api/labels")
       .then((r) => r.json())
       .then((d) => setLabels(d.mods ?? {}))
-      .catch(() => { /* un tri illisible ne doit pas empecher la liste */ });
+      .catch(() => { /* an unreadable classification must not block the list */ });
   }, []);
 
   useEffect(() => {
-    // Un mod se cherche en tapant : on attend une pause avant d'interroger le
-    // serveur, sinon chaque frappe relance un filtrage sur cinq mille entrees.
+    // A mod is searched for by typing: we wait for a pause before asking the
+    // server, otherwise every keystroke re-filters five thousand entries.
     const timer = setTimeout(() => {
       setBusy(true);
       setError(null);
@@ -77,20 +78,19 @@ export default function Home() {
     setLeaving((prev) => (prev.includes(packageId) ? prev.filter((x) => x !== packageId) : prev));
   }, []);
 
-  // Une etiquette posee sort le mod de la liste apres un delai.
+  // A label sends the mod out of the list after a delay.
   //
-  // Le depart se decide sur les ETIQUETTES, pas sur l'etat « trie » : c'est le
-  // serveur qui derive le tri des etiquettes, donc sa reponse revient toujours
-  // avec « trie », et lire ce drapeau annulait le depart aussitot apres l'avoir
-  // programme.
+  // The departure is decided on the LABELS, not on the "sorted" state: the server
+  // derives sorting from the labels, so its reply always comes back sorted, and
+  // reading that flag cancelled the departure right after scheduling it.
   //
-  // Le delai repart a chaque clic : poser une deuxieme categorie, c'est qu'on n'a
-  // pas fini de decrire le mod, pas qu'on veut le voir partir plus vite.
+  // The delay restarts on every click: adding a second category means the mod is
+  // not fully described yet, not that it should leave sooner.
   const patchLabel = useCallback((packageId: string, label: ModLabel) => {
     setLabels((prev) => ({ ...prev, [packageId]: label }));
 
-    // Tout retirer annule le depart : c'est la seule facon de le faire, et elle
-    // suffit — un bouton d'annulation en bout de ligne decalerait les etiquettes.
+    // Removing every label cancels the departure: it is the only way to do it, and
+    // it is enough — a cancel button at the end of the row would shift the labels.
     if (label.categories.length === 0) { cancelLeaving(packageId); return; }
 
     const t = timers.current.get(packageId);
@@ -107,34 +107,32 @@ export default function Home() {
     return () => { for (const t of map.values()) clearTimeout(t); map.clear(); };
   }, []);
 
-  // Le filtre par etiquette porte sur ce que le serveur a deja renvoye : le tri
-  // vit ici, pas dans le moteur, et la liste est deja bornee.
+  // Filtering by label works on what the server already returned: the
+  // classification lives here, not in the engine, and the list is already capped.
   const shown = useMemo(() => {
     return rows.filter((m) => {
-      // Une ligne qu'on vient d'etiqueter reste visible dix secondes, puis le
-      // filtre reprend ses droits. C'est LUI qui decide du depart, pas le delai :
-      // sous « a trier » la ligne s'en va, puisqu'etiqueter vaut trier ; sous
-      // « tries » ou « tous » elle reste, et la faire disparaitre d'une vue ou
-      // elle a sa place serait absurde.
+      // A freshly labelled row stays visible for ten seconds, then the filter takes
+      // over. It is the FILTER that decides the departure, not the delay: under "to
+      // sort" the row leaves, since labelling is sorting; under "sorted" or "both"
+      // it stays, and making it vanish from a view where it belongs would be
+      // absurd.
       //
-      // Sans ce sursis, etiqueter sous « a trier » escamote la ligne au clic : le
-      // mod devient trie a l'instant meme, donc le filtre l'ecarte avant que le
-      // delai ait servi a quoi que ce soit.
+      // Without this reprieve, labelling under "to sort" whisks the row away on the
+      // click: the mod becomes sorted at that very instant, so the filter drops it
+      // before the delay has served any purpose.
       if (leaving.includes(m.PackageId)) return true;
       const l = labels[m.PackageId] ?? EMPTY;
-      if (sift === "todo" && l.reviewed) return false;
-      if (sift === "done" && !l.reviewed) return false;
-      if (sift === "untagged" && l.categories.length > 0) return false;
-      // Plusieurs etiquettes cochees, c'est un OU : on cherche « tout ce qui
-      // touche aux animaux ou aux plantes », pas leur intersection, qui serait
-      // presque toujours vide.
+      if (sift === "todo" && isSorted(l)) return false;
+      if (sift === "done" && !isSorted(l)) return false;
+      // Several labels ticked means OR: one looks for "everything touching animals
+      // or plants", not their intersection, which would almost always be empty.
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
   }, [rows, labels, sift, only, leaving]);
 
   const tally = useMemo(() => {
-    const done = rows.filter((m) => (labels[m.PackageId] ?? EMPTY).reviewed).length;
+    const done = rows.filter((m) => isSorted(labels[m.PackageId] ?? EMPTY)).length;
     return { done, todo: rows.length - done };
   }, [rows, labels]);
 
@@ -169,8 +167,7 @@ export default function Home() {
           <option value="all">tries et non tries</option>
           <option value="todo">a trier ({tally.todo})</option>
           <option value="done">tries ({tally.done})</option>
-          <option value="untagged">sans etiquette</option>
-        </select>
+          </select>
         <span className="tally">
           {busy
             ? "lecture..."
@@ -206,10 +203,11 @@ export default function Home() {
         {shown.map((m) => {
           const l = labels[m.PackageId] ?? EMPTY;
           const due = leaving.includes(m.PackageId);
+          const steam = workshopUrl(m.Path);
           return (
             <li
               key={m.PackageId}
-              className={`${l.reviewed ? "sorted" : ""}${due ? " leaving" : ""}`}
+              className={`${isSorted(l) ? "sorted" : ""}${due ? " leaving" : ""}`}
             >
               <Link
                 href={`/mod/${encodeURIComponent(m.PackageId)}?path=${encodeURIComponent(m.Path)}`}
@@ -222,10 +220,29 @@ export default function Home() {
                   {m.SupportedVersions.length > 0 && (
                     <em className="tag">{m.SupportedVersions.join(" ")}</em>
                   )}
-                  {m.DeadBefore16 && <em className="tag dead">mort avant 1.6</em>}
+                  {m.DeadBefore16 && !l.works16 && <em className="tag dead">mort avant 1.6</em>}
+                  {m.DeadBefore16 && l.works16 && <em className="tag act">tourne en 1.6</em>}
                 </span>
               </Link>
-              <Labeler packageId={m.PackageId} label={l} onChange={patchLabel} compact />
+              {/* Space reserved even with no page: a local mod has none, and a
+                  magnifier that comes and goes shifts the whole row. */}
+              <a
+                className={`peek${steam ? "" : " off"}`}
+                href={steam ?? undefined}
+                target="_blank"
+                rel="noreferrer noopener"
+                title={steam ? "ouvrir la fiche Steam Workshop" : "pas de fiche Steam : mod local"}
+                onClick={(e) => e.stopPropagation()}
+              >
+                🔍
+              </a>
+              <Labeler
+                packageId={m.PackageId}
+                label={l}
+                onChange={patchLabel}
+                compact
+                dead={m.DeadBefore16}
+              />
             </li>
           );
         })}

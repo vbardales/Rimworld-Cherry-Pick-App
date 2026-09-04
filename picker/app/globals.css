@@ -70,9 +70,9 @@ td.pic img { width: 38px; height: 38px; object-fit: contain; image-rendering: pi
 
 pre { background: var(--panel); padding: 10px; border-radius: 6px; overflow: auto; font-size: 12px; }
 
-/* --- les trois etats -------------------------------------------------- */
-/* Indetermine n'est pas « rien » : c'est « embarque, sans qu'on l'ait dit ».
-   Il doit donc se lire comme un etat neutre, pas comme une case vide. */
+/* --- the three states -------------------------------------------------- */
+/* Undetermined is not "nothing": it is "taken, without having said so". It must
+   therefore read as a neutral state, not as an empty box. */
 .tri {
   width: 24px; height: 24px; line-height: 1;
   border: 1px solid var(--line); border-radius: 5px;
@@ -91,7 +91,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .tag.over { color: var(--warn, #8a5a00); border-color: var(--warn, #8a5a00); }
 @media (prefers-color-scheme: dark) { .tag.over { color: #e0a94a; border-color: #e0a94a; } }
 
-/* --- panneau de fermeture --------------------------------------------- */
+/* --- closure panel ----------------------------------------------------- */
 .panel {
   border: 1px solid var(--line); border-radius: 8px;
   padding: 12px 14px; margin: 0 0 16px; background: var(--panel);
@@ -106,7 +106,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .panel li { margin: 2px 0; }
 .panel .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--dim); }
 
-/* Actions en bloc : marquer tout le mod, ou tout le filtre courant. */
+/* Bulk actions: mark the whole mod, or the whole current filter. */
 .bar.bulk { margin-top: -6px; gap: 8px; }
 .bar.bulk button {
   padding: 4px 10px; border: 1px solid var(--line); border-radius: 5px;
@@ -115,9 +115,9 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .bar.bulk button:hover { border-color: var(--accent); }
 .bar.bulk .sep { color: var(--line); }
 
-/* --- etiquettes de mod ------------------------------------------------ */
-/* Une couleur par categorie, definie ici et nulle part ailleurs : le composant
-   ne connait que l'identifiant, et le theme sombre se rattrape d'un seul bloc. */
+/* --- mod labels -------------------------------------------------------- */
+/* One colour per category, defined here and nowhere else: the component knows
+   only the identifier, and the dark theme is caught up in a single block. */
 .labeler {
   --c: var(--dim);
   display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
@@ -133,6 +133,8 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .labeler [data-cat=factions] { --c: #b04a34; }
 .labeler [data-cat=races]    { --c: #8b5cc4; }
 .labeler [data-cat=medical]  { --c: #2e93b8; }
+.labeler [data-cat=furniture] { --c: #8a6a3a; }
+.labeler [data-cat=apparel]  { --c: #14907f; }
 @media (prefers-color-scheme: dark) {
   .labeler [data-cat=engine]   { --c: #f07ab0; }
   .labeler [data-cat=gameplay] { --c: #8ed97a; }
@@ -144,10 +146,12 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   .labeler [data-cat=factions] { --c: #e08a72; }
   .labeler [data-cat=races]    { --c: #bb92ea; }
   .labeler [data-cat=medical]  { --c: #6fc9e6; }
+  .labeler [data-cat=furniture] { --c: #c9a26a; }
+  .labeler [data-cat=apparel]  { --c: #59d3bd; }
 }
 
-/* Non posee, une etiquette reste grise : sur une liste de soixante-dix mods,
-   neuf couleurs allumees en permanence ne classent plus rien. */
+/* Unset, a label stays grey: on a list of a hundred and eighty mods, a dozen
+   colours lit permanently classify nothing at all. */
 .chip {
   font: inherit; font-size: 11.5px; line-height: 1.5;
   padding: 1px 8px; border-radius: 10px; cursor: pointer;
@@ -159,27 +163,42 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   border-color: var(--c); color: var(--c); font-weight: 600;
   background: color-mix(in srgb, var(--c) 16%, transparent);
 }
-.chip.check { --c: var(--accent); margin-right: 4px; }
-.labeler.compact .chip { font-size: 11px; padding: 0 6px; }
+.labeler.compact .chip { font-size: 10.5px; padding: 0 5px; }
 
-/* Sur la liste, les etiquettes sont a droite et ne doivent pas ouvrir le mod :
-   elles vivent donc hors du lien, pas dedans. */
+/* In the list the labels sit on the right and must not open the mod: they live
+   outside the link, not inside it. */
 .mods li { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
 .mods li > a { flex: 1 1 auto; min-width: 0; }
-.mods li > .labeler { flex: 0 0 auto; justify-content: flex-end; max-width: 52%; }
+.mods li > .labeler { flex: 0 0 auto; justify-content: flex-end; max-width: 64%; }
 .mods li.sorted > a .name { color: var(--dim); }
 
-/* Filtrer par etiquette : memes couleurs, meme lecture. */
+/* Filtering by label: same colours, same reading. */
 .bar .labeler { gap: 4px; }
 
-/* --- chaine d'heritage ------------------------------------------------- */
-/* Trois origines a distinguer d'un coup d'oeil : declaree ici, fournie par le
-   jeu, ou introuvable. La derniere seule justifie une couleur d'alerte. */
+/* --- inheritance chain -------------------------------------------------- */
+/* Three origins to tell apart at a glance: declared here, provided by the game,
+   or nowhere to be found. Only the last one warrants an alert colour. */
 .chain .core { color: var(--accent); }
 .chain .gone { color: var(--bad); text-decoration: underline dotted; }
 
-/* Une ligne etiquetee s'efface avant de quitter la liste : ce qui part doit se
-   voir partir, sinon la liste semble se vider toute seule. Rien n'est ajoute a la
-   ligne — un bouton d'annulation en bout de ligne pousserait les etiquettes au
-   moment precis ou l'on vise la suivante, et decocher suffit a annuler. */
+/* A labelled row fades before leaving the list: what goes must be seen going,
+   otherwise the list looks as if it empties itself. Nothing is added to the row —
+   a cancel button at its end would push the labels sideways at the exact moment
+   the next one is being aimed at, and unticking is enough to cancel. */
 .mods li.leaving { opacity: .5; transition: opacity .4s ease; }
+
+/* Link to the Steam page. Fixed width in the list, filled or not: a local mod has
+   no page, and a magnifier that comes and goes would shift the row. */
+.mods li > .peek {
+  flex: 0 0 22px; text-align: center; font-size: 12.5px; line-height: 1;
+  color: var(--dim); text-decoration: none;
+}
+.mods li > .peek { opacity: .55; }
+.mods li > .peek:hover { opacity: 1; }
+.mods li > .peek.off { visibility: hidden; }
+.tag.link { color: var(--accent); border-color: var(--accent); }
+.tag.link:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
+/* "Works in 1.6": something observed in game, not a classification. It stands
+   apart from the labels by wearing the tool's own colour. */
+.chip.v16 { --c: var(--accent); margin-right: 4px; }

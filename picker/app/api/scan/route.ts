@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { scanMod, isUnderAllowedRoot } from "@/lib/cherrypick";
 
-// L'inventaire d'UN mod, a la demande. Le chemin est verifie avant tout appel :
-// on ne scanne que ce qui vit sous une racine de mods connue.
+// The inventory of ONE mod, on demand. The path is checked before any call: we
+// only scan what lives under a known mods root.
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
   const modPath = req.nextUrl.searchParams.get("path");
