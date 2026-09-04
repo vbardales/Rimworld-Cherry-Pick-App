@@ -46,7 +46,7 @@ the machine to whoever can talk to localhost. Both routes answer 403 outside.
 ```
 engine/     C# engine — XML reading, inheritance, dependency closure
 picker/     Next interface — listing, inspection, selection
-data/       the modlist classification, in plain text and versioned
+data/       the modlist classification and the saved configs, versioned
 ```
 
 The engine carries the whole analysis. The interface only orchestrates calls.
@@ -150,6 +150,10 @@ level resolved through inheritance, Architect menu category, linked research,
 dependency closure with the reason for every addition, detection of orphan
 patches and useless dependencies, full inheritance chain, modlist classification
 by labels, links to the Steam Workshop pages.
+
+A saved configuration lands in `data/configs/cherrypick-<packageId>.json`,
+written straight into the repository rather than downloaded — a config filed
+beside the day's screenshots is one that never gets replayed.
 
 To come: resource merging with an alternative display (style or `randomGraphics`
 depending on how many sources target the same def), and the generation of the mod

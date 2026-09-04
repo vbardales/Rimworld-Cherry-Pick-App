@@ -93,6 +93,7 @@ export default function ModPage({
   const [rescanning, setRescanning] = useState(false);
   const [label, setLabel] = useState<ModLabel>(EMPTY);
   const [restored, setRestored] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
 
   // Read the mod again from its files.
   //
@@ -260,12 +261,18 @@ export default function ModPage({
         referencesNonResolues: closure.Unresolved,
       },
     };
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `cherrypick-${mod.PackageId}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    // Written into the repository rather than downloaded. A download lands in the
+    // downloads folder and has to be moved by hand, and a config filed beside the
+    // day's screenshots is one that never gets replayed.
+    setSaved(null);
+    fetch("/api/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(config),
+    })
+      .then((r) => r.json())
+      .then((d) => (d.error ? Promise.reject(new Error(d.error)) : setSaved(d.name)))
+      .catch((e) => setError(String(e)));
   };
 
   // The closure costs a call to the engine: it is computed after a pause, not on
@@ -356,8 +363,9 @@ export default function ModPage({
           {rescanning ? "relecture..." : "reetudier le mod"}
         </button>
         <button onClick={exportConfig} disabled={!closure}>
-          exporter la conf{partial ? "" : " (mod entier)"}
+          enregistrer la conf{partial ? "" : " (mod entier)"}
         </button>
+        {saved && <span className="sub">ecrite dans data/configs/{saved}</span>}
         <span className="sep">|</span>
         <span className="sub">le mod entier :</span>
         <button onClick={() => setAll(groups, "in")}>

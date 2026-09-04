@@ -60,6 +60,11 @@ public static class Scanner
         "outOfFuelMessage", "ingestCommandString", "ingestReportString",
         "letterText", "letterLabel", "letterInfoText", "summary", "text",
         "structureLabel", "GizmoLabel", "GizmoDescription", "beginLetterLabel", "beginLetter",
+
+        // Translation keys, not defs. They name an entry in Keyed/, and they are
+        // shaped exactly like a defName — MeditationFocusPerFlame is a sentence in
+        // the game's language files.
+        "explanationKey", "explanationKeyAbstract", "customLabelKey", "labelKey",
     };
 
     // C# enumerations: "Item", "PassThroughOnly", "Adulthood"...
@@ -86,11 +91,21 @@ public static class Scanner
         "descriptionHyperlinks", "recipeUsers", "hiddenWhileUndiscovered",
     };
 
-    static bool IsReportableDefRef(string tag, string? parentTag, string value)
+    static bool IsReportableDefRef(string tag, string? parentTag, string value, bool conditional)
     {
         if (FreeTextTags.Contains(tag) || EnumTags.Contains(tag)) return false;
         if (parentTag is not null && NonDefListParents.Contains(parentTag)) return false;
         if (value is "true" or "false" or "True" or "False") return false;
+
+        // Held behind a MayRequire, somewhere up the tree. The def is not there
+        // unless that mod is loaded, and the author said so — reporting it as
+        // unresolved would be reporting a decision as a fault.
+        //
+        // The Halloween lantern lists DankPyon_Candles as a meditation focus,
+        // guarded by MayRequire on Medieval Overhaul. Without this, every optional
+        // integration a mod ships comes back as a missing dependency.
+        if (conditional) return false;
+
         return true;
     }
 
@@ -317,7 +332,9 @@ public static class Scanner
             refs.Defs.Add(v);
 
             // The report, on the other hand, keeps only what can really be a def.
-            if (IsReportableDefRef(tag, parentTag, v)) refs.StrictDefs.Add(v);
+            var conditional = node.AncestorsAndSelf().Any(
+                a => a.Attribute("MayRequire") is not null || a.Attribute("MayRequireAnyOf") is not null);
+            if (IsReportableDefRef(tag, parentTag, v, conditional)) refs.StrictDefs.Add(v);
         }
         Dedupe(refs);
     }

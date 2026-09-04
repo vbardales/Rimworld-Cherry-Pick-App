@@ -331,6 +331,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:39.834Z"
     },
+    "HalloweenGraves.velcroboy333": {
+      "categories": [
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:43:21.432Z"
+    },
     "hekmo.flavortext": {
       "categories": [
         "food"
@@ -394,12 +401,28 @@
       "works16": false,
       "updated": "2026-09-04T18:23:30.542Z"
     },
+    "KD.HalloweenMonsterMash": {
+      "categories": [
+        "food",
+        "furniture",
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:45:30.704Z"
+    },
     "keyz182.keyzallowutilities": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:49:19.721Z"
+    },
+    "keyz182.KeyzAllowUtilities": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:46:42.366Z"
     },
     "kopp.smallcorpsesdecayfaster": {
       "categories": [
@@ -575,6 +598,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:47.410Z"
+    },
+    "Mlie.KilledEnemyAutoAllowed": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:46:49.043Z"
     },
     "mlie.logafterdeferror": {
       "categories": [
