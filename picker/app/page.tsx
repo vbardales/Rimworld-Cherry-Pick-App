@@ -27,6 +27,9 @@ type Sift = "all" | "todo" | "done";
 // second label, and to notice one was put on the wrong row.
 const HOLD_MS = 10_000;
 
+// How long the row then takes to fold up. Kept in step with the CSS animation.
+const FOLD_MS = 450;
+
 export default function Home() {
   const [scope, setScope] = useState<"active" | "all">("active");
   const [q, setQ] = useState("");
@@ -42,6 +45,14 @@ export default function Home() {
   // Mods on reprieve: just labelled, and momentarily exempt from the current
   // filter.
   const [leaving, setLeaving] = useState<string[]>([]);
+
+  // Mods on their way out: the reprieve is over, and the row is folding up.
+  //
+  // React would unmount the row the instant the filter drops it, and everything
+  // below would jump up under the pointer — which is exactly how a click lands on
+  // the wrong mod. So the row stays mounted for the length of the fold, taking no
+  // clicks, and the list closes up at a speed the eye can follow.
+  const [folding, setFolding] = useState<string[]>([]);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   // The classification loads once: it depends neither on the scope nor on the
@@ -76,6 +87,7 @@ export default function Home() {
     const t = timers.current.get(packageId);
     if (t) { clearTimeout(t); timers.current.delete(packageId); }
     setLeaving((prev) => (prev.includes(packageId) ? prev.filter((x) => x !== packageId) : prev));
+    setFolding((prev) => (prev.includes(packageId) ? prev.filter((x) => x !== packageId) : prev));
   }, []);
 
   // A label sends the mod out of the list after a delay.
@@ -97,8 +109,26 @@ export default function Home() {
     if (t) clearTimeout(t);
     setLeaving((prev) => (prev.includes(packageId) ? prev : [...prev, packageId]));
     timers.current.set(packageId, setTimeout(() => {
-      timers.current.delete(packageId);
+      // The row's real height, handed to the animation.
+      //
+      // A guessed starting height is worse than none: too high and the fold spends
+      // its first moments doing nothing visible, too low and the row snaps down
+      // before it starts. Both defeat the point, which is that the movement be
+      // followable. Measuring is one line, and it survives a row that wraps.
+      const row = document.querySelector<HTMLElement>(
+        `.mods li[data-pid="${CSS.escape(packageId)}"]`,
+      );
+      row?.style.setProperty("--h", `${row.offsetHeight}px`);
+
       setLeaving((prev) => prev.filter((x) => x !== packageId));
+      setFolding((prev) => (prev.includes(packageId) ? prev : [...prev, packageId]));
+
+      // Same duration as the CSS animation. Ending the fold early would make the
+      // row snap out; ending it late would leave a gap in the list.
+      timers.current.set(packageId, setTimeout(() => {
+        timers.current.delete(packageId);
+        setFolding((prev) => prev.filter((x) => x !== packageId));
+      }, FOLD_MS));
     }, HOLD_MS));
   }, [cancelLeaving]);
 
@@ -120,7 +150,7 @@ export default function Home() {
       // Without this reprieve, labelling under "to sort" whisks the row away on the
       // click: the mod becomes sorted at that very instant, so the filter drops it
       // before the delay has served any purpose.
-      if (leaving.includes(m.PackageId)) return true;
+      if (leaving.includes(m.PackageId) || folding.includes(m.PackageId)) return true;
       const l = labels[m.PackageId] ?? EMPTY;
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
@@ -129,7 +159,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, labels, sift, only, leaving]);
+  }, [rows, labels, sift, only, leaving, folding]);
 
   const tally = useMemo(() => {
     const done = rows.filter((m) => isSorted(labels[m.PackageId] ?? EMPTY)).length;
@@ -203,11 +233,13 @@ export default function Home() {
         {shown.map((m) => {
           const l = labels[m.PackageId] ?? EMPTY;
           const due = leaving.includes(m.PackageId);
+          const out = folding.includes(m.PackageId);
           const steam = workshopUrl(m.Path);
           return (
             <li
               key={m.PackageId}
-              className={`${isSorted(l) ? "sorted" : ""}${due ? " leaving" : ""}`}
+              data-pid={m.PackageId}
+              className={`${isSorted(l) ? "sorted" : ""}${due ? " leaving" : ""}${out ? " folding" : ""}`}
             >
               <Link
                 href={`/mod/${encodeURIComponent(m.PackageId)}?path=${encodeURIComponent(m.Path)}`}

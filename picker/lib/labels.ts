@@ -13,7 +13,7 @@
 // only, and it knows how to adapt to the dark theme.
 export type CategoryId =
   | "engine" | "gameplay" | "animals" | "joy" | "textures"
-  | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel";
+  | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel" | "ideology";
 
 export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "engine",   label: "moteur/UI" },
@@ -28,6 +28,7 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "medical",  label: "medical" },
   { id: "furniture", label: "furniture" },
   { id: "apparel",  label: "vetements/cheveux" },
+  { id: "ideology", label: "ideologie" },
 ];
 
 export type ModLabel = {

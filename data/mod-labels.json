@@ -71,6 +71,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:18.757Z"
     },
+    "blues.sharedjoys": {
+      "categories": [
+        "joy"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:09:05.687Z"
+    },
     "brrainz.harmony": {
       "categories": [
         "engine"
@@ -126,6 +133,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:44:49.668Z"
+    },
+    "cruesoe.vanillauiplus": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:16:00.187Z"
     },
     "defaults.1trickpwnyta": {
       "categories": [
@@ -232,6 +246,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:49:19.721Z"
     },
+    "kopp.smallcorpsesdecayfaster": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:09:12.195Z"
+    },
     "kota.inventorytab": {
       "categories": [
         "engine"
@@ -252,6 +273,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:09.057Z"
+    },
+    "lordfanger.rimlanguagehotreload": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:40.312Z"
     },
     "lucius.cherryscroll": {
       "categories": [
@@ -350,6 +378,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:18.906Z"
     },
+    "malteschulze.rimmsqol": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:43.571Z"
+    },
     "matvey24.fpsstabilizer": {
       "categories": [
         "engine"
@@ -386,12 +421,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:50:49.667Z"
     },
+    "mlie.toolbox": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:12:00.808Z"
+    },
     "nals.facialanimation": {
       "categories": [
         "textures"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:42.364Z"
+    },
+    "nanaloveyuki.ohyouaresofast": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:34.438Z"
     },
     "nelim.animasong": {
       "categories": [
@@ -467,6 +516,14 @@
       "reviewed": true,
       "updated": "2026-09-04T17:54:21.267Z"
     },
+    "nelim.nightchange": {
+      "categories": [
+        "apparel",
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:21.475Z"
+    },
     "nelim.notableneeded": {
       "categories": [
         "gameplay"
@@ -495,6 +552,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:54:24.256Z"
     },
+    "nelim.spittingimage": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:09:17.380Z"
+    },
     "nercury.assignanimalfood": {
       "categories": [
         "animals"
@@ -502,12 +566,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:27.080Z"
     },
+    "ocarina.rimscent.incense": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:50.059Z"
+    },
     "oskarpotocki.vanillafactionsexpanded.core": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:32.463Z"
+    },
+    "oskarpotocki.vanillavehiclesexpanded": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:16:04.069Z"
     },
     "owlchemist.cherrypicker": {
       "categories": [
@@ -523,6 +601,20 @@
       "reviewed": true,
       "updated": "2026-09-04T17:49:21.727Z"
     },
+    "reo.rimscent": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:47.934Z"
+    },
+    "rnwb.library": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:09:02.589Z"
+    },
     "romyashi.perfumes": {
       "categories": [
         "gameplay",
@@ -537,6 +629,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:10.680Z"
+    },
+    "scorpio.resourcedictionary": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:08:36.349Z"
     },
     "secsky2.gearstatoptimization": {
       "categories": [
@@ -587,6 +686,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:12.288Z"
     },
+    "tolak.vtexe.ambrosiafix": {
+      "categories": [
+        "textures"
+      ],
+      "works16": true,
+      "updated": "2026-09-04T18:15:36.279Z"
+    },
     "triskal.colonistbarqol": {
       "categories": [
         "engine"
@@ -621,6 +727,56 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:55:04.527Z"
+    },
+    "vanillaexpanded.recycling": {
+      "categories": [
+        "gameplay",
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:12:44.085Z"
+    },
+    "vanillaexpanded.temperature": {
+      "categories": [
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:15:26.887Z"
+    },
+    "vanillaexpanded.vanillasocialinteractionsexpanded": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:15:07.305Z"
+    },
+    "vanillaexpanded.vanillatradingexpanded": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:15:56.936Z"
+    },
+    "vanillaexpanded.vanillatraitsexpanded": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:15:58.573Z"
+    },
+    "vanillaexpanded.vfecore": {
+      "categories": [
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:12:03.200Z"
+    },
+    "vanillaexpanded.vtexe": {
+      "categories": [
+        "textures"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:15:29.902Z"
     },
     "void.charactereditor": {
       "categories": [
@@ -664,12 +820,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:51:03.155Z"
     },
+    "zal.vanillataxidermy": {
+      "categories": [
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:15:22.468Z"
+    },
     "zetrith.prepatcher": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:28.351Z"
+    },
+    "zilla.fertilityinfo": {
+      "categories": [
+        "engine"
+      ],
+      "works16": true,
+      "updated": "2026-09-04T18:09:09.917Z"
     }
   }
 }

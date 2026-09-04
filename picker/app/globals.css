@@ -135,6 +135,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .labeler [data-cat=medical]  { --c: #2e93b8; }
 .labeler [data-cat=furniture] { --c: #8a6a3a; }
 .labeler [data-cat=apparel]  { --c: #14907f; }
+.labeler [data-cat=ideology] { --c: #c02a52; }
 @media (prefers-color-scheme: dark) {
   .labeler [data-cat=engine]   { --c: #f07ab0; }
   .labeler [data-cat=gameplay] { --c: #8ed97a; }
@@ -148,6 +149,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   .labeler [data-cat=medical]  { --c: #6fc9e6; }
   .labeler [data-cat=furniture] { --c: #c9a26a; }
   .labeler [data-cat=apparel]  { --c: #59d3bd; }
+  .labeler [data-cat=ideology] { --c: #f0788f; }
 }
 
 /* Unset, a label stays grey: on a list of a hundred and eighty mods, a dozen
@@ -163,13 +165,13 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   border-color: var(--c); color: var(--c); font-weight: 600;
   background: color-mix(in srgb, var(--c) 16%, transparent);
 }
-.labeler.compact .chip { font-size: 10.5px; padding: 0 5px; }
+.labeler.compact .chip { font-size: 10px; padding: 0 4px; }
 
 /* In the list the labels sit on the right and must not open the mod: they live
    outside the link, not inside it. */
 .mods li { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
 .mods li > a { flex: 1 1 auto; min-width: 0; }
-.mods li > .labeler { flex: 0 0 auto; justify-content: flex-end; max-width: 64%; }
+.mods li > .labeler { flex: 0 0 auto; justify-content: flex-end; max-width: 72%; }
 .mods li.sorted > a .name { color: var(--dim); }
 
 /* Filtering by label: same colours, same reading. */
@@ -186,6 +188,25 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
    a cancel button at its end would push the labels sideways at the exact moment
    the next one is being aimed at, and unticking is enough to cancel. */
 .mods li.leaving { opacity: .5; transition: opacity .4s ease; }
+
+/* Then the row folds up instead of vanishing.
+   Removing it outright makes everything below jump up under the pointer, which is
+   how a click lands on the wrong mod. Folding moves the same distance at a speed
+   the eye can follow — and the row stops taking clicks the moment it starts, so a
+   click already on its way is spent on nothing rather than on the wrong thing. */
+.mods li.folding {
+  overflow: hidden;
+  pointer-events: none;
+  animation: fold-row .45s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+@keyframes fold-row {
+  from { max-height: var(--h, 44px); opacity: .5; }
+  to {
+    max-height: 0; opacity: 0;
+    padding-top: 0; padding-bottom: 0;
+    border-bottom-color: transparent;
+  }
+}
 
 /* Link to the Steam page. Fixed width in the list, filled or not: a local mod has
    no page, and a magnifier that comes and goes would shift the row. */
