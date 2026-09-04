@@ -21,6 +21,7 @@ export function Labeler({
   dead?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
+  const [rate, setRate] = useState<string | null>(null);
 
   const send = (patch: { categories?: CategoryId[]; works16?: boolean }) => {
     // Optimistic display: the disk will answer, but the colour must not wait for
@@ -30,14 +31,26 @@ export function Labeler({
       works16: patch.works16 ?? label.works16,
       updated: new Date().toISOString(),
     });
+    // Un enregistrement qui echoue doit se voir.
+    //
+    // Sans cette branche, l'affichage optimiste restait en place et l'echec ne
+    // laissait aucune trace : l'etiquette semblait posee, le disque n'en savait
+    // rien, et on s'en apercevait des heures plus tard en regardant la date du
+    // fichier. On revient donc a l'etat d'avant le clic, et on le dit.
+    const avant = label;
+    setRate(null);
     setBusy(true);
     fetch("/api/labels", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ packageId, ...patch }),
     })
-      .then((r) => r.json())
-      .then((d) => { if (d.label) onChange(packageId, d.label); })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) throw new Error(d.error ?? `HTTP ${r.status}`);
+        if (d.label) onChange(packageId, d.label);
+      })
+      .catch((e) => { onChange(packageId, avant); setRate(String(e.message ?? e)); })
       .finally(() => setBusy(false));
   };
 
@@ -48,6 +61,11 @@ export function Labeler({
 
   return (
     <div className={`labeler${compact ? " compact" : ""}${busy ? " busy" : ""}`}>
+      {rate && (
+        <span className="rate" title={`non enregistre : ${rate}`} onClick={() => setRate(null)}>
+          non enregistre
+        </span>
+      )}
       {dead && (
         <button
           type="button"

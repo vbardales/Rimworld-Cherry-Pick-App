@@ -65,6 +65,17 @@ export type LabelStore = { version: 1; mods: Record<string, ModLabel> };
 
 export const EMPTY: ModLabel = { categories: [], works16: false, updated: "" };
 
+// Le packageId, ramene a une forme unique.
+//
+// RimWorld ne distingue pas la casse d'un packageId, et les deux vues de l'outil
+// ne donnent pas la meme : la modlist rend ce que ModsConfig contient, la liste
+// complete rend ce que chaque About.xml declare. Le meme mod arrivait donc sous
+// deux noms — etiquete dans une vue, il apparaissait vierge dans l'autre, et un
+// deuxieme clic creait une deuxieme entree.
+export function key(packageId: string): string {
+  return packageId.trim().toLowerCase();
+}
+
 export function labelOf(store: Record<string, ModLabel>, packageId: string): ModLabel {
-  return store[packageId] ?? EMPTY;
+  return store[key(packageId)] ?? store[packageId] ?? EMPTY;
 }

@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { CategoryId, LabelStore, ModLabel } from "./labels";
-import { CATEGORIES } from "./labels";
+import { CATEGORIES, key } from "./labels";
 
 // Classifying a modlist takes weeks, one mod at a time. So it cannot live in the
 // browser: clearing site data would wipe it, and it would not follow from one
@@ -11,10 +11,26 @@ const FILE = path.resolve(process.cwd(), "..", "data", "mod-labels.json");
 
 const KNOWN = new Set<string>(CATEGORIES.map((c) => c.id));
 
+// Deux entrees pour un meme mod, ecrites sous deux casses : on les reunit plutot
+// que d'en preferer une. Les etiquettes des deux vues sont vraies toutes les deux.
+function fusionner(mods: Record<string, ModLabel>): Record<string, ModLabel> {
+  const sortie: Record<string, ModLabel> = {};
+  for (const [id, l] of Object.entries(mods)) {
+    const k = key(id);
+    const deja = sortie[k];
+    sortie[k] = !deja ? l : {
+      categories: [...new Set([...deja.categories, ...l.categories])],
+      works16: deja.works16 || l.works16,
+      updated: deja.updated > l.updated ? deja.updated : l.updated,
+    };
+  }
+  return sortie;
+}
+
 export async function readStore(): Promise<LabelStore> {
   try {
     const raw = JSON.parse(await fs.readFile(FILE, "utf8"));
-    if (raw && typeof raw === "object" && raw.mods) return { version: 1, mods: raw.mods };
+    if (raw && typeof raw === "object" && raw.mods) return { version: 1, mods: fusionner(raw.mods) };
   } catch {
     // File missing on first run, or unreadable: start from an empty
     // classification rather than refuse to serve the page.
@@ -35,7 +51,8 @@ export function writeLabel(
 ): Promise<ModLabel> {
   const task = queue.then(async () => {
     const store = await readStore();
-    const cur: ModLabel = store.mods[packageId] ?? { categories: [], updated: "" };
+    const id = key(packageId);
+    const cur: ModLabel = store.mods[id] ?? { categories: [], updated: "" };
     const works16 = patch.works16 ?? cur.works16 ?? false;
 
     const categories = patch.categories
@@ -49,8 +66,8 @@ export function writeLabel(
     //
     // Unless it carries the 1.6 flag: that is not a classification but the result
     // of a test in game, and losing it would cost running the test again.
-    if (categories.length === 0 && !works16) delete store.mods[packageId];
-    else store.mods[packageId] = next;
+    if (categories.length === 0 && !works16) delete store.mods[id];
+    else store.mods[id] = next;
 
     await fs.mkdir(path.dirname(FILE), { recursive: true });
     // Atomic write: a cut in the middle would leave truncated JSON, hence the

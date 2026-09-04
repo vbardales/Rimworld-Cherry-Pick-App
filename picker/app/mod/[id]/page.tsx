@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
-import { EMPTY, type ModLabel } from "@/lib/labels";
+import { EMPTY, labelOf, type ModLabel } from "@/lib/labels";
 import { workshopId, workshopUrl } from "@/lib/steam";
 import { keyOf } from "@/lib/cherryKey";
 
@@ -124,7 +124,7 @@ export default function ModPage({
   useEffect(() => {
     fetch("/api/labels")
       .then((r) => r.json())
-      .then((d) => setLabel(d.mods?.[id] ?? EMPTY))
+      .then((d) => setLabel(d.mods ? labelOf(d.mods, id) : EMPTY))
       .catch(() => { /* an unreadable classification must not block the sheet */ });
   }, [id]);
 

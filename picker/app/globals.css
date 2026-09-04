@@ -250,3 +250,14 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
    mod's and four leftovers from 1.5. */
 .tag.foreign { color: #9b5bb0; border-color: #9b5bb0; }
 @media (prefers-color-scheme: dark) { .tag.foreign { color: #d09ce0; border-color: #d09ce0; } }
+
+/* Un enregistrement qui a echoue. Il tient la place d'une etiquette, en rouge :
+   le silence coutait des heures de clics perdus. */
+.labeler .rate {
+  font-size: 11px; padding: 1px 7px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--bad); color: var(--bad); white-space: nowrap;
+}
+
+/* Un filtre par etiquette n'a pas de sens sous « a trier ». */
+.bar.bulk .chip:disabled { opacity: .35; cursor: default; }
+.bar.bulk .chip:disabled:hover { border-color: var(--line); color: var(--dim); }

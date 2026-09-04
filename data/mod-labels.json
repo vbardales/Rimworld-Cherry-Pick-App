@@ -15,7 +15,7 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:18.873Z"
     },
-    "AndrewRaphaelLukasik.AllowDeadAnimals": {
+    "andrewraphaellukasik.allowdeadanimals": {
       "categories": [
         "gameplay"
       ],
@@ -159,8 +159,8 @@
       "categories": [
         "engine"
       ],
-      "reviewed": true,
-      "updated": "2026-09-04T17:46:11.946Z"
+      "works16": false,
+      "updated": "2026-09-04T22:06:19.632Z"
     },
     "ccj.nlfaloadfix": {
       "categories": [
@@ -232,7 +232,7 @@
       "works16": false,
       "updated": "2026-09-04T18:16:00.187Z"
     },
-    "Daemon976.PF.VFEC": {
+    "daemon976.pf.vfec": {
       "categories": [
         "food"
       ],
@@ -331,7 +331,7 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:39.834Z"
     },
-    "HalloweenGraves.velcroboy333": {
+    "halloweengraves.velcroboy333": {
       "categories": [
         "furniture"
       ],
@@ -401,7 +401,7 @@
       "works16": false,
       "updated": "2026-09-04T18:23:30.542Z"
     },
-    "KD.HalloweenMonsterMash": {
+    "kd.halloweenmonstermash": {
       "categories": [
         "food",
         "furniture",
@@ -411,13 +411,6 @@
       "updated": "2026-09-04T18:45:30.704Z"
     },
     "keyz182.keyzallowutilities": {
-      "categories": [
-        "engine"
-      ],
-      "reviewed": true,
-      "updated": "2026-09-04T17:49:19.721Z"
-    },
-    "keyz182.KeyzAllowUtilities": {
       "categories": [
         "engine"
       ],
@@ -452,7 +445,7 @@
       "works16": false,
       "updated": "2026-09-04T18:28:03.075Z"
     },
-    "Lava.MO.SpookyHalloweenExtravaganza": {
+    "lava.mo.spookyhalloweenextravaganza": {
       "categories": [
         "joy",
         "food",
@@ -573,14 +566,14 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:18.906Z"
     },
-    "Mallow.Gloves": {
+    "mallow.gloves": {
       "categories": [
         "apparel"
       ],
       "works16": false,
       "updated": "2026-09-04T19:13:15.705Z"
     },
-    "Mallow.Shoes.Socks": {
+    "mallow.shoes.socks": {
       "categories": [
         "apparel"
       ],
@@ -623,7 +616,7 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:47.410Z"
     },
-    "Mlie.KilledEnemyAutoAllowed": {
+    "mlie.killedenemyautoallowed": {
       "categories": [
         "gameplay"
       ],
@@ -659,7 +652,7 @@
       "works16": false,
       "updated": "2026-09-04T18:26:55.124Z"
     },
-    "nakamura.ProcessorQualityMemory": {
+    "nakamura.processorqualitymemory": {
       "categories": [
         "gameplay"
       ],
@@ -1044,7 +1037,7 @@
       "reviewed": true,
       "updated": "2026-09-04T17:49:21.727Z"
     },
-    "RedRam.AllowPrisonersToEatCorpses": {
+    "redram.allowprisonerstoeatcorpses": {
       "categories": [
         "gameplay"
       ],
@@ -1087,7 +1080,7 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:10.680Z"
     },
-    "rune1993.ShallowWaterFloorTile": {
+    "rune1993.shallowwaterfloortile": {
       "categories": [
         "structure"
       ],
@@ -1185,7 +1178,7 @@
       "works16": true,
       "updated": "2026-09-04T18:22:32.118Z"
     },
-    "Tinda.Patches.EpochsTallow": {
+    "tinda.patches.epochstallow": {
       "categories": [
         "food",
         "gameplay"
@@ -1200,7 +1193,7 @@
       "works16": true,
       "updated": "2026-09-04T18:15:36.279Z"
     },
-    "Touchnir.NoxChangingProcessorDays": {
+    "touchnir.noxchangingprocessordays": {
       "categories": [
         "engine",
         "gameplay"
@@ -1215,7 +1208,7 @@
       "reviewed": true,
       "updated": "2026-09-04T17:44:47.497Z"
     },
-    "troopersmith1.Rotmeth": {
+    "troopersmith1.rotmeth": {
       "categories": [
         "food"
       ],
@@ -1230,13 +1223,6 @@
       "updated": "2026-09-04T17:47:25.407Z"
     },
     "unlimitedhugs.allowtool": {
-      "categories": [
-        "engine"
-      ],
-      "reviewed": true,
-      "updated": "2026-09-04T17:45:38.263Z"
-    },
-    "UnlimitedHugs.AllowTool": {
       "categories": [
         "engine"
       ],

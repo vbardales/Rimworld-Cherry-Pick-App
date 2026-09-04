@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
-import { CATEGORIES, EMPTY, isSorted, type CategoryId, type ModLabel } from "@/lib/labels";
+import { CATEGORIES, isSorted, key, labelOf, type CategoryId, type ModLabel } from "@/lib/labels";
 import { workshopUrl } from "@/lib/steam";
 
 type ModRow = {
@@ -43,7 +43,7 @@ export default function Home() {
   const [scope, setScope] = useState<"active" | "all">("active");
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<ModRow[]>([]);
-  const [counts, setCounts] = useState({ total: 0, matched: 0 });
+  const [counts, setCounts] = useState({ total: 0, matched: 0, sorted: 0, todo: 0 });
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -118,18 +118,22 @@ export default function Home() {
     const timer = setTimeout(() => {
       setBusy(true);
       setError(null);
-      fetch(`/api/mods?scope=${scope}&q=${encodeURIComponent(q)}`)
+      // Le tri et les etiquettes partent au serveur : la reponse est bornee a 200
+      // lignes, donc filtrer ici filtrerait la page et non l'ensemble.
+      const params = new URLSearchParams({ scope, q, sift, only: only.join(",") });
+      fetch(`/api/mods?${params}`)
         .then((r) => r.json())
         .then((d) => {
           if (d.error) throw new Error(d.error);
           setRows(d.mods);
-          setCounts({ total: d.total, matched: d.matched });
+          setCounts({ total: d.total, matched: d.matched, sorted: d.sorted, todo: d.todo });
+          setLabels((prev) => ({ ...prev, ...d.labels }));
         })
         .catch((e) => setError(String(e)))
         .finally(() => setBusy(false));
     }, 180);
     return () => clearTimeout(timer);
-  }, [restored, scope, q]);
+  }, [restored, scope, q, sift, only]);
 
   const cancelLeaving = useCallback((packageId: string) => {
     const t = timers.current.get(packageId);
@@ -147,7 +151,7 @@ export default function Home() {
   // The delay restarts on every click: adding a second category means the mod is
   // not fully described yet, not that it should leave sooner.
   const patchLabel = useCallback((packageId: string, label: ModLabel) => {
-    setLabels((prev) => ({ ...prev, [packageId]: label }));
+    setLabels((prev) => ({ ...prev, [key(packageId)]: label }));
 
     // Removing every label cancels the departure: it is the only way to do it, and
     // it is enough — a cancel button at the end of the row would shift the labels.
@@ -199,20 +203,16 @@ export default function Home() {
       // click: the mod becomes sorted at that very instant, so the filter drops it
       // before the delay has served any purpose.
       if (leaving.includes(m.PackageId) || folding.includes(m.PackageId)) return true;
-      const l = labels[m.PackageId] ?? EMPTY;
+      const l = labelOf(labels, m.PackageId);
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
+      if (sift === "todo") return true;    // rien d'etiquete ici : le filtre par etiquette ne s'applique pas
       // Several labels ticked means OR: one looks for "everything touching animals
       // or plants", not their intersection, which would almost always be empty.
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
   }, [rows, labels, sift, only, leaving, folding]);
-
-  const tally = useMemo(() => {
-    const done = rows.filter((m) => isSorted(labels[m.PackageId] ?? EMPTY)).length;
-    return { done, todo: rows.length - done };
-  }, [rows, labels]);
 
   return (
     <main className="wrap">
@@ -243,8 +243,8 @@ export default function Home() {
         />
         <select value={sift} onChange={(e) => setSift(e.target.value as Sift)}>
           <option value="all">tries et non tries</option>
-          <option value="todo">a trier ({tally.todo})</option>
-          <option value="done">tries ({tally.done})</option>
+          <option value="todo">a trier ({counts.todo})</option>
+          <option value="done">tries ({counts.sorted})</option>
           </select>
         <span className="tally">
           {busy
@@ -254,13 +254,18 @@ export default function Home() {
       </div>
 
       <div className="bar bulk">
-        <span className="sub">ne montrer que :</span>
+        <span className="sub">
+          {sift === "todo" ? "les etiquettes ne filtrent pas ce qui reste a trier :" : "ne montrer que :"}
+        </span>
         <div className="labeler">
           {CATEGORIES.map((c) => (
             <button
               key={c.id}
               type="button"
               data-cat={c.id}
+              // Une etiquette posee vaut tri : sous « a trier », aucun mod n'en
+              // porte, et la liste sortait vide sans jamais dire pourquoi.
+              disabled={sift === "todo"}
               className={`chip${only.includes(c.id) ? " on" : ""}`}
               onClick={() =>
                 setOnly((prev) =>
@@ -279,7 +284,7 @@ export default function Home() {
 
       <ul className="mods">
         {shown.map((m) => {
-          const l = labels[m.PackageId] ?? EMPTY;
+          const l = labelOf(labels, m.PackageId);
           const due = leaving.includes(m.PackageId);
           const out = folding.includes(m.PackageId);
           const steam = workshopUrl(m.Path);
