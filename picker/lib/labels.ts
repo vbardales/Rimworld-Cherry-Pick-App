@@ -30,7 +30,7 @@ export const CATEGORIES: { id: CategoryId; label: string; hint?: string }[] = [
   { id: "races",    label: "races" },
   { id: "medical",  label: "medical" },
   { id: "furniture", label: "furniture", hint: "les meubles de rangement en font partie" },
-  { id: "structure", label: "sols/murs" },
+  { id: "structure", label: "sols/murs", hint: "les portes aussi" },
   { id: "apparel",  label: "vetements/cheveux" },
   { id: "ideology", label: "ideologie" },
   { id: "armor",    label: "armes/armures" },

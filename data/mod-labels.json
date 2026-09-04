@@ -190,6 +190,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:28.998Z"
     },
+    "community.vveupgradespatch": {
+      "categories": [
+        "vehicles"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:31:16.284Z"
+    },
     "coolnether123.betterworktab": {
       "categories": [
         "engine"
@@ -260,6 +267,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:46:54.189Z"
     },
+    "dubwise.dubsperformanceanalyzer.steam": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:33:01.355Z"
+    },
     "falconne.bwm": {
       "categories": [
         "engine"
@@ -301,6 +315,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:14.459Z"
+    },
+    "hicon.nicebilltabexpansion": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:53.658Z"
     },
     "ilyvion.loadingprogress": {
       "categories": [
@@ -562,6 +583,13 @@
       "works16": false,
       "updated": "2026-09-04T18:26:55.124Z"
     },
+    "nakamura.ProcessorQualityMemory": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:37:03.063Z"
+    },
     "nals.facialanimation": {
       "categories": [
         "textures"
@@ -596,6 +624,20 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:36.335Z"
+    },
+    "nelim.architectstudio": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:48.485Z"
+    },
+    "nelim.billautopilot": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:58.074Z"
     },
     "nelim.crystalball": {
       "categories": [
@@ -645,6 +687,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:35.783Z"
+    },
+    "nelim.fortheoccasion": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:51.667Z"
     },
     "nelim.geniusescraftfastpatched": {
       "categories": [
@@ -854,6 +903,15 @@
       "works16": false,
       "updated": "2026-09-04T18:08:50.059Z"
     },
+    "oppey.eyegenes2": {
+      "categories": [
+        "engine",
+        "textures",
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:45.183Z"
+    },
     "oskarpotocki.vanillafactionsexpanded.core": {
       "categories": [
         "engine"
@@ -895,6 +953,13 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:23:19.122Z"
+    },
+    "qux.betterarchitect": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:49.852Z"
     },
     "r40x.loadingtracker": {
       "categories": [
@@ -992,8 +1057,8 @@
       "categories": [
         "gameplay"
       ],
-      "reviewed": true,
-      "updated": "2026-09-04T17:45:39.945Z"
+      "works16": false,
+      "updated": "2026-09-04T18:37:06.511Z"
     },
     "sz.yaopt": {
       "categories": [
@@ -1008,6 +1073,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:46:14.987Z"
+    },
+    "taranchuk.performanceoptimizer": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:33:02.857Z"
     },
     "telardo.fireworks": {
       "categories": [
@@ -1029,6 +1101,14 @@
       ],
       "works16": true,
       "updated": "2026-09-04T18:15:36.279Z"
+    },
+    "Touchnir.NoxChangingProcessorDays": {
+      "categories": [
+        "engine",
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:37:01.847Z"
     },
     "triskal.colonistbarqol": {
       "categories": [
@@ -1129,6 +1209,13 @@
       "works16": false,
       "updated": "2026-09-04T18:15:29.902Z"
     },
+    "vanillaexpanded.vtexe.facialanims": {
+      "categories": [
+        "textures"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:44.147Z"
+    },
     "vanillaexpanded.vtexvariations": {
       "categories": [
         "textures"
@@ -1149,6 +1236,13 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:21:05.843Z"
+    },
+    "vanillaexpanded.vweft": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:27.075Z"
     },
     "vanillaexpanded.vwel": {
       "categories": [
@@ -1192,6 +1286,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:18.751Z"
     },
+    "vr.missilegirl": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:33:48.434Z"
+    },
     "windicevista.modernlog": {
       "categories": [
         "engine"
@@ -1206,12 +1307,26 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:05.656Z"
     },
+    "yamazaki.rimworldpizza": {
+      "categories": [
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:30.512Z"
+    },
     "yintx.deepseek.modernexpandmenu": {
       "categories": [
         "engine"
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:51:03.155Z"
+    },
+    "zal.heavyweaponsreloading": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:32:28.346Z"
     },
     "zal.vanillataxidermy": {
       "categories": [

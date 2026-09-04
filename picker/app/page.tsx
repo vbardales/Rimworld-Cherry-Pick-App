@@ -30,6 +30,15 @@ const HOLD_MS = 10_000;
 // How long the row then takes to fold up. Kept in step with the CSS animation.
 const FOLD_MS = 450;
 
+// Where the state of the controls is kept between visits.
+//
+// Opening a mod and coming back reset them, and the two that reset silently are
+// the costly ones: the scope and the sorting filter say WHICH mods are missing
+// from the list, and a list quietly showing the wrong set is worse than an empty
+// one. So they are remembered across visits, and across days — this is a tool one
+// comes back to, not a page one lands on.
+const KEEP = "cherrypick:list";
+
 export default function Home() {
   const [scope, setScope] = useState<"active" | "all">("active");
   const [q, setQ] = useState("");
@@ -55,6 +64,41 @@ export default function Home() {
   const [folding, setFolding] = useState<string[]>([]);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
+  // The controls are restored after mounting, never while rendering: reading
+  // localStorage during the first render would make the server's HTML and the
+  // browser's disagree, and React would throw the whole tree away.
+  //
+  // Nothing is written back before the restore has happened, otherwise the first
+  // render would overwrite the stored state with the defaults it was about to
+  // replace.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const kept = JSON.parse(localStorage.getItem(KEEP) ?? "{}");
+      if (kept.scope === "all" || kept.scope === "active") setScope(kept.scope);
+      if (["all", "todo", "done"].includes(kept.sift)) setSift(kept.sift);
+      if (typeof kept.q === "string") setQ(kept.q);
+      // Labels come and go. A category that no longer exists would filter the list
+      // down to nothing, with no visible reason — so only the known ones survive.
+      if (Array.isArray(kept.only)) {
+        const known = new Set<string>(CATEGORIES.map((c) => c.id));
+        setOnly(kept.only.filter((c: CategoryId) => known.has(c)));
+      }
+    } catch {
+      // no stored state, or unreadable: the defaults are fine
+    }
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only }));
+    } catch {
+      // private window, or storage refused: the tool works, it just forgets
+    }
+  }, [restored, scope, q, sift, only]);
+
   // The classification loads once: it depends neither on the scope nor on the
   // search, and it is tiny next to the list of mods.
   useEffect(() => {
@@ -65,6 +109,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Nothing is fetched before the controls are restored: the scope decides what
+    // is asked for, and asking with the default first would spend a second of
+    // engine time on a list about to be replaced.
+    if (!restored) return;
     // A mod is searched for by typing: we wait for a pause before asking the
     // server, otherwise every keystroke re-filters five thousand entries.
     const timer = setTimeout(() => {
@@ -81,7 +129,7 @@ export default function Home() {
         .finally(() => setBusy(false));
     }, 180);
     return () => clearTimeout(timer);
-  }, [scope, q]);
+  }, [restored, scope, q]);
 
   const cancelLeaving = useCallback((packageId: string) => {
     const t = timers.current.get(packageId);

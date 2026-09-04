@@ -114,6 +114,12 @@ verified mod does not read as dead on every pass through the list.
 The classification lives in `data/mod-labels.json`, versioned with the rest: it
 is built over weeks, it cannot depend on a browser cache.
 
+The list controls — scope, sorting filter, label filter, search — are remembered
+across visits and across days, in the browser. They are not the work, so they do
+not belong in the file; but the scope and the sorting filter decide WHICH mods
+are missing from the list, and a list quietly showing the wrong set is worse than
+an empty one.
+
 ## Inheritance
 
 Each def shows its parent chain to the root, not only its immediate parent. A mod
