@@ -18,7 +18,17 @@ var json = new JsonSerializerOptions
 {
     WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    // The default encoder is kept, which escapes everything outside ASCII as a
+    // Unicode escape sequence.
+    //
+    // UnsafeRelaxedJsonEscaping emitted those characters as they are, and the
+    // Windows console encoding destroyed them on the way out: a mod with Chinese
+    // labels came back as broken JSON — one quotation mark survived unescaped and
+    // ended the string early. Escaping makes the output pure ASCII, which no
+    // console encoding can touch.
+    //
+    // It is the pipe that matters, not the file: the picker reads this process
+    // stdout.
 };
 
 var verb = args.Length > 0 ? args[0] : "help";
