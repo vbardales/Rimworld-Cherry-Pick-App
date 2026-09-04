@@ -84,6 +84,11 @@ creature mod
 brings animals *and* their textures; an overhaul touches gameplay *and*
 factions.
 
+Where a category's border was settled on a mod that straddled it, the decision is
+written next to the category and shown on the chip — storage furniture counts as
+furniture, for one. The moment of hesitation is the moment the chip is hovered,
+so that is where the answer lives.
+
 One label is the common case, several the exception, and the exception costs
 nothing: the row waits ten seconds, and every further click restarts that wait.
 The labels sit on their own line under the name — at sixteen of them they need

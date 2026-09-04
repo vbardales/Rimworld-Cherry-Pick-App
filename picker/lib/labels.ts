@@ -15,7 +15,10 @@ export type CategoryId =
   | "engine" | "gameplay" | "animals" | "joy" | "textures"
   | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel" | "ideology" | "armor" | "structure" | "vehicles";
 
-export const CATEGORIES: { id: CategoryId; label: string }[] = [
+// A category's borders are decided once, on the first mod that straddles them,
+// and forgotten by the next. Those decisions live here, and the interface shows
+// them on the chip: the moment one hesitates is the moment one hovers it.
+export const CATEGORIES: { id: CategoryId; label: string; hint?: string }[] = [
   { id: "engine",   label: "moteur/UI" },
   { id: "gameplay", label: "gameplay" },
   { id: "animals",  label: "animaux" },
@@ -26,7 +29,7 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "factions", label: "factions" },
   { id: "races",    label: "races" },
   { id: "medical",  label: "medical" },
-  { id: "furniture", label: "furniture" },
+  { id: "furniture", label: "furniture", hint: "les meubles de rangement en font partie" },
   { id: "structure", label: "sols/murs" },
   { id: "apparel",  label: "vetements/cheveux" },
   { id: "ideology", label: "ideologie" },

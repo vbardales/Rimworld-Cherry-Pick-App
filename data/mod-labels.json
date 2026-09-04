@@ -22,6 +22,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:50:46.048Z"
     },
+    "andromeda.nicebilltab": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:20.989Z"
+    },
     "andromeda.nicehealthtab": {
       "categories": [
         "engine"
@@ -29,12 +36,33 @@
       "works16": false,
       "updated": "2026-09-04T18:23:15.427Z"
     },
+    "andromeda.niceinventorytab": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:23.012Z"
+    },
+    "andromeda.niceplantsmenu": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:24.600Z"
+    },
     "andromeda.niceresearchtab": {
       "categories": [
         "engine"
       ],
       "works16": false,
       "updated": "2026-09-04T18:23:12.007Z"
+    },
+    "astryl.facialanimationperformancepatch": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:11.446Z"
     },
     "astryl.modernfactionmenu": {
       "categories": [
@@ -190,6 +218,13 @@
       "works16": false,
       "updated": "2026-09-04T18:16:00.187Z"
     },
+    "danzinagri.facialanimationcompatabilityproject": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:09.356Z"
+    },
     "defaults.1trickpwnyta": {
       "categories": [
         "engine"
@@ -231,6 +266,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:20.628Z"
+    },
+    "ferny.betterarchitect": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:05.317Z"
     },
     "ferny.nomodlistonloading": {
       "categories": [
@@ -336,6 +378,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:22.151Z"
+    },
+    "largemoron.woodybins": {
+      "categories": [
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:03.075Z"
     },
     "llunak.fastmodaudioload": {
       "categories": [
@@ -505,6 +554,14 @@
       "works16": false,
       "updated": "2026-09-04T18:12:00.808Z"
     },
+    "mlie.vanillalikewheat": {
+      "categories": [
+        "plants",
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:26:55.124Z"
+    },
     "nals.facialanimation": {
       "categories": [
         "textures"
@@ -574,6 +631,13 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:22:58.020Z"
+    },
+    "nelim.flavortextextended.fr": {
+      "categories": [
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:17.307Z"
     },
     "nelim.foodcourt": {
       "categories": [
@@ -678,12 +742,68 @@
       "works16": false,
       "updated": "2026-09-04T18:23:27.166Z"
     },
+    "nelim.rimscent.extended.decay": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:26.714Z"
+    },
+    "nelim.rimscent.extended.everydaylife": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:29.170Z"
+    },
+    "nelim.rimscent.extended.farmyard": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:27.897Z"
+    },
+    "nelim.rimscent.extended.incenseplus": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:32.711Z"
+    },
+    "nelim.rimscent.extended.industry": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:34.051Z"
+    },
+    "nelim.rimscent.extended.perfumeplus": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:35.518Z"
+    },
+    "nelim.rimscent.extended.weather": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:37.625Z"
+    },
     "nelim.sharedjoysplus": {
       "categories": [
         "joy"
       ],
       "works16": false,
       "updated": "2026-09-04T18:23:36.407Z"
+    },
+    "nelim.skillicons": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:28:41.428Z"
     },
     "nelim.spittingimage": {
       "categories": [
@@ -854,6 +974,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:46.137Z"
     },
+    "sol.vfearchaddon": {
+      "categories": [
+        "structure"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:27:02.490Z"
+    },
     "superniquito.modoptionssort": {
       "categories": [
         "engine"
@@ -1023,6 +1150,13 @@
       "works16": false,
       "updated": "2026-09-04T18:21:05.843Z"
     },
+    "vanillaexpanded.vwel": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:26:26.710Z"
+    },
     "vanillaexpanded.vwetb": {
       "categories": [
         "armor"
@@ -1085,6 +1219,13 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:15:22.468Z"
+    },
+    "zal.vwretexture": {
+      "categories": [
+        "textures"
+      ],
+      "works16": false,
+      "updated": "2026-09-04T18:26:43.307Z"
     },
     "zetrith.prepatcher": {
       "categories": [

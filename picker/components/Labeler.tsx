@@ -71,7 +71,10 @@ export function Labeler({
             data-cat={c.id}
             className={`chip${on ? " on" : ""}`}
             onClick={() => toggle(c.id)}
-            title={on ? `retirer « ${c.label} »` : `classer en « ${c.label} »`}
+            title={
+              (on ? `retirer « ${c.label} »` : `classer en « ${c.label} »`)
+              + (c.hint ? ` — ${c.hint}` : "")
+            }
           >
             {c.label}
           </button>
