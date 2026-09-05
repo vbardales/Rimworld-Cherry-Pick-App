@@ -35,7 +35,7 @@ export const CATEGORIES: { id: CategoryId; label: string; hint?: string }[] = [
   { id: "ideology", label: "ideologie" },
   { id: "armor",    label: "armes/armures" },
   { id: "vehicles", label: "vehicules" },
-  { id: "props",    label: "props" },
+  { id: "props",    label: "props", hint: "les objets decoratifs sans usage — un meuble utilisable est furniture" },
 ];
 
 export type ModLabel = {
