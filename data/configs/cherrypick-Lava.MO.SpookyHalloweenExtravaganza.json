@@ -51,8 +51,8 @@
     "TraderKindDef/Lavas_Caravan_Medieval_Armorsmith": "out",
     "TraderKindDef/Lavas_Caravan_Medieval_Weaponsmith": "out",
     "TraderKindDef/Lavas_Visitor_Medieval_Standard": "out",
-    "ThingDef/Lavas_MeleeWeapon_Bible": "out",
-    "ThingDef/lavas_MeleeWeapon_DevilFork": "out"
+    "ThingDef/Lavas_MeleeWeapon_Bible": "in",
+    "ThingDef/lavas_MeleeWeapon_DevilFork": "in"
   },
   "cherryPicker": {
     "aRetirer": [
@@ -71,8 +71,6 @@
       "PawnKindDef/Lavas_Medieval_Harlequin",
       "PawnKindDef/Lavas_Medieval_TwilightMerchant",
       "PawnKindDef/Lavas_Twilight_MadamNight",
-      "ThingDef/Lavas_MeleeWeapon_Bible",
-      "ThingDef/lavas_MeleeWeapon_DevilFork",
       "ThingSetMakerDef/Lava_TwilightRaidLootMaker",
       "TraderKindDef/Lavas_Base_Medieval_Standard",
       "TraderKindDef/Lavas_Caravan_Medieval_Armorsmith",
@@ -83,13 +81,11 @@
     ]
   },
   "diagnostic": {
-    "embarquees": 13,
-    "ecartees": 26,
+    "embarquees": 15,
+    "ecartees": 24,
     "indeterminees": 0,
     "conflits": 0,
-    "dependancesInutiles": [
-      "oskarpotocki.vanillafactionsexpanded.core"
-    ],
+    "dependancesInutiles": [],
     "patchsOrphelins": [],
     "referencesNonResolues": []
   }
