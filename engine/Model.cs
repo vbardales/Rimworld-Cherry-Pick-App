@@ -146,6 +146,18 @@ public sealed class PatchEntry
     public List<string> TargetDefs { get; set; } = new();     // defName= read from the xpaths
     public List<string> Classes { get; set; } = new();
     public List<string> GuardedByMods { get; set; } = new();  // PatchOperationFindMod
+
+    // True when the file protects itself some other way than by naming a mod.
+    //
+    // The older idiom is a PatchOperationSequence opening with a
+    // PatchOperationTest: the sequence STOPS at the first operation that fails,
+    // so a failed test cancels everything after it, and <success>Always</success>
+    // keeps the failure out of the log. It guards as well as FindMod does, and it
+    // is what mods written before 1.3 use.
+    //
+    // Without this, the tool called Dalmatians' A Dog Said patch unguarded, and a
+    // porting session had to be told not to "fix" something that was intact.
+    public bool GuardedByTest { get; set; }
 }
 
 public sealed class Inventory

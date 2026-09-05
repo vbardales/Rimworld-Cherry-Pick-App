@@ -397,6 +397,15 @@ public static class Scanner
                     var mods = op.Element("mods");
                     if (mods is not null) p.GuardedByMods.AddRange(mods.Elements("li").Select(e => e.Value.Trim()));
                 }
+
+                // A sequence that opens with a test guards itself: the sequence
+                // stops at the first failing operation, so nothing after the test
+                // runs when the test fails. See PatchEntry.GuardedByTest.
+                if (cls == "PatchOperationSequence")
+                {
+                    var premiere = op.Element("operations")?.Elements("li").FirstOrDefault();
+                    if ((string?)premiere?.Attribute("Class") == "PatchOperationTest") p.GuardedByTest = true;
+                }
             }
 
             p.TargetDefs = p.TargetDefs.Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToList();
