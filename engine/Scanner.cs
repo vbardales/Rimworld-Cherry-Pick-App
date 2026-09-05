@@ -230,7 +230,20 @@ public static class Scanner
             XDocument doc;
             try { doc = XDocument.Load(file, LoadOptions.SetLineInfo); }
             catch (Exception e) { inv.Problems.Add($"XML invalide : {Rel(mod.Path, file)} — {e.Message}"); continue; }
-            if (doc.Root is null || doc.Root.Name.LocalName != "Defs") continue;
+            // The root element's NAME IS FREE. RimWorld takes the children of
+            // whatever the root happens to be, and old mods use it as a comment:
+            // Zoo-home opens its plant files with <Plants>, its food with <Foods>.
+            //
+            // Requiring <Defs> here dropped those files without a word — the mod
+            // reported 37 defs out of about a hundred, and nothing said which ones
+            // were missing or why. A silent under-count is the worst answer this
+            // tool can give: a selection made on it looks complete.
+            //
+            // Nothing is lost by accepting any root: ReadDef already ignores any
+            // element that carries neither a defName nor a Name attribute. Only a
+            // patch document is skipped outright, since its operations would be
+            // read here as well as in Patches/.
+            if (doc.Root is null || doc.Root.Name.LocalName == "Patch") continue;
 
             foreach (var el in doc.Root.Elements())
             {
