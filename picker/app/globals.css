@@ -142,6 +142,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .labeler [data-cat=armor]    { --c: #5c728f; }
 .labeler [data-cat=structure] { --c: #6e6a63; }
 .labeler [data-cat=vehicles] { --c: #9b3fa8; }
+.labeler [data-cat=props]    { --c: #2c4a7c; }
 @media (prefers-color-scheme: dark) {
   .labeler [data-cat=engine]   { --c: #f07ab0; }
   .labeler [data-cat=gameplay] { --c: #8ed97a; }
@@ -159,6 +160,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   .labeler [data-cat=armor]    { --c: #a3b4cc; }
   .labeler [data-cat=structure] { --c: #b0aa9e; }
   .labeler [data-cat=vehicles] { --c: #d08ce0; }
+  .labeler [data-cat=props]    { --c: #93b0e0; }
 }
 
 /* Unset, a label stays grey: on a list of a hundred and eighty mods, a dozen

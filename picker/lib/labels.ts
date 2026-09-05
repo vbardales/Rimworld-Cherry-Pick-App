@@ -13,7 +13,7 @@
 // only, and it knows how to adapt to the dark theme.
 export type CategoryId =
   | "engine" | "gameplay" | "animals" | "joy" | "textures"
-  | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel" | "ideology" | "armor" | "structure" | "vehicles";
+  | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel" | "ideology" | "armor" | "structure" | "vehicles" | "props";
 
 // A category's borders are decided once, on the first mod that straddles them,
 // and forgotten by the next. Those decisions live here, and the interface shows
@@ -35,6 +35,7 @@ export const CATEGORIES: { id: CategoryId; label: string; hint?: string }[] = [
   { id: "ideology", label: "ideologie" },
   { id: "armor",    label: "armes/armures" },
   { id: "vehicles", label: "vehicules" },
+  { id: "props",    label: "props" },
 ];
 
 export type ModLabel = {
