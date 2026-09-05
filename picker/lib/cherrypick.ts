@@ -60,11 +60,51 @@ export type ModRow = {
 // past a megabyte.
 const MAX = 256 * 1024 * 1024;
 
+// The modlist, kept in memory between requests.
+//
+// Filtering moved to the server so that it would happen before the 200-row cut —
+// otherwise "sorted" answered about the page instead of the set. But that made
+// every change of filter re-run the engine: measured between 8 and 24 seconds per
+// click on a full Workshop, because the cost is spawning dotnet, walking nine
+// thousand About.xml files and parsing the JSON back, and none of that depends on
+// the filter.
+//
+// So the engine is asked once and the answer is held. What invalidates it differs
+// by scope, and guessing one rule for both would be wrong:
+//
+//   active — ModsConfig.xml IS the answer, so its modification date is an exact
+//            stamp. A mod activated elsewhere shows up on the next request.
+//   all    — nothing cheap says whether the Workshop folder changed, so this one
+//            expires on time alone. Sixty seconds: long enough that a session of
+//            sorting never waits, short enough that a mod installed mid-session
+//            appears without restarting anything. The refresh button on a mod
+//            sheet is the escape hatch when that is not fast enough.
+type Held = { at: number; stamp: string; mods: ModRow[] };
+const held = new Map<string, Held>();
+const TTL = 60_000;
+
+async function stampOf(scope: "active" | "all"): Promise<string> {
+  if (scope === "all") return "";
+  try {
+    const f = path.join(process.env.USERPROFILE ?? "", "AppData", "LocalLow", "Ludeon Studios",
+      "RimWorld by Ludeon Studios", "Config", "ModsConfig.xml");
+    return String((await fs.stat(f)).mtimeMs);
+  } catch {
+    return "";
+  }
+}
+
 export async function listMods(scope: "active" | "all"): Promise<ModRow[]> {
+  const stamp = await stampOf(scope);
+  const deja = held.get(scope);
+  if (deja && deja.stamp === stamp && Date.now() - deja.at < TTL) return deja.mods;
+
   const args = ["list", "--json"];
   if (scope === "all") args.push("--all");
   const { stdout } = await run(DOTNET, [DLL, ...args], { maxBuffer: MAX, windowsHide: true });
-  return JSON.parse(stdout);
+  const mods = JSON.parse(stdout) as ModRow[];
+  held.set(scope, { at: Date.now(), stamp, mods });
+  return mods;
 }
 
 // A mod's inventory is cached on disk and revalidated against the folder's

@@ -115,13 +115,21 @@ export default function Home() {
     if (!restored) return;
     // A mod is searched for by typing: we wait for a pause before asking the
     // server, otherwise every keystroke re-filters five thousand entries.
+    // Une lecture en cours est abandonnee des que les filtres changent.
+    //
+    // Le nettoyage ne coupait que le delai d'attente : une requete deja partie
+    // continuait, et sa reponse ecrasait la suivante si elle arrivait apres. Sur
+    // les neuf mille mods installes, une lecture prenait plusieurs secondes — on
+    // choisissait un filtre, on attendait, et on obtenait la liste du filtre
+    // precedent, avec des commandes qui disaient autre chose que la liste.
+    const abandon = new AbortController();
     const timer = setTimeout(() => {
       setBusy(true);
       setError(null);
       // Le tri et les etiquettes partent au serveur : la reponse est bornee a 200
       // lignes, donc filtrer ici filtrerait la page et non l'ensemble.
       const params = new URLSearchParams({ scope, q, sift, only: only.join(",") });
-      fetch(`/api/mods?${params}`)
+      fetch(`/api/mods?${params}`, { signal: abandon.signal })
         .then((r) => r.json())
         .then((d) => {
           if (d.error) throw new Error(d.error);
@@ -129,10 +137,17 @@ export default function Home() {
           setCounts({ total: d.total, matched: d.matched, sorted: d.sorted, todo: d.todo });
           setLabels((prev) => ({ ...prev, ...d.labels }));
         })
-        .catch((e) => setError(String(e)))
-        .finally(() => setBusy(false));
+        .catch((e) => {
+          // Une lecture abandonnee n'est pas une panne : elle a ete remplacee.
+          if (e?.name !== "AbortError") setError(String(e));
+        })
+        .finally(() => {
+          // Et elle ne rend pas la main non plus : la lecture qui l'a remplacee
+          // est encore en cours, l'attente doit continuer de se voir.
+          if (!abandon.signal.aborted) setBusy(false);
+        });
     }, 180);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); abandon.abort(); };
   }, [restored, scope, q, sift, only]);
 
   const cancelLeaving = useCallback((packageId: string) => {
