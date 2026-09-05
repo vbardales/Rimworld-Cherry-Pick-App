@@ -306,3 +306,30 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
    continue de repondre par sous-chaine, le champ dit seulement qu'il ne lit pas
    encore ce qu'on est en train d'ecrire. */
 input[type="search"].bancal { border-color: var(--warn, #b8860b); }
+
+/* Les deux facons de continuer la liste, cote a cote.
+   « De plus » avance d'un cran, « tout » va au bout ; celle qui coute cher est la
+   seconde, donc elle est la plus discrete des deux. */
+.suite { display: flex; gap: 10px; margin-top: 10px; }
+.suite .plus { margin-top: 0; }
+.suite .tout { flex: 0 0 auto; color: var(--dim); }
+
+/* Revenir en haut.
+   Ancre en bas a droite, au-dessus de la liste, et assez petit pour ne jamais
+   couvrir une etiquette : les puces d'une ligne vont jusqu'au bord droit. */
+.haut {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgb(0 0 0 / .18);
+}
+.haut:hover { border-color: var(--accent); color: var(--accent); }

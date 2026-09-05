@@ -65,6 +65,18 @@ export default function Home() {
   // qui reste a verifier — la pile de portages possibles, sans ceux deja essayes.
   const [casse, setCasse] = useState(false);
 
+  // Le retour en haut ne s'affiche qu'une fois la barre de filtres hors de vue.
+  //
+  // Un bouton toujours la, c'est un bouton qui recouvre une ligne pour rien pendant
+  // les trois quarts du temps. On l'accroche au defilement, et on ne redessine que
+  // sur le passage du seuil — pas a chaque pixel.
+  const [loin, setLoin] = useState(false);
+  useEffect(() => {
+    const seuil = () => setLoin(window.scrollY > 600);
+    window.addEventListener("scroll", seuil, { passive: true });
+    return () => window.removeEventListener("scroll", seuil);
+  }, []);
+
   // Combien de lignes on dessine, et pourquoi ce n'est pas tout.
   //
   // Le serveur repond en soixante millisecondes ; c'est le navigateur qui peine.
@@ -404,9 +416,29 @@ export default function Home() {
       </ul>
 
       {shown.length > visibles && (
-        <button className="plus" onClick={() => setVisibles((n) => n + PAS)}>
-          afficher {Math.min(PAS, shown.length - visibles)} de plus
-          <span className="sub"> — {shown.length - visibles} restants</span>
+        <div className="suite">
+          <button className="plus" onClick={() => setVisibles((n) => n + PAS)}>
+            afficher {Math.min(PAS, shown.length - visibles)} de plus
+            <span className="sub"> — {shown.length - visibles} restants</span>
+          </button>
+          {/* Tout d'un coup, avec le prix affiche.
+              Une ligne porte dix-neuf puces : deux cents lignes en font quatre
+              mille, et les neuf mille sept cents installes en feraient cent
+              quatre-vingt-cinq mille, ce qu'aucun navigateur ne dessine sans se
+              figer plusieurs secondes. On ne l'interdit pas — sur une recherche qui
+              a deja reduit la liste, c'est exactement ce qu'on veut — mais le
+              nombre est ecrit sur le bouton, et au-dela de mille il le dit. */}
+          <button className="plus tout" onClick={() => setVisibles(shown.length)}>
+            tout afficher ({shown.length})
+            {shown.length > 1000 && <span className="sub"> — ce sera long</span>}
+          </button>
+        </div>
+      )}
+
+      {loin && (
+        <button className="haut" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                title="revenir en haut">
+          ↑
         </button>
       )}
 

@@ -214,6 +214,14 @@
       "works16": false,
       "updated": "2026-09-05T16:51:32.841Z"
     },
+    "arandomkiwi.huntforme": {
+      "categories": [
+        "gameplay",
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:49:37.861Z"
+    },
     "arcangel.winterhats": {
       "categories": [
         "apparel"
@@ -512,6 +520,20 @@
       "works16": false,
       "updated": "2026-09-05T18:17:36.183Z"
     },
+    "bichang.huri": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:49:59.416Z"
+    },
+    "bigtortoise.drugcookingspeed": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:47:39.498Z"
+    },
     "billnotic.actuallyvanillamusicexpansion": {
       "categories": [
         "engine"
@@ -539,6 +561,14 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:09:05.687Z"
+    },
+    "booleanne.horsebreedvariations": {
+      "categories": [
+        "animals",
+        "textures"
+      ],
+      "works16": true,
+      "updated": "2026-09-05T19:48:59.024Z"
     },
     "botchjob.hthair": {
       "categories": [
@@ -1462,6 +1492,13 @@
       "works16": false,
       "updated": "2026-09-05T16:46:54.931Z"
     },
+    "giwaffed.haulersdream": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:39.671Z"
+    },
     "goatboy.aomost2": {
       "categories": [
         "engine"
@@ -1475,6 +1512,14 @@
       ],
       "works16": false,
       "updated": "2026-09-05T16:23:29.991Z"
+    },
+    "gpac1231.hitchingspotbreedingfix": {
+      "categories": [
+        "gameplay",
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:47:47.586Z"
     },
     "grimworks.ballinacup": {
       "categories": [
@@ -1554,6 +1599,13 @@
       "works16": false,
       "updated": "2026-09-05T16:53:33.794Z"
     },
+    "hc.creatures.1": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:47:06.037Z"
+    },
     "heartray.alliedideologies": {
       "categories": [
         "ideology"
@@ -1581,6 +1633,27 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:32:53.658Z"
+    },
+    "houseplantsremastered.mp3": {
+      "categories": [
+        "plants"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:49:21.294Z"
+    },
+    "iceworld.tribalouterwear": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:53:46.706Z"
+    },
+    "ilarion.haulafterstripping": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:43.227Z"
     },
     "ilyvion.loadingprogress": {
       "categories": [
@@ -1618,6 +1691,15 @@
       ],
       "works16": false,
       "updated": "2026-09-05T16:34:00.721Z"
+    },
+    "ivelischt.rimworld.uncooledhay": {
+      "categories": [
+        "gameplay",
+        "plants",
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:54.932Z"
     },
     "jackledead.buildings.portablehammocksandcushionbeds": {
       "categories": [
@@ -1879,6 +1961,13 @@
       "works16": true,
       "updated": "2026-09-05T15:14:21.347Z"
     },
+    "laredson.harvestandhaul": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:27.250Z"
+    },
     "largemoron.woodybins": {
       "categories": [
         "furniture"
@@ -1910,6 +1999,14 @@
       "works16": false,
       "updated": "2026-09-05T15:11:55.228Z"
     },
+    "lc.homelyunderwherecompat": {
+      "categories": [
+        "gameplay",
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:48:23.789Z"
+    },
     "lc.tammybee.selectablesculpturegraphic": {
       "categories": [
         "textures"
@@ -1930,6 +2027,21 @@
       ],
       "works16": false,
       "updated": "2026-09-05T17:59:54.259Z"
+    },
+    "lewkah0.homesweethome": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:48:12.503Z"
+    },
+    "lewkah0.imissmylimb": {
+      "categories": [
+        "medical",
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:53:20.173Z"
     },
     "lingluo.customizeroomrole": {
       "categories": [
@@ -2602,6 +2714,63 @@
       ],
       "works16": false,
       "updated": "2026-09-05T18:31:41.169Z"
+    },
+    "mlie.harvestwhenbutchering": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:31.037Z"
+    },
+    "mlie.haulminedchunks": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:47.113Z"
+    },
+    "mlie.holstersandscabbards": {
+      "categories": [
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:47:57.255Z"
+    },
+    "mlie.huntingrestriction": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:49:46.175Z"
+    },
+    "mlie.icantfixthat": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:52:02.271Z"
+    },
+    "mlie.iceisslippery": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:53:33.680Z"
+    },
+    "mlie.iclearlyhaveenough": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:52:05.662Z"
+    },
+    "mlie.ihavematerials": {
+      "categories": [
+        "gameplay",
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:52:13.927Z"
     },
     "mlie.killedenemyautoallowed": {
       "categories": [
@@ -3812,6 +3981,13 @@
       "works16": false,
       "updated": "2026-09-05T16:37:15.156Z"
     },
+    "syrus.heatmap": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:47:19.510Z"
+    },
     "sysmy.cockcrowing": {
       "categories": [
         "gameplay",
@@ -4464,6 +4640,21 @@
       "works16": false,
       "updated": "2026-09-04T18:32:28.346Z"
     },
+    "zal.heiskotomod": {
+      "categories": [
+        "joy",
+        "furniture"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:47:26.486Z"
+    },
+    "zal.homunculus": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:48:31.191Z"
+    },
     "zal.monketime": {
       "categories": [
         "animals"
@@ -4520,6 +4711,13 @@
       ],
       "works16": false,
       "updated": "2026-09-05T18:35:59.013Z"
+    },
+    "zrex.improudofit": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:53:30.144Z"
     },
     "zylle.boomalopesbleedchemfuel": {
       "categories": [
