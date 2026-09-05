@@ -116,12 +116,22 @@
       "works16": false,
       "updated": "2026-09-05T16:06:35.855Z"
     },
-    "andrewraphaellukasik.allowdeadanimals": {
+    "amch.improvedneedindicator": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "engine"
       ],
       "works16": false,
-      "updated": "2026-09-04T18:40:59.652Z"
+      "updated": "2026-09-05T19:55:12.707Z"
+    },
+    "andrewraphaellukasik.allowdeadanimals": {
+      "categories": [
+        "gameplay",
+        "animals",
+        "food"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:03:51.456Z"
     },
     "andromeda.milkyway": {
       "categories": [
@@ -202,10 +212,12 @@
     },
     "apparel.durability.adjust": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "apparel",
+        "armor"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:52:58.127Z"
+      "updated": "2026-09-05T20:04:50.886Z"
     },
     "arandomkiwi.downforme": {
       "categories": [
@@ -238,10 +250,12 @@
     },
     "arkymn.bettergrowthmoments": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "children",
+        "biotech"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:03:28.492Z"
+      "updated": "2026-09-05T20:05:39.680Z"
     },
     "armoredampharos.coldwarg": {
       "categories": [
@@ -641,6 +655,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:52:44.911Z"
     },
+    "cedaro.initialmotivation": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:55:47.910Z"
+    },
     "cedaro.material.submenu": {
       "categories": [
         "engine"
@@ -679,10 +700,11 @@
     },
     "childrencanlearnfast.mod": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "children"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:20:23.156Z"
+      "updated": "2026-09-05T20:06:41.442Z"
     },
     "childrentraitsaffectlearning.mod": {
       "categories": [
@@ -728,13 +750,21 @@
       "works16": false,
       "updated": "2026-09-05T16:04:23.080Z"
     },
+    "colinfang.infectioninfo": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:55:30.629Z"
+    },
     "colossalfossil.animalsarefuncontinued": {
       "categories": [
         "gameplay",
-        "animals"
+        "animals",
+        "joy"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:50:46.418Z"
+      "updated": "2026-09-05T20:04:09.620Z"
     },
     "com.bymarcin.architecticons": {
       "categories": [
@@ -926,10 +956,13 @@
     },
     "dame.arcanetechnology": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "apparel",
+        "furniture",
+        "armor"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:53:33.955Z"
+      "updated": "2026-09-05T20:04:56.619Z"
     },
     "dame.hotmeals": {
       "categories": [
@@ -937,6 +970,13 @@
       ],
       "works16": false,
       "updated": "2026-09-05T14:55:08.188Z"
+    },
+    "dame.ignorance": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:54:14.962Z"
     },
     "danzinagri.facialanimationcompatabilityproject": {
       "categories": [
@@ -1024,6 +1064,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:49:03.246Z"
+    },
+    "dfifd.joyfulresearch": {
+      "categories": [
+        "joy"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:59:58.516Z"
     },
     "dhultgren.buryonthespot": {
       "categories": [
@@ -1114,10 +1161,11 @@
     },
     "dogard.butcherspoilingfirst": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "food"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:14:26.224Z"
+      "updated": "2026-09-05T20:06:32.231Z"
     },
     "dogard.cookspoilingfirst": {
       "categories": [
@@ -1335,6 +1383,13 @@
       "works16": false,
       "updated": "2026-09-05T16:42:36.044Z"
     },
+    "ferny.easycaravanformation": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:58:40.926Z"
+    },
     "ferny.freeuiscaling": {
       "categories": [
         "engine"
@@ -1422,10 +1477,11 @@
     },
     "funstab.autoselftend": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "medical"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:55:42.008Z"
+      "updated": "2026-09-05T20:05:10.518Z"
     },
     "ganja.betterlinkablecolors": {
       "categories": [
@@ -1551,10 +1607,11 @@
     },
     "guppyfacesarecute.bettervomit": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "medical"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:04:52.026Z"
+      "updated": "2026-09-05T20:05:49.779Z"
     },
     "gwinnbleidd.mothballedanddeadpawns": {
       "categories": [
@@ -1562,6 +1619,14 @@
       ],
       "works16": false,
       "updated": "2026-09-05T16:03:22.822Z"
+    },
+    "haecriver.injuredcarry": {
+      "categories": [
+        "gameplay",
+        "medical"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:55:56.992Z"
     },
     "hailuan.cathiss": {
       "categories": [
@@ -1615,10 +1680,11 @@
     },
     "heatherathebyne.childrenlearnoncaravan": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "children"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:20:31.523Z"
+      "updated": "2026-09-05T20:06:42.631Z"
     },
     "hekmo.flavortext": {
       "categories": [
@@ -1671,10 +1737,12 @@
     },
     "inglix.appareltaintedoncorpserot": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "apparel",
+        "armor"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:52:55.474Z"
+      "updated": "2026-09-05T20:04:51.841Z"
     },
     "ionfrigate12345.diplomaticmarriageplus": {
       "categories": [
@@ -1851,6 +1919,13 @@
       "works16": false,
       "updated": "2026-09-05T19:45:53.442Z"
     },
+    "kathanon.impressionablechildren": {
+      "categories": [
+        "children"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:54:51.593Z"
+    },
     "kathanon.resizabletablecolumns": {
       "categories": [
         "engine"
@@ -1881,12 +1956,21 @@
       "works16": false,
       "updated": "2026-09-04T18:45:30.704Z"
     },
-    "keyz182.ageupgenes": {
+    "keshash.injurytextures": {
       "categories": [
-        "gameplay"
+        "textures"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:43:18.819Z"
+      "updated": "2026-09-05T19:56:05.577Z"
+    },
+    "keyz182.ageupgenes": {
+      "categories": [
+        "gameplay",
+        "biotech",
+        "children"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:03:35.177Z"
     },
     "keyz182.keyzallowutilities": {
       "categories": [
@@ -1894,6 +1978,14 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:46:42.366Z"
+    },
+    "kidapparelexpanded.goblins4lyfe": {
+      "categories": [
+        "children",
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:00:59.039Z"
     },
     "kittahkhan.grazeup": {
       "categories": [
@@ -2071,6 +2163,14 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:09.057Z"
     },
+    "llunak.improvedautoslaughter": {
+      "categories": [
+        "engine",
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:55:00.069Z"
+    },
     "lordfanger.rimlanguagehotreload": {
       "categories": [
         "gameplay"
@@ -2133,10 +2233,12 @@
         "ideology",
         "armor",
         "vehicles",
-        "props"
+        "props",
+        "children",
+        "biotech"
       ],
       "works16": false,
-      "updated": "2026-09-05T19:41:41.832Z"
+      "updated": "2026-09-05T20:04:24.598Z"
     },
     "ludeon.rimworld.biotech": {
       "categories": [
@@ -2155,10 +2257,12 @@
         "structure",
         "ideology",
         "armor",
-        "vehicles"
+        "vehicles",
+        "props",
+        "biotech"
       ],
       "works16": false,
-      "updated": "2026-09-05T14:44:57.127Z"
+      "updated": "2026-09-05T20:06:01.587Z"
     },
     "ludeon.rimworld.ideology": {
       "categories": [
@@ -2229,17 +2333,19 @@
     "luved.animaltraits": {
       "categories": [
         "gameplay",
-        "animals"
+        "animals",
+        "biotech"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:50:29.846Z"
+      "updated": "2026-09-05T20:04:06.282Z"
     },
     "lydocia.adoptiverelationships": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "children"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:42:35.091Z"
+      "updated": "2026-09-05T20:03:30.299Z"
     },
     "lyn.togasareclothing": {
       "categories": [
@@ -2275,6 +2381,15 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:08:43.571Z"
+    },
+    "matathias.traitinheritance": {
+      "categories": [
+        "gameplay",
+        "children",
+        "biotech"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:55:41.715Z"
     },
     "matvey24.fpsstabilizer": {
       "categories": [
@@ -2407,10 +2522,11 @@
       "categories": [
         "gameplay",
         "animals",
-        "food"
+        "food",
+        "medical"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:51:13.848Z"
+      "updated": "2026-09-05T20:04:18.022Z"
     },
     "mlie.animalsforage": {
       "categories": [
@@ -2430,10 +2546,11 @@
     },
     "mlie.autonameanimals": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "animals"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:56:15.961Z"
+      "updated": "2026-09-05T20:05:18.593Z"
     },
     "mlie.basicmirrors": {
       "categories": [
@@ -2482,10 +2599,11 @@
       "categories": [
         "gameplay",
         "furniture",
-        "medical"
+        "medical",
+        "biotech"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:09:53.969Z"
+      "updated": "2026-09-05T20:06:14.831Z"
     },
     "mlie.boommodexpanded": {
       "categories": [
@@ -2764,6 +2882,13 @@
       "works16": false,
       "updated": "2026-09-05T19:52:05.662Z"
     },
+    "mlie.ignoreidleguests": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:54:22.437Z"
+    },
     "mlie.ihavematerials": {
       "categories": [
         "gameplay",
@@ -2771,6 +2896,23 @@
       ],
       "works16": false,
       "updated": "2026-09-05T19:52:13.927Z"
+    },
+    "mlie.ivoryandjadecarving": {
+      "categories": [
+        "gameplay",
+        "furniture",
+        "apparel",
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:59:26.741Z"
+    },
+    "mlie.justputitoverthere": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:00:20.463Z"
     },
     "mlie.killedenemyautoallowed": {
       "categories": [
@@ -2887,6 +3029,13 @@
       ],
       "works16": true,
       "updated": "2026-09-05T16:55:52.667Z"
+    },
+    "moardm.ideologydoubt": {
+      "categories": [
+        "ideology"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:54:01.220Z"
     },
     "morton.retextureballgames": {
       "categories": [
@@ -3226,6 +3375,13 @@
       "works16": false,
       "updated": "2026-09-04T18:21:45.552Z"
     },
+    "nemtek.insects": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:58:31.101Z"
+    },
     "nep.getoffmygravship": {
       "categories": [
         "gameplay"
@@ -3406,10 +3562,11 @@
     },
     "phil42.allergies": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "medical"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:44:06.140Z"
+      "updated": "2026-09-05T20:03:42.970Z"
     },
     "phomor.craftingqualityrebalanced": {
       "categories": [
@@ -3545,24 +3702,27 @@
     },
     "redmattis.betterchildren": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "children"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:03:16.296Z"
+      "updated": "2026-09-05T20:05:36.978Z"
     },
     "redram.allowprisonerstoeatcorpses": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "food"
       ],
       "works16": false,
-      "updated": "2026-09-04T18:41:33.230Z"
+      "updated": "2026-09-05T20:03:50.349Z"
     },
     "remingtonryder.betterrefueling": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "furniture"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:04:00.448Z"
+      "updated": "2026-09-05T20:05:46.233Z"
     },
     "reo.rimscent": {
       "categories": [
@@ -3885,6 +4045,20 @@
       "works16": false,
       "updated": "2026-09-05T18:13:59.610Z"
     },
+    "sirmashedpotato.insectshavenobones": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:58:21.435Z"
+    },
+    "sk.inspiredunique": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:58:36.768Z"
+    },
     "smashphil.vehicleframework": {
       "categories": [
         "engine"
@@ -4166,10 +4340,18 @@
     },
     "toxicyui.artisantouch": {
       "categories": [
+        "gameplay",
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:05:06.104Z"
+    },
+    "toxicyui.impactfulskills.modsupport": {
+      "categories": [
         "gameplay"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:54:43.013Z"
+      "updated": "2026-09-05T19:54:32.458Z"
     },
     "tribble24601.goban.0001": {
       "categories": [
@@ -4191,6 +4373,13 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:39:02.241Z"
+    },
+    "tsa.intellectualmatters": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:58:49.379Z"
     },
     "tunombre.cerbatanatranquilizante": {
       "categories": [
@@ -4655,6 +4844,20 @@
       "works16": false,
       "updated": "2026-09-05T19:48:31.191Z"
     },
+    "zal.itemlistselector": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:59:13.958Z"
+    },
+    "zal.juggling": {
+      "categories": [
+        "joy"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:00:05.795Z"
+    },
     "zal.monketime": {
       "categories": [
         "animals"
@@ -4698,6 +4901,13 @@
       "works16": true,
       "updated": "2026-09-04T18:09:09.917Z"
     },
+    "zipender.justaventolin": {
+      "categories": [
+        "medical"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T20:00:12.624Z"
+    },
     "zookes.chinchillafarming": {
       "categories": [
         "animals"
@@ -4729,10 +4939,11 @@
     },
     "zylle.childboodbackstories": {
       "categories": [
-        "gameplay"
+        "gameplay",
+        "children"
       ],
       "works16": false,
-      "updated": "2026-09-05T16:20:16.409Z"
+      "updated": "2026-09-05T20:06:39.845Z"
     },
     "zylle.childrensdrawings": {
       "categories": [

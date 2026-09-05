@@ -140,14 +140,27 @@ export default function Home() {
     }
   }, [restored, scope, q, sift, only, casse]);
 
-  // The classification loads once: it depends neither on the scope nor on the
-  // search, and it is tiny next to the list of mods.
+  // Le classement se lit avec la liste, et sa panne se voit.
+  //
+  // Il ne dependait ni du perimetre ni de la recherche, donc il se lisait une seule
+  // fois au montage — et son echec etait avale en silence. Tant que la reponse des
+  // mods portait aussi les etiquettes des lignes rendues, cet oubli se reparait
+  // tout seul a chaque filtre. Depuis qu'on ne lit plus qu'une fois, c'est devenu
+  // l'unique source : ratee, tous les mods paraissent non tries, « tries » ne rend
+  // rien, et rien ne dit pourquoi.
+  //
+  // Donc : relue en meme temps que la liste — le bouton « relire » la rattrape — et
+  // un echec s'affiche au lieu de se deviner.
   useEffect(() => {
+    if (!restored) return;
     fetch("/api/labels")
       .then((r) => r.json())
-      .then((d) => setLabels(d.mods ?? {}))
-      .catch(() => { /* an unreadable classification must not block the list */ });
-  }, []);
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        setLabels(d.mods ?? {});
+      })
+      .catch((e) => setError("classement illisible — les etiquettes manquent : " + String(e)));
+  }, [restored, relire]);
 
   useEffect(() => {
     // Nothing is fetched before the controls are restored: the scope decides what

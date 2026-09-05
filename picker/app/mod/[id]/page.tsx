@@ -238,6 +238,64 @@ export default function ModPage({
     return [...new Set(keys)].sort();
   }, [groups, states]);
 
+  // Les memes defs ecartees, mais dites autrement.
+  //
+  // Cherry Picker veut une cle « TypeName/defName » ; le mod genere veut un xpath,
+  // donc le nom d'element tel qu'il est ECRIT dans le fichier — c'est ce que le
+  // moteur range dans DefType (el.Name.LocalName), et c'est ce que le document
+  // unifie contiendra. Une def abstraite n'a pas de defName et ne se retire pas
+  // ainsi : la retirer casserait ses enfants, qui eux restent.
+  const toStrip = useMemo(() => {
+    const out: { defType: string; defName: string }[] = [];
+    for (const g of groups) {
+      if (states.get(g.key) !== "out") continue;
+      for (const m of g.members) if (m.DefName) out.push({ defType: m.DefType, defName: m.DefName });
+    }
+    return out;
+  }, [groups, states]);
+
+  // Les bases abstraites qu'on ecarte alors qu'un enfant reste.
+  //
+  // Le xpath ne peut pas les viser — elles n'ont pas de defName — mais l'alerte
+  // vaut d'etre dite : ecarter un parent en croyant ecarter la famille laisse les
+  // enfants derriere, et ils chargeront sans leur parent une fois qu'on aura, un
+  // jour, trouve comment le retirer.
+  const orphelins = useMemo(() => {
+    const partants = new Set<string>();
+    for (const g of groups)
+      if (states.get(g.key) === "out")
+        for (const m of g.members) if (m.AbstractName) partants.add(m.AbstractName);
+    if (partants.size === 0) return [];
+    const restants = new Set<string>();
+    for (const g of groups)
+      if (states.get(g.key) !== "out")
+        for (const m of g.members)
+          for (const p of m.ParentChain ?? []) if (partants.has(p.Name)) restants.add(p.Name);
+    return [...restants];
+  }, [groups, states]);
+
+  const applyToPrepatch = () => {
+    setApplied(null);
+    fetch("/api/prepatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageId: mod?.PackageId, name: mod?.Name, removals: toStrip }),
+    })
+      .then((r) => r.json())
+      .then((d) => d.error
+        ? Promise.reject(new Error(d.error))
+        : setApplied(
+            d.ecrites === 0
+              ? `rien a retirer — ${d.fichier} efface`
+              : `${d.ecrites} def(s) retirees avant chargement, dans Mods/${d.modDir}/Patches/${d.fichier}` +
+                (d.present
+                  ? d.dernier ? " — le mod est bien charge en dernier"
+                              : ` — ATTENTION : ${d.apres} mod(s) se chargent apres lui, place-le en dernier`
+                  : " — le mod n'est pas encore dans ta modlist"),
+          ))
+      .catch((e) => setError(String(e)));
+  };
+
   // Tout ce que CE mod pourrait faire retirer, ecarte ou non.
   //
   // Sert de perimetre a la fusion : le fichier de Cherry Picker est commun a tous
@@ -426,7 +484,21 @@ export default function ModPage({
         <button onClick={applyToCherryPicker} disabled={toRemove.length === 0}>
           appliquer dans Cherry Picker ({toRemove.length})
         </button>
+        {/* La meme decision, prise plus tot dans le chargement.
+            Cherry Picker retire une def batie ; ceci retire le noeud XML avant que
+            le jeu ne la batisse, donc rien ne peut plus la pointer. Le mod genere
+            doit charger en dernier — la reponse le verifie et le dit. */}
+        <button onClick={applyToPrepatch} disabled={toStrip.length === 0}
+                title="Ecrit Mods/NelimCherryPick/Patches/ : les defs ne sont jamais construites. A charger en dernier.">
+          retirer avant chargement ({toStrip.length})
+        </button>
         {applied && <span className="sub">{applied}</span>}
+        {orphelins.length > 0 && (
+          <span className="sub warn">
+            {orphelins.length} base(s) abstraite(s) ecartee(s) ont encore des enfants gardes :{" "}
+            {orphelins.join(", ")}
+          </span>
+        )}
         <span className="sep">|</span>
         <span className="sub">le mod entier :</span>
         <button onClick={() => setAll(groups, "in")}>
