@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
 import { CATEGORIES, isSorted, key, labelOf, type CategoryId, type ModLabel } from "@/lib/labels";
@@ -43,13 +43,34 @@ export default function Home() {
   const [scope, setScope] = useState<"active" | "all">("active");
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<ModRow[]>([]);
-  const [counts, setCounts] = useState({ total: 0, matched: 0, sorted: 0, todo: 0 });
   const [busy, setBusy] = useState(true);
+  // Ce qui declenche une relecture, et rien d'autre.
+  //
+  // On lit TOUT une fois, puis on filtre sur place. Un filtre n'est plus une
+  // question posee au disque : les nom mille mods sont deja la, et le serveur ne
+  // repond plus qu'a une demande explicite — au lancement, au changement de
+  // perimetre, ou sur le bouton.
+  const [relire, setRelire] = useState(0);
+  const [lu, setLu] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [labels, setLabels] = useState<Record<string, ModLabel>>({});
   const [sift, setSift] = useState<Sift>("all");
   const [only, setOnly] = useState<CategoryId[]>([]);
+
+  // Combien de lignes on dessine, et pourquoi ce n'est pas tout.
+  //
+  // Le serveur repond en soixante millisecondes ; c'est le navigateur qui peine.
+  // Une ligne porte dix-sept puces, donc deux cents lignes en portent plus de
+  // trois mille quatre cents — a chaque changement de filtre, autant de boutons a
+  // construire. La memoisation n'y peut rien : quand le filtre change, les lignes
+  // changent vraiment, et il faut bien les dessiner.
+  //
+  // On en dessine donc soixante, et on charge la suite a la demande. Le tri se
+  // fait par le haut de la liste : les cent quarante autres ne servaient qu'a
+  // ralentir le clic suivant.
+  const PAS = 60;
+  const [visibles, setVisibles] = useState(PAS);
 
   // Mods on reprieve: just labelled, and momentarily exempt from the current
   // filter.
@@ -113,29 +134,25 @@ export default function Home() {
     // is asked for, and asking with the default first would spend a second of
     // engine time on a list about to be replaced.
     if (!restored) return;
-    // A mod is searched for by typing: we wait for a pause before asking the
-    // server, otherwise every keystroke re-filters five thousand entries.
-    // Une lecture en cours est abandonnee des que les filtres changent.
+    // Une lecture en cours est abandonnee des qu'une autre est demandee.
     //
     // Le nettoyage ne coupait que le delai d'attente : une requete deja partie
     // continuait, et sa reponse ecrasait la suivante si elle arrivait apres. Sur
     // les neuf mille mods installes, une lecture prenait plusieurs secondes — on
-    // choisissait un filtre, on attendait, et on obtenait la liste du filtre
-    // precedent, avec des commandes qui disaient autre chose que la liste.
+    // changeait de perimetre, on attendait, et on obtenait le perimetre precedent,
+    // avec des commandes qui disaient autre chose que la liste.
     const abandon = new AbortController();
     const timer = setTimeout(() => {
       setBusy(true);
       setError(null);
-      // Le tri et les etiquettes partent au serveur : la reponse est bornee a 200
-      // lignes, donc filtrer ici filtrerait la page et non l'ensemble.
-      const params = new URLSearchParams({ scope, q, sift, only: only.join(",") });
-      fetch(`/api/mods?${params}`, { signal: abandon.signal })
+      // Tout le perimetre, sans plafond : c'est le seul appel de la session, et il
+      // faut qu'aucun filtre pose ensuite n'ait a redemander quoi que ce soit.
+      fetch(`/api/mods?scope=${scope}&limit=0`, { signal: abandon.signal })
         .then((r) => r.json())
         .then((d) => {
           if (d.error) throw new Error(d.error);
           setRows(d.mods);
-          setCounts({ total: d.total, matched: d.matched, sorted: d.sorted, todo: d.todo });
-          setLabels((prev) => ({ ...prev, ...d.labels }));
+          setLu(new Date());
         })
         .catch((e) => {
           // Une lecture abandonnee n'est pas une panne : elle a ete remplacee.
@@ -148,7 +165,19 @@ export default function Home() {
         });
     }, 180);
     return () => { clearTimeout(timer); abandon.abort(); };
-  }, [restored, scope, q, sift, only]);
+  }, [restored, scope, relire]);
+
+  // Changer de filtre, c'est repartir du haut : le plafond retombe avec la liste.
+  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only]);
+
+  // Ce que le tri a deja couvert, compte sur l'ensemble et non sur la page.
+  //
+  // Le serveur donnait ces nombres ; il les redonnait donc a chaque filtre. Ici
+  // ils se recalculent quand une etiquette est posee, et se voient bouger au clic.
+  const counts = useMemo(() => {
+    const sorted = rows.filter((m) => isSorted(labelOf(labels, m.PackageId))).length;
+    return { total: rows.length, sorted, todo: rows.length - sorted };
+  }, [rows, labels]);
 
   const cancelLeaving = useCallback((packageId: string) => {
     const t = timers.current.get(packageId);
@@ -204,10 +233,21 @@ export default function Home() {
     return () => { for (const t of map.values()) clearTimeout(t); map.clear(); };
   }, []);
 
-  // Filtering by label works on what the server already returned: the
-  // classification lives here, not in the engine, and the list is already capped.
+  // Tout le filtrage se fait ici, sur la liste complete tenue en memoire.
+  //
+  // Il partait au serveur tant que la reponse etait bornee a deux cents lignes :
+  // filtrer apres une troncature, c'est repondre a une question que personne n'a
+  // posee. La reponse n'est plus bornee, donc le disque n'a plus rien a en savoir,
+  // et changer de filtre ne coute plus un aller-retour.
   const shown = useMemo(() => {
+    const cherche = q.trim().toLowerCase();
     return rows.filter((m) => {
+      if (
+        cherche &&
+        !m.Name.toLowerCase().includes(cherche) &&
+        !m.PackageId.toLowerCase().includes(cherche)
+      )
+        return false;
       // A freshly labelled row stays visible for ten seconds, then the filter takes
       // over. It is the FILTER that decides the departure, not the delay: under "to
       // sort" the row leaves, since labelling is sorting; under "sorted" or "both"
@@ -227,7 +267,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, labels, sift, only, leaving, folding]);
+  }, [rows, q, labels, sift, only, leaving, folding]);
 
   return (
     <main className="wrap">
@@ -264,8 +304,20 @@ export default function Home() {
         <span className="tally">
           {busy
             ? "lecture..."
-            : `${shown.length} affiche${shown.length > 1 ? "s" : ""} — ${counts.matched} sur ${counts.total}`}
+            : `${shown.length} affiche${shown.length > 1 ? "s" : ""} sur ${counts.total}`}
         </span>
+        {/* Relire est un geste, pas une consequence.
+            Le disque n'est consulte qu'ici : un mod installe ou desinstalle pendant
+            la session ne se voit qu'apres ce bouton. L'heure dit de quand date ce
+            qu'on regarde — sans elle, une liste perimee ressemble a une liste. */}
+        <button className="ghost" onClick={() => setRelire((n) => n + 1)} disabled={busy}>
+          relire le disque
+          {lu && (
+            <span className="sub">
+              {" "}— lu a {lu.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+        </button>
       </div>
 
       <div className="bar bulk">
@@ -298,57 +350,85 @@ export default function Home() {
       {error && <p className="err">{error}</p>}
 
       <ul className="mods">
-        {shown.map((m) => {
-          const l = labelOf(labels, m.PackageId);
-          const due = leaving.includes(m.PackageId);
-          const out = folding.includes(m.PackageId);
-          const steam = workshopUrl(m.Path);
-          return (
-            <li
-              key={m.PackageId}
-              data-pid={m.PackageId}
-              className={`${isSorted(l) ? "sorted" : ""}${due ? " leaving" : ""}${out ? " folding" : ""}`}
-            >
-              <Link
-                href={`/mod/${encodeURIComponent(m.PackageId)}?path=${encodeURIComponent(m.Path)}`}
-              >
-                <span className="name">{m.Name || m.PackageId}</span>{" "}
-                <span className="pid">{m.PackageId}</span>{" "}
-                <span className="tags">
-                  {m.Active && <em className="tag act">actif</em>}
-                  <em className="tag">{m.Source}</em>
-                  {m.SupportedVersions.length > 0 && (
-                    <em className="tag">{m.SupportedVersions.join(" ")}</em>
-                  )}
-                  {m.DeadBefore16 && !l.works16 && <em className="tag dead">mort avant 1.6</em>}
-                  {m.DeadBefore16 && l.works16 && <em className="tag act">tourne en 1.6</em>}
-                </span>
-              </Link>
-              {/* Space reserved even with no page: a local mod has none, and a
-                  magnifier that comes and goes shifts the whole row. */}
-              <a
-                className={`peek${steam ? "" : " off"}`}
-                href={steam ?? undefined}
-                target="_blank"
-                rel="noreferrer noopener"
-                title={steam ? "ouvrir la fiche Steam Workshop" : "pas de fiche Steam : mod local"}
-                onClick={(e) => e.stopPropagation()}
-              >
-                🔍
-              </a>
-              <Labeler
-                packageId={m.PackageId}
-                label={l}
-                onChange={patchLabel}
-                compact
-                dead={m.DeadBefore16}
-              />
-            </li>
-          );
-        })}
+        {shown.slice(0, visibles).map((m) => (
+          <Ligne
+            key={m.PackageId}
+            mod={m}
+            label={labelOf(labels, m.PackageId)}
+            leaving={leaving.includes(m.PackageId)}
+            folding={folding.includes(m.PackageId)}
+            onChange={patchLabel}
+          />
+        ))}
       </ul>
+
+      {shown.length > visibles && (
+        <button className="plus" onClick={() => setVisibles((n) => n + PAS)}>
+          afficher {Math.min(PAS, shown.length - visibles)} de plus
+          <span className="sub"> — {shown.length - visibles} restants</span>
+        </button>
+      )}
 
       {!busy && shown.length === 0 && <p className="sub">Aucun mod ne correspond.</p>}
     </main>
   );
 }
+
+// Une ligne de la liste, memoisee.
+//
+// Le compte a rebours d'un depart, une etiquette posee ailleurs, une lecture qui
+// revient : chacun de ces evenements est un etat de la PAGE, et redessinait donc
+// les quatre-vingt-dix-neuf lignes et leurs seize cent quatre-vingt-trois puces.
+// Ici les props d'une ligne ne changent que si CETTE ligne change — l'objet du
+// mod vient de la reponse du serveur, le label du magasin, et onChange d'un
+// useCallback.
+const Ligne = memo(function Ligne({
+  mod, label, leaving, folding, onChange,
+}: {
+  mod: ModRow;
+  label: ModLabel;
+  leaving: boolean;
+  folding: boolean;
+  onChange: (packageId: string, label: ModLabel) => void;
+}) {
+  const steam = workshopUrl(mod.Path);
+  return (
+    <li
+      data-pid={mod.PackageId}
+      className={`${isSorted(label) ? "sorted" : ""}${leaving ? " leaving" : ""}${folding ? " folding" : ""}`}
+    >
+      <Link href={`/mod/${encodeURIComponent(mod.PackageId)}?path=${encodeURIComponent(mod.Path)}`}>
+        <span className="name">{mod.Name || mod.PackageId}</span>{" "}
+        <span className="pid">{mod.PackageId}</span>{" "}
+        <span className="tags">
+          {mod.Active && <em className="tag act">actif</em>}
+          <em className="tag">{mod.Source}</em>
+          {mod.SupportedVersions.length > 0 && (
+            <em className="tag">{mod.SupportedVersions.join(" ")}</em>
+          )}
+          {mod.DeadBefore16 && !label.works16 && <em className="tag dead">mort avant 1.6</em>}
+          {mod.DeadBefore16 && label.works16 && <em className="tag act">tourne en 1.6</em>}
+        </span>
+      </Link>
+      {/* Space reserved even with no page: a local mod has none, and a magnifier
+          that comes and goes shifts the whole row. */}
+      <a
+        className={`peek${steam ? "" : " off"}`}
+        href={steam ?? undefined}
+        target="_blank"
+        rel="noreferrer noopener"
+        title={steam ? "ouvrir la fiche Steam Workshop" : "pas de fiche Steam : mod local"}
+        onClick={(e) => e.stopPropagation()}
+      >
+        🔍
+      </a>
+      <Labeler
+        packageId={mod.PackageId}
+        label={label}
+        onChange={onChange}
+        compact
+        dead={mod.DeadBefore16}
+      />
+    </li>
+  );
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { CATEGORIES, type CategoryId, type ModLabel } from "@/lib/labels";
 
 // A mod's labels, clickable. The same component serves the list and the mod
@@ -9,7 +9,19 @@ import { CATEGORIES, type CategoryId, type ModLabel } from "@/lib/labels";
 //
 // Saving happens on the click, with no "apply" button: a classification you have
 // to remember to save is one you lose.
-export function Labeler({
+// Memoise, et ce n'est pas une precaution de principe.
+//
+// Une ligne de la liste porte dix-sept puces, donc quatre-vingt-dix-neuf lignes
+// en portent seize cent quatre-vingt-trois. Sans memoisation, le moindre
+// changement d'etat de la page les redessine toutes : le compte a rebours
+// d'une ligne qui part, une etiquette posee ailleurs, une lecture qui revient.
+// Mesure avant : de 0,5 a 2 secondes par changement de filtre, alors que la
+// reponse du serveur arrive en 60 ms.
+//
+// Les trois props qui comptent sont stables : packageId est une chaine,
+// onChange vient d'un useCallback, et label est l'objet du magasin — une
+// nouvelle identite n'apparait que pour le mod qu'on vient de modifier.
+export const Labeler = memo(function Labeler({
   packageId, label, onChange, compact = false, dead = false,
 }: {
   packageId: string;
@@ -100,4 +112,4 @@ export function Labeler({
       })}
     </div>
   );
-}
+});

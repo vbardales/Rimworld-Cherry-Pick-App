@@ -263,3 +263,36 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 /* Un filtre par etiquette n'a pas de sens sous « a trier ». */
 .bar.bulk .chip:disabled { opacity: .35; cursor: default; }
 .bar.bulk .chip:disabled:hover { border-color: var(--line); color: var(--dim); }
+
+/* Relire le disque : une action discrete, jamais le geste principal.
+   Elle sort le bouton du flux normal — on ne relit pas pour travailler, on relit
+   parce qu'on a installe quelque chose pendant qu'on triait. */
+.ghost {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--fg); }
+.ghost:disabled { opacity: .45; cursor: default; }
+.ghost .sub { font-size: inherit; }
+
+/* La suite de la liste, sur demande.
+   Pleine largeur et sous la derniere ligne : c'est la fin de ce qu'on a devant
+   les yeux, pas une commande de plus dans le bandeau. */
+.plus {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--fg);
+  font-size: 13px;
+  cursor: pointer;
+}
+.plus:hover { border-color: var(--accent); border-style: solid; }

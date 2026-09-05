@@ -3,21 +3,27 @@ import { listMods } from "@/lib/cherrypick";
 import { readStore } from "@/lib/labelStore";
 import { isSorted, key, EMPTY, type CategoryId } from "@/lib/labels";
 
-// The active modlist, or everything installed. With more than nine thousand mods
-// on disk, filtering happens here and not in the browser.
+// The active modlist, or everything installed.
 //
-// The classification filters here too, and that is not an optimisation. The
-// answer is capped at 200 rows, so filtering in the browser filters the page
-// rather than the set: with 9612 mods installed and 199 labelled, "sorted" found
-// one — the only one that happened to fall inside the first 200 — and the count
-// said so. A filter applied after a truncation answers a question nobody asked.
+// Filtering used to happen here, and it had to: the answer was capped at 200
+// rows, and a filter applied after a truncation answers a question nobody asked —
+// with 9612 mods installed and 199 labelled, "sorted" found the one that happened
+// to fall inside the first 200, and the count said so.
+//
+// The page now asks for the whole scope once (limit=0) and filters what it holds,
+// so the cap and the filtering that had to work around it are both optional. They
+// stay for anything else calling this route, and because a capped answer is still
+// the right shape for a search box that queries as it types.
 export async function GET(req: NextRequest) {
   const scope = req.nextUrl.searchParams.get("scope") === "all" ? "all" : "active";
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim().toLowerCase();
   const sift = req.nextUrl.searchParams.get("sift") ?? "all";
   const only = (req.nextUrl.searchParams.get("only") ?? "")
     .split(",").map((s) => s.trim()).filter(Boolean) as CategoryId[];
+  // limit=0 means the whole scope, no cap: the page reads once and filters on its
+  // own, so a truncated answer would silently hide mods from every later filter.
   const limit = Number(req.nextUrl.searchParams.get("limit") ?? 200);
+  const capped = limit > 0;
 
   try {
     let mods = await listMods(scope);
@@ -49,8 +55,14 @@ export async function GET(req: NextRequest) {
       matched,
       sorted,
       todo: total - sorted,
-      mods: mods.slice(0, limit),
-      labels: Object.fromEntries(mods.slice(0, limit).map((m) => [key(m.PackageId), labelOf(m.PackageId)])),
+      mods: capped ? mods.slice(0, limit) : mods,
+      // The labels of the rows sent back — but only when there are few of them.
+      // Uncapped, the page has already loaded the whole classification from
+      // /api/labels, and 9612 mostly-empty entries would double the payload to say
+      // nothing.
+      labels: capped
+        ? Object.fromEntries(mods.slice(0, limit).map((m) => [key(m.PackageId), labelOf(m.PackageId)]))
+        : undefined,
     });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
