@@ -390,6 +390,13 @@
       "works16": false,
       "updated": "2026-09-05T18:31:29.287Z"
     },
+    "automatic.hairdye": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:20.615Z"
+    },
     "avilmask.animalcontrols": {
       "categories": [
         "gameplay",
@@ -533,6 +540,13 @@
       "works16": false,
       "updated": "2026-09-04T18:09:05.687Z"
     },
+    "botchjob.hthair": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:46:09.285Z"
+    },
     "brothority.cratesforchunks": {
       "categories": [
         "furniture"
@@ -547,6 +561,14 @@
       "works16": false,
       "updated": "2026-09-04T22:06:19.632Z"
     },
+    "brunin.greenrim": {
+      "categories": [
+        "plants",
+        "gameplay"
+      ],
+      "works16": true,
+      "updated": "2026-09-05T18:34:01.249Z"
+    },
     "bs.mbifvte": {
       "categories": [
         "textures"
@@ -560,6 +582,13 @@
       ],
       "works16": false,
       "updated": "2026-09-05T16:11:37.405Z"
+    },
+    "butterfish.hairmoddingplus": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:31.987Z"
     },
     "canon.crownsandregalia": {
       "categories": [
@@ -683,6 +712,14 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:45:28.998Z"
+    },
+    "com.jimmslimm.grouphunt": {
+      "categories": [
+        "animals",
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T18:34:17.082Z"
     },
     "community.vveupgradespatch": {
       "categories": [
@@ -1617,6 +1654,13 @@
       "works16": false,
       "updated": "2026-09-05T16:32:57.620Z"
     },
+    "jdalt.gmmsn": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T18:34:48.348Z"
+    },
     "jelly.craftsmanship": {
       "categories": [
         "gameplay"
@@ -1717,6 +1761,13 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:20.567Z"
+    },
+    "kathanon.happypawnsdontbreak": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:53.442Z"
     },
     "kathanon.resizabletablecolumns": {
       "categories": [
@@ -1969,10 +2020,11 @@
         "furniture",
         "ideology",
         "armor",
-        "vehicles"
+        "vehicles",
+        "props"
       ],
       "works16": false,
-      "updated": "2026-09-05T14:44:58.282Z"
+      "updated": "2026-09-05T19:41:41.832Z"
     },
     "ludeon.rimworld.biotech": {
       "categories": [
@@ -2118,6 +2170,15 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:23.593Z"
+    },
+    "maxwell.growingzonesplitter": {
+      "categories": [
+        "gameplay",
+        "plants",
+        "engine"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T18:34:42.708Z"
     },
     "md.gotosleep": {
       "categories": [
@@ -3017,6 +3078,13 @@
       "reviewed": true,
       "updated": "2026-09-04T17:45:27.080Z"
     },
+    "neronix17.hairstyles": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:22.951Z"
+    },
     "neronix17.retexture.charactereditor": {
       "categories": [
         "engine"
@@ -3187,6 +3255,13 @@
       ],
       "works16": false,
       "updated": "2026-09-05T16:35:59.058Z"
+    },
+    "plaxen.hamster": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:39.730Z"
     },
     "programmerlily.comfortablefishing": {
       "categories": [
@@ -3582,6 +3657,14 @@
       "reviewed": true,
       "updated": "2026-09-04T17:47:26.280Z"
     },
+    "seekiworksmod.no5": {
+      "categories": [
+        "furniture",
+        "armor"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:47.547Z"
+    },
     "seneal.mod.qoldev": {
       "categories": [
         "engine"
@@ -3802,6 +3885,20 @@
       "works16": false,
       "updated": "2026-09-05T18:32:01.431Z"
     },
+    "teridax.happypawnsfearnofire": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T19:45:54.439Z"
+    },
+    "theocean.grudges": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T18:34:55.549Z"
+    },
     "thevillageguy.chocolatemilk.1": {
       "categories": [
         "food"
@@ -3953,6 +4050,13 @@
       ],
       "works16": false,
       "updated": "2026-09-05T18:03:24.438Z"
+    },
+    "tyrannidae.gregnfriends": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T18:34:06.672Z"
     },
     "udon.animalsimplecommand": {
       "categories": [
@@ -4409,6 +4513,13 @@
       ],
       "works16": false,
       "updated": "2026-09-05T16:22:33.138Z"
+    },
+    "zookes.guineapigfarming": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "updated": "2026-09-05T18:35:59.013Z"
     },
     "zylle.boomalopesbleedchemfuel": {
       "categories": [

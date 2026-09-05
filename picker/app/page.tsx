@@ -58,6 +58,13 @@ export default function Home() {
   const [sift, setSift] = useState<Sift>("all");
   const [only, setOnly] = useState<CategoryId[]>([]);
 
+  // Ne montrer que ce qui ne tourne pas en 1.6.
+  //
+  // « Mort avant 1.6 » est une deduction : le mod ne declare pas 1.6. Le bouton
+  // « tourne en 1.6 » dement cette deduction un mod a la fois, et ce filtre est ce
+  // qui reste a verifier — la pile de portages possibles, sans ceux deja essayes.
+  const [casse, setCasse] = useState(false);
+
   // Combien de lignes on dessine, et pourquoi ce n'est pas tout.
   //
   // Le serveur repond en soixante millisecondes ; c'est le navigateur qui peine.
@@ -99,6 +106,7 @@ export default function Home() {
       if (kept.scope === "all" || kept.scope === "active") setScope(kept.scope);
       if (["all", "todo", "done"].includes(kept.sift)) setSift(kept.sift);
       if (typeof kept.q === "string") setQ(kept.q);
+      if (typeof kept.casse === "boolean") setCasse(kept.casse);
       // Labels come and go. A category that no longer exists would filter the list
       // down to nothing, with no visible reason — so only the known ones survive.
       if (Array.isArray(kept.only)) {
@@ -114,11 +122,11 @@ export default function Home() {
   useEffect(() => {
     if (!restored) return;
     try {
-      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only }));
+      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only, casse }));
     } catch {
       // private window, or storage refused: the tool works, it just forgets
     }
-  }, [restored, scope, q, sift, only]);
+  }, [restored, scope, q, sift, only, casse]);
 
   // The classification loads once: it depends neither on the scope nor on the
   // search, and it is tiny next to the list of mods.
@@ -168,7 +176,7 @@ export default function Home() {
   }, [restored, scope, relire]);
 
   // Changer de filtre, c'est repartir du haut : le plafond retombe avec la liste.
-  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only]);
+  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only, casse]);
 
   // Ce que le tri a deja couvert, compte sur l'ensemble et non sur la page.
   //
@@ -176,7 +184,8 @@ export default function Home() {
   // ils se recalculent quand une etiquette est posee, et se voient bouger au clic.
   const counts = useMemo(() => {
     const sorted = rows.filter((m) => isSorted(labelOf(labels, m.PackageId))).length;
-    return { total: rows.length, sorted, todo: rows.length - sorted };
+    const ko = rows.filter((m) => m.DeadBefore16 && !labelOf(labels, m.PackageId).works16).length;
+    return { total: rows.length, sorted, todo: rows.length - sorted, ko };
   }, [rows, labels]);
 
   const cancelLeaving = useCallback((packageId: string) => {
@@ -239,15 +248,36 @@ export default function Home() {
   // filtrer apres une troncature, c'est repondre a une question que personne n'a
   // posee. La reponse n'est plus bornee, donc le disque n'a plus rien a en savoir,
   // et changer de filtre ne coute plus un aller-retour.
+  // Ce que la recherche cherche.
+  //
+  // Elle accepte une expression reguliere, et le motif qui sert vraiment est
+  // « ^ » : dix mods commencent par « Vanilla Factions Expanded », cinquante en
+  // parlent, et « contient » ne permet pas de le dire. On tape « ^vanilla » et on
+  // les a.
+  //
+  // Un motif se tape caractere par caractere, donc il est invalide pendant qu'on
+  // l'ecrit : « [a » n'est pas une erreur, c'est un motif inacheve. Tant qu'il ne
+  // compile pas on retombe sur la recherche par sous-chaine, qui trouve toujours
+  // quelque chose de raisonnable, et le champ le signale sans rien bloquer.
+  const motif = useMemo(() => {
+    const c = q.trim();
+    if (!c) return null;
+    try {
+      return { re: new RegExp(c, "i"), valide: true };
+    } catch {
+      return { texte: c.toLowerCase(), valide: false };
+    }
+  }, [q]);
+
   const shown = useMemo(() => {
-    const cherche = q.trim().toLowerCase();
     return rows.filter((m) => {
-      if (
-        cherche &&
-        !m.Name.toLowerCase().includes(cherche) &&
-        !m.PackageId.toLowerCase().includes(cherche)
-      )
-        return false;
+      if (motif) {
+        const va = motif.re
+          ? motif.re.test(m.Name) || motif.re.test(m.PackageId)
+          : m.Name.toLowerCase().includes(motif.texte!) ||
+            m.PackageId.toLowerCase().includes(motif.texte!);
+        if (!va) return false;
+      }
       // A freshly labelled row stays visible for ten seconds, then the filter takes
       // over. It is the FILTER that decides the departure, not the delay: under "to
       // sort" the row leaves, since labelling is sorting; under "sorted" or "both"
@@ -259,6 +289,9 @@ export default function Home() {
       // before the delay has served any purpose.
       if (leaving.includes(m.PackageId) || folding.includes(m.PackageId)) return true;
       const l = labelOf(labels, m.PackageId);
+      // « Tourne en 1.6 » l'emporte sur ce que le mod declare : c'est une
+      // verification faite a la main, la declaration n'est qu'une presomption.
+      if (casse && (!m.DeadBefore16 || l.works16)) return false;
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
       if (sift === "todo") return true;    // rien d'etiquete ici : le filtre par etiquette ne s'applique pas
@@ -267,7 +300,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, q, labels, sift, only, leaving, folding]);
+  }, [rows, motif, labels, sift, only, casse, leaving, folding]);
 
   return (
     <main className="wrap">
@@ -292,7 +325,9 @@ export default function Home() {
         </div>
         <input
           type="search"
-          placeholder="filtrer par nom ou packageId..."
+          className={motif && !motif.valide ? "bancal" : ""}
+          placeholder="nom, packageId, ou expression reguliere (^vanilla)"
+          title="Une expression reguliere est acceptee : ^vanilla pour ce qui commence par Vanilla. Tant qu'elle est incomplete, la recherche se fait par sous-chaine."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -301,6 +336,12 @@ export default function Home() {
           <option value="todo">a trier ({counts.todo})</option>
           <option value="done">tries ({counts.sorted})</option>
           </select>
+        {/* Un filtre a part, parce que ce n'est pas la meme question.
+            Le menu dit ou on en est du tri ; celui-ci dit ce qui reste a faire
+            tourner. Un mod peut etre trie et casse, ou intact et jamais regarde. */}
+        <button className={casse ? "on" : ""} onClick={() => setCasse((v) => !v)}>
+          ne tourne pas en 1.6 ({counts.ko})
+        </button>
         <span className="tally">
           {busy
             ? "lecture..."

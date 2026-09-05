@@ -13,7 +13,8 @@
 // only, and it knows how to adapt to the dark theme.
 export type CategoryId =
   | "engine" | "gameplay" | "animals" | "joy" | "textures"
-  | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel" | "ideology" | "armor" | "structure" | "vehicles" | "props";
+  | "food" | "plants" | "factions" | "races" | "medical" | "furniture" | "apparel" | "ideology" | "armor" | "structure" | "vehicles" | "props"
+  | "biotech" | "children";
 
 // A category's borders are decided once, on the first mod that straddles them,
 // and forgotten by the next. Those decisions live here, and the interface shows
@@ -36,6 +37,8 @@ export const CATEGORIES: { id: CategoryId; label: string; hint?: string }[] = [
   { id: "armor",    label: "armes/armures" },
   { id: "vehicles", label: "vehicules" },
   { id: "props",    label: "props", hint: "les objets decoratifs sans usage — un meuble utilisable est furniture" },
+  { id: "biotech",  label: "biotech", hint: "genes, xenotypes, mecanoides personnels — ce qui passe par le DLC" },
+  { id: "children", label: "enfants", hint: "grossesse, bebes, ecole, jouets — l'enfance elle-meme, pas le DLC" },
 ];
 
 export type ModLabel = {

@@ -143,6 +143,8 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .labeler [data-cat=structure] { --c: #6e6a63; }
 .labeler [data-cat=vehicles] { --c: #9b3fa8; }
 .labeler [data-cat=props]    { --c: #2c4a7c; }
+.labeler [data-cat=biotech]  { --c: #1f8f6b; }
+.labeler [data-cat=children] { --c: #c46a9a; }
 @media (prefers-color-scheme: dark) {
   .labeler [data-cat=engine]   { --c: #f07ab0; }
   .labeler [data-cat=gameplay] { --c: #8ed97a; }
@@ -157,6 +159,8 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   .labeler [data-cat=furniture] { --c: #c9a26a; }
   .labeler [data-cat=apparel]  { --c: #59d3bd; }
   .labeler [data-cat=ideology] { --c: #f0788f; }
+  .labeler [data-cat=biotech]  { --c: #5fd4ab; }
+  .labeler [data-cat=children] { --c: #f0a0c4; }
   .labeler [data-cat=armor]    { --c: #a3b4cc; }
   .labeler [data-cat=structure] { --c: #b0aa9e; }
   .labeler [data-cat=vehicles] { --c: #d08ce0; }
@@ -296,3 +300,9 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   cursor: pointer;
 }
 .plus:hover { border-color: var(--accent); border-style: solid; }
+
+/* Un motif encore incomplet.
+   Pas une erreur : on le tape, donc il passe par des etats invalides. La liste
+   continue de repondre par sous-chaine, le champ dit seulement qu'il ne lit pas
+   encore ce qu'on est en train d'ecrire. */
+input[type="search"].bancal { border-color: var(--warn, #b8860b); }
