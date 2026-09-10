@@ -137,7 +137,7 @@ public static class Inherited
         foreach (var file in Directory.EnumerateFiles(gameDataDir, "*.xml", SearchOption.AllDirectories))
         {
             XDocument doc;
-            try { doc = XDocument.Load(file); }
+            try { doc = XmlFile.Load(file); }
             catch { continue; }
             if (doc.Root is null || doc.Root.Name.LocalName != "Defs") continue;
 

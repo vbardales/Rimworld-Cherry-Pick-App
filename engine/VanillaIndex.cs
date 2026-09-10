@@ -74,7 +74,7 @@ public static class VanillaIndex
                               StringComparison.OrdinalIgnoreCase)) continue;
 
             XDocument doc;
-            try { doc = XDocument.Load(file); }
+            try { doc = XmlFile.Load(file); }
             catch { continue; }
             if (doc.Root is null || doc.Root.Name.LocalName != "Defs") continue;
 

@@ -131,11 +131,22 @@ public static class Scanner
         {
             try
             {
-                var meta = XDocument.Load(aboutPath).Root;
+                var meta = XmlFile.Load(aboutPath).Root;
                 if (meta != null)
                 {
                     mod.Name = ((string?)meta.Element("name") ?? mod.Id).Trim();
                     mod.PackageId = ((string?)meta.Element("packageId") ?? "").Trim();
+                    // Two spellings, and both are in use: <author> is the old
+                    // one, a single line where several names are separated by
+                    // hand; <authors> is the list the game reads today. Mods
+                    // written before 1.0 only have the first, and those are
+                    // exactly the ones with no packageId, where the author is
+                    // all we have left to identify the thing.
+                    var authors = meta.Element("authors");
+                    mod.Author = authors != null
+                        ? string.Join(", ", authors.Elements("li").Select(e => e.Value.Trim())
+                            .Where(s => s.Length > 0))
+                        : ((string?)meta.Element("author") ?? "").Trim();
                     var sv = meta.Element("supportedVersions");
                     if (sv != null)
                         mod.SupportedVersions = sv.Elements("li").Select(e => e.Value.Trim()).ToList();
@@ -148,6 +159,9 @@ public static class Scanner
             }
             catch (Exception e) { Console.Error.WriteLine($"About illisible : {aboutPath} — {e.Message}"); }
         }
+        // An unreadable About must not produce a blank row: the folder is the only
+        // name left, and it is already the fallback when <name> is missing.
+        if (mod.Name.Length == 0) mod.Name = mod.Id;
         mod.ContentRoots = ContentRoots(path, mod.ConditionalRoots);
         return mod;
     }
@@ -192,7 +206,7 @@ public static class Scanner
         if (file is null) return new List<string>();
 
         XDocument doc;
-        try { doc = XDocument.Load(file); }
+        try { doc = XmlFile.Load(file); }
         catch { return new List<string>(); }
         if (doc.Root is null) return new List<string>();
 
@@ -228,7 +242,7 @@ public static class Scanner
         foreach (var file in Directory.EnumerateFiles(defsDir, "*.xml", SearchOption.AllDirectories))
         {
             XDocument doc;
-            try { doc = XDocument.Load(file, LoadOptions.SetLineInfo); }
+            try { doc = XmlFile.Load(file, LoadOptions.SetLineInfo); }
             catch (Exception e) { inv.Problems.Add($"XML invalide : {Rel(mod.Path, file)} — {e.Message}"); continue; }
             // The root element's NAME IS FREE. RimWorld takes the children of
             // whatever the root happens to be, and old mods use it as a comment:
@@ -376,7 +390,7 @@ public static class Scanner
         foreach (var file in Directory.EnumerateFiles(patchDir, "*.xml", SearchOption.AllDirectories))
         {
             XDocument doc;
-            try { doc = XDocument.Load(file); }
+            try { doc = XmlFile.Load(file); }
             catch (Exception e) { inv.Problems.Add($"XML invalide : {Rel(mod.Path, file)} — {e.Message}"); continue; }
             if (doc.Root is null || doc.Root.Name.LocalName != "Patch") continue;
 

@@ -7,6 +7,7 @@ public sealed class ModInfo
 {
     public string Id { get; set; } = "";            // folder name: Workshop id, or local name
     public string Name { get; set; } = "";
+    public string Author { get; set; } = "";
     public string PackageId { get; set; } = "";
     public string Path { get; set; } = "";
     public List<string> SupportedVersions { get; set; } = new();
@@ -185,6 +186,7 @@ public sealed class ActiveMod
 {
     public string PackageId { get; set; } = "";
     public string Name { get; set; } = "";
+    public string Author { get; set; } = "";
     public string Path { get; set; } = "";
     public string Source { get; set; } = "";        // workshop, local, or official
     public bool Found { get; set; }

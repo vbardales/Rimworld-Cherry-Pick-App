@@ -28,7 +28,7 @@ public static class ModList
 
     public static List<string> ReadActivePackageIds(string modsConfigPath)
     {
-        var doc = XDocument.Load(modsConfigPath);
+        var doc = XmlFile.Load(modsConfigPath);
         var active = doc.Root?.Element("activeMods");
         if (active is null) return new List<string>();
         return active.Elements("li").Select(e => e.Value.Trim()).Where(s => s.Length > 0).ToList();
@@ -71,6 +71,7 @@ public static class ModList
                 {
                     PackageId = pid,
                     Name = info.Name,
+                    Author = info.Author,
                     Path = info.Path,
                     Source = SourceOf(gameDir, info.Path),
                     Found = true,
@@ -99,6 +100,7 @@ public static class ModList
             {
                 PackageId = info.PackageId,
                 Name = info.Name,
+                Author = info.Author,
                 Path = info.Path,
                 Source = SourceOf(gameDir, info.Path),
                 Found = true,

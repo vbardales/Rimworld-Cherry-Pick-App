@@ -21,12 +21,13 @@ public static class InstalledIndex
         public long Stamp { get; set; }              // About.xml modification date
         public string PackageId { get; set; } = "";
         public string Name { get; set; } = "";
+        public string Author { get; set; } = "";
         public List<string> SupportedVersions { get; set; } = new();
     }
 
     sealed class Cache
     {
-        public int Version { get; set; } = 1;
+        public int Version { get; set; } = 3;   // 2: entries carry the author. 3: UTF-16 About files read
         public List<Entry> Entries { get; set; } = new();
     }
 
@@ -62,13 +63,30 @@ public static class InstalledIndex
                     ModInfo info;
                     try { info = Scanner.ReadAbout(dir); }
                     catch { continue; }
-                    if (info.PackageId.Length == 0) continue;
                     entry = new Entry
                     {
                         Path = dir,
                         Stamp = stamp,
-                        PackageId = info.PackageId,
+                        // A mod with no packageId still gets a key, built from its
+                        // folder.
+                        //
+                        // The field only became mandatory in 1.0, so every B18 and
+                        // older mod lacks it — 378 of the 535 affected here declare
+                        // no version at all and carry the pre-1.0 targetVersion
+                        // instead. Skipping them dropped 5% of what is installed
+                        // from the list, silently, and the ones dropped were
+                        // precisely those most likely to need a rebuild rather than
+                        // a port.
+                        //
+                        // The prefix is deliberate: this is not a packageId and must
+                        // never be mistaken for one. Nothing matches it against
+                        // ModsConfig, which is correct — the game cannot activate
+                        // these mods either, for the same missing field.
+                        PackageId = info.PackageId.Length > 0
+                            ? info.PackageId
+                            : FallbackKey(dir),
                         Name = info.Name,
+                        Author = info.Author,
                         SupportedVersions = info.SupportedVersions,
                     };
                 }
@@ -85,6 +103,7 @@ public static class InstalledIndex
                         Path = entry.Path,
                         PackageId = entry.PackageId,
                         Name = entry.Name,
+                        Author = entry.Author,
                         SupportedVersions = entry.SupportedVersions,
                         // An empty list is not a dead mod: the official DLC
                         // declare no version at all. Without this guard, Core and
@@ -100,6 +119,26 @@ public static class InstalledIndex
         return index;
     }
 
+    // The stand-in key for a mod that declares no packageId.
+    //
+    // A Workshop folder is its numeric id, which is stable and unique, so
+    // "workshop:2313737553" identifies Anima Tree Scream as well as a real
+    // packageId would. A local folder is named by hand, so "local:" plus that name
+    // is only as unique as she made it — good enough here, since the two roots are
+    // scanned separately and a collision would only mean one shadowing the other,
+    // exactly as two real packageIds already do.
+    //
+    // The colon is what makes this safe: it cannot occur in a packageId, so a
+    // fallback key can never be confused with one, in this code or by eye.
+    public static string FallbackKey(string dir)
+    {
+        var name = new DirectoryInfo(dir).Name;
+        var workshop = name.Length > 0 && name.All(char.IsDigit);
+        return (workshop ? "workshop:" : "local:") + name;
+    }
+
+    public static bool IsFallbackKey(string packageId) => packageId.Contains(':');
+
     static Dictionary<string, Entry> LoadCache()
     {
         var map = new Dictionary<string, Entry>(StringComparer.OrdinalIgnoreCase);
@@ -107,7 +146,7 @@ public static class InstalledIndex
         {
             if (!File.Exists(CachePath)) return map;
             var cache = JsonSerializer.Deserialize<Cache>(File.ReadAllText(CachePath));
-            if (cache is null || cache.Version != 1) return map;
+            if (cache is null || cache.Version != 3) return map;
             foreach (var e in cache.Entries) map[e.Path] = e;
         }
         catch { /* unreadable cache: rebuild it, quietly */ }
