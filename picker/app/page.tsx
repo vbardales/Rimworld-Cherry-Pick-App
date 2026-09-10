@@ -9,6 +9,7 @@ import { workshopUrl } from "@/lib/steam";
 type ModRow = {
   PackageId: string;
   Name: string;
+  Author: string;
   Path: string;
   Source: string;
   Found: boolean;
@@ -297,10 +298,14 @@ export default function Home() {
   const shown = useMemo(() => {
     return rows.filter((m) => {
       if (motif) {
+        // L'auteur est cherchable au meme titre que le nom : « hanaasagi » est
+        // parfois la seule chose qu'on sache retaper d'un mod dont le titre est
+        // en japonais.
         const va = motif.re
-          ? motif.re.test(m.Name) || motif.re.test(m.PackageId)
+          ? motif.re.test(m.Name) || motif.re.test(m.PackageId) || motif.re.test(m.Author)
           : m.Name.toLowerCase().includes(motif.texte!) ||
-            m.PackageId.toLowerCase().includes(motif.texte!);
+            m.PackageId.toLowerCase().includes(motif.texte!) ||
+            m.Author.toLowerCase().includes(motif.texte!);
         if (!va) return false;
       }
       // A freshly labelled row stays visible for ten seconds, then the filter takes
@@ -351,7 +356,7 @@ export default function Home() {
         <input
           type="search"
           className={motif && !motif.valide ? "bancal" : ""}
-          placeholder="nom, packageId, ou expression reguliere (^vanilla)"
+          placeholder="nom, auteur, packageId, ou expression reguliere (^vanilla)"
           title="Une expression reguliere est acceptee : ^vanilla pour ce qui commence par Vanilla. Tant qu'elle est incomplete, la recherche se fait par sous-chaine."
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -390,27 +395,26 @@ export default function Home() {
         <span className="sub">
           {sift === "todo" ? "les etiquettes ne filtrent pas ce qui reste a trier :" : "ne montrer que :"}
         </span>
-        <div className="labeler">
+        {/* Un menu, pas dix-neuf pastilles.
+            Le choix devient unique : la liste rendait la ligne illisible bien
+            avant qu'on ait besoin de croiser deux etiquettes. `only` reste un
+            tableau, parce que le filtre et les preferences enregistrees le
+            lisent ainsi, et parce qu'un jour on voudra peut-etre y remettre
+            deux valeurs. */}
+        <select
+          // Une etiquette posee vaut tri : sous « a trier », aucun mod n'en
+          // porte, et la liste sortait vide sans jamais dire pourquoi.
+          disabled={sift === "todo"}
+          value={only[0] ?? ""}
+          onChange={(e) => setOnly(e.target.value ? [e.target.value as CategoryId] : [])}
+        >
+          <option value="">tout afficher</option>
           {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              data-cat={c.id}
-              // Une etiquette posee vaut tri : sous « a trier », aucun mod n'en
-              // porte, et la liste sortait vide sans jamais dire pourquoi.
-              disabled={sift === "todo"}
-              className={`chip${only.includes(c.id) ? " on" : ""}`}
-              onClick={() =>
-                setOnly((prev) =>
-                  prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id],
-                )
-              }
-            >
+            <option key={c.id} value={c.id}>
               {c.label}
-            </button>
+            </option>
           ))}
-        </div>
-        {only.length > 0 && <button onClick={() => setOnly([])}>tout afficher</button>}
+        </select>
       </div>
 
       {error && <p className="err">{error}</p>}
@@ -486,6 +490,11 @@ const Ligne = memo(function Ligne({
       <Link href={`/mod/${encodeURIComponent(mod.PackageId)}?path=${encodeURIComponent(mod.Path)}`}>
         <span className="name">{mod.Name || mod.PackageId}</span>{" "}
         <span className="pid">{mod.PackageId}</span>{" "}
+        {/* L'auteur, quand About.xml le donne.
+            C'est la seule identite qui reste aux mods d'avant 1.0 : pas de
+            packageId, souvent un nom qui ne dit rien hors de sa langue. Sur les
+            autres, il evite de confondre deux mods homonymes. */}
+        {mod.Author && <span className="auteur">{mod.Author}</span>}{" "}
         <span className="tags">
           {mod.Active && <em className="tag act">actif</em>}
           <em className="tag">{mod.Source}</em>
@@ -494,6 +503,17 @@ const Ligne = memo(function Ligne({
           )}
           {mod.DeadBefore16 && !label.works16 && <em className="tag dead">mort avant 1.6</em>}
           {mod.DeadBefore16 && label.works16 && <em className="tag act">tourne en 1.6</em>}
+          {/* Ce mod ne declare pas de packageId, et la cle affichee est une cle de
+              repli fabriquee depuis son dossier.
+              Le champ n'est devenu obligatoire qu'en 1.0 : c'est donc la population
+              des mods B18 et anterieurs, plus quelques negligents recents. Elle
+              merite d'etre vue, parce qu'un mod sans packageId ne se porte pas, il
+              se reconstruit — et parce que le jeu lui-meme ne sait pas l'activer. */}
+          {mod.PackageId.includes(":") && (
+            <em className="tag nopid" title="Ce mod ne déclare pas de packageId : la clé affichée est fabriquée depuis son dossier. Le jeu ne peut pas l'activer en l'état.">
+              sans packageId
+            </em>
+          )}
         </span>
       </Link>
       {/* Space reserved even with no page: a local mod has none, and a magnifier

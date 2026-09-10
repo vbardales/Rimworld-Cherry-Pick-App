@@ -48,6 +48,7 @@ export function isUnderAllowedRoot(candidate: string): boolean {
 export type ModRow = {
   PackageId: string;
   Name: string;
+  Author: string;
   Path: string;
   Source: string;
   Found: boolean;
@@ -79,18 +80,26 @@ const MAX = 256 * 1024 * 1024;
 //            sorting never waits, short enough that a mod installed mid-session
 //            appears without restarting anything. The refresh button on a mod
 //            sheet is the escape hatch when that is not fast enough.
+//
+// Both stamps also carry the engine's date, see stampOf.
 type Held = { at: number; stamp: string; mods: ModRow[] };
 const held = new Map<string, Held>();
 const TTL = 60_000;
 
 async function stampOf(scope: "active" | "all"): Promise<string> {
-  if (scope === "all") return "";
+  // The engine's date is part of the stamp for both scopes. Recompiling it is the
+  // one thing that changes the answer without any game file moving, and the held
+  // list would otherwise survive — for a whole minute, or until the next
+  // ModsConfig write — the very change it was meant to show.
+  let engine = "";
+  try { engine = String((await fs.stat(DLL)).mtimeMs); } catch { /* not built yet */ }
+  if (scope === "all") return engine;
   try {
     const f = path.join(process.env.USERPROFILE ?? "", "AppData", "LocalLow", "Ludeon Studios",
       "RimWorld by Ludeon Studios", "Config", "ModsConfig.xml");
-    return String((await fs.stat(f)).mtimeMs);
+    return engine + "|" + String((await fs.stat(f)).mtimeMs);
   } catch {
-    return "";
+    return engine;
   }
 }
 

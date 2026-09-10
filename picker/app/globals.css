@@ -59,6 +59,14 @@ input[type=search] { min-width: 260px; }
 .mods .pid { color: var(--dim); font-size: 12px; }
 .mods .tags { margin-left: auto; }
 
+/* L'auteur : au meme rang que le packageId, mais il cede la place avant lui.
+   Sur un mod d'avant 1.0 c'est la seule identite lisible ; sur les autres c'est
+   un confort, et la ligne appartient d'abord au nom. */
+.mods .auteur {
+  color: var(--dim); font-size: 12px; font-style: italic;
+  white-space: nowrap; flex: 0 2 auto; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+
 table.defs { border-collapse: collapse; width: 100%; }
 table.defs td { border-bottom: 1px solid var(--line); padding: 5px 8px; vertical-align: middle; }
 table.defs tr:hover td { background: var(--panel); }
@@ -265,8 +273,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 }
 
 /* Un filtre par etiquette n'a pas de sens sous « a trier ». */
-.bar.bulk .chip:disabled { opacity: .35; cursor: default; }
-.bar.bulk .chip:disabled:hover { border-color: var(--line); color: var(--dim); }
+.bar.bulk select:disabled { opacity: .35; cursor: default; }
 
 /* Relire le disque : une action discrete, jamais le geste principal.
    Elle sort le bouton du flux normal — on ne relit pas pour travailler, on relit
@@ -333,3 +340,9 @@ input[type="search"].bancal { border-color: var(--warn, #b8860b); }
   box-shadow: 0 2px 10px rgb(0 0 0 / .18);
 }
 .haut:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Un mod qui ne declare pas de packageId.
+   Rouge comme « mort avant 1.6 », et pour la meme raison : le jeu ne sait pas
+   l'activer. La clef affichee est fabriquee depuis son dossier, elle ne sert qu'a
+   nous. Il n'y a rien a en tirer sans le reconstruire. */
+.tag.nopid { color: var(--bad); border-color: var(--bad); }

@@ -30,8 +30,13 @@ export async function GET(req: NextRequest) {
     const total = mods.length;
 
     if (q) {
+      // Same three fields as the page: name, author, packageId. A capped answer
+      // that searched fewer of them would disagree with the list it feeds.
       mods = mods.filter(
-        (m) => m.Name.toLowerCase().includes(q) || m.PackageId.toLowerCase().includes(q),
+        (m) =>
+          m.Name.toLowerCase().includes(q) ||
+          m.Author.toLowerCase().includes(q) ||
+          m.PackageId.toLowerCase().includes(q),
       );
     }
 
