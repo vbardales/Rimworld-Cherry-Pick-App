@@ -184,7 +184,8 @@
         "engine"
       ],
       "works16": false,
-      "updated": "2026-09-14T12:09:10.857Z"
+      "starred": false,
+      "updated": "2026-09-16T19:02:45.826Z"
     },
     "ab.vplrf": {
       "categories": [
@@ -242,14 +243,16 @@
         "furniture"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:40:50.254Z"
+      "starred": false,
+      "updated": "2026-09-16T19:17:29.131Z"
     },
     "adaptive.primitivestorage": {
       "categories": [
         "furniture"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:40:54.830Z"
+      "starred": false,
+      "updated": "2026-09-16T19:18:02.678Z"
     },
     "adaptive.simplestorage": {
       "categories": [
@@ -1051,12 +1054,11 @@
     },
     "armoredampharos.fancyrats": {
       "categories": [
-        "textures",
         "animals"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T19:01:18.902Z"
+      "updated": "2026-09-16T19:16:35.783Z"
     },
     "armoredampharos.rodentpack": {
       "categories": [
@@ -1076,26 +1078,27 @@
     },
     "armoredampharos.superfancyrats": {
       "categories": [
-        "textures",
         "animals"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T19:01:58.212Z"
+      "updated": "2026-09-16T19:16:34.405Z"
     },
     "armoredampharos.superpenguin": {
       "categories": [
         "animals"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:39:15.036Z"
+      "starred": false,
+      "updated": "2026-09-16T19:02:04.594Z"
     },
     "armoredampharos.vampiresquirrels": {
       "categories": [
         "animals"
       ],
       "works16": false,
-      "updated": "2026-09-14T12:08:14.073Z"
+      "starred": false,
+      "updated": "2026-09-16T19:02:10.428Z"
     },
     "arquebus.stagzmerfolk": {
       "categories": [
@@ -1990,7 +1993,8 @@
         "textures"
       ],
       "works16": false,
-      "updated": "2026-09-06T13:16:32.416Z"
+      "starred": false,
+      "updated": "2026-09-16T19:16:09.196Z"
     },
     "binchcannon.overcookedmeals": {
       "categories": [
@@ -3252,7 +3256,8 @@
         "furniture"
       ],
       "works16": false,
-      "updated": "2026-09-14T12:16:38.689Z"
+      "starred": false,
+      "updated": "2026-09-16T19:17:54.390Z"
     },
     "dankpyon.medieval.overhaul.house.roxmont": {
       "categories": [
@@ -6156,7 +6161,7 @@
       ],
       "works16": false,
       "starred": true,
-      "updated": "2026-09-16T14:49:22.805Z"
+      "updated": "2026-09-16T19:16:03.202Z"
     },
     "hysteria82.mousekinmaritimeapparel": {
       "categories": [
@@ -7624,7 +7629,8 @@
         "furniture"
       ],
       "works16": false,
-      "updated": "2026-09-14T12:11:58.834Z"
+      "starred": false,
+      "updated": "2026-09-16T19:02:53.593Z"
     },
     "lee4733.giddyup.cavalrycharge": {
       "categories": [
@@ -8914,7 +8920,8 @@
         "engine"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:40:03.539Z"
+      "starred": false,
+      "updated": "2026-09-16T19:15:50.657Z"
     },
     "mlie.acidchamberdissolveanything": {
       "categories": [
@@ -8925,22 +8932,21 @@
     },
     "mlie.activeresponsetraining": {
       "categories": [
-        "gameplay"
-      ],
-      "works16": false,
-      "updated": "2026-09-14T12:14:15.786Z"
-    },
-    "mlie.adaptationrefusal": {
-      "categories": [
-        "food",
-        "furniture",
-        "armor",
-        "gameplay",
-        "medical"
+        "furniture"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T14:49:35.468Z"
+      "updated": "2026-09-16T19:15:56.313Z"
+    },
+    "mlie.adaptationrefusal": {
+      "categories": [
+        "armor",
+        "apparel",
+        "food"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T19:17:05.772Z"
     },
     "mlie.addchangenote": {
       "categories": [
@@ -11991,12 +11997,11 @@
     },
     "plumbiar.accuratehedgehogs": {
       "categories": [
-        "animals",
-        "gameplay"
+        "animals"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T14:49:02.827Z"
+      "updated": "2026-09-16T19:15:43.633Z"
     },
     "poet.ddexpandedcollection": {
       "categories": [
@@ -13446,13 +13451,11 @@
     },
     "royaltea.acericulture": {
       "categories": [
-        "food",
-        "plants",
-        "gameplay"
+        "food"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T14:49:29.456Z"
+      "updated": "2026-09-16T19:16:48.843Z"
     },
     "royaltea.animalsatwork.herding": {
       "categories": [
