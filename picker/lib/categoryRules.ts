@@ -316,8 +316,11 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   // triage: the targets' categories plus gameplay put at least one right in 44,
   // precision 0.52, recall 0.67 — targets alone were right in 24.
   const onlyPatches = counted.length === 0 && (a?.Assemblies ?? 0) === 0 && (mod.patchCount ?? 0) > 0;
-  if (strong.size === 0 && onlyPatches && (mod.patchTargets ?? []).length > 0) {
-    for (const d of mod.patchTargets!) for (const h of defHits(d)) if (h.strong) add(strong, h.cat);
+  // Patches that name no def at all — a whole def type, like every royal title's
+  // throne room requirements — are a tweak all the same. Measured on the 19 such
+  // mods of the triage: gameplay is right in 9, the next category in 6.
+  if (strong.size === 0 && onlyPatches) {
+    for (const d of mod.patchTargets ?? []) for (const h of defHits(d)) if (h.strong) add(strong, h.cat);
     add(strong, "gameplay");
   }
 
@@ -333,6 +336,12 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
     const text = `${mod.name ?? ""} ${mod.packageId ?? ""}`;
     for (const [re, c] of NAME_WORDS) if (re.test(text)) add(strong, c);
   }
+
+  // Content of its own, no C#, and still nothing spoke — not even the name: wax
+  // cloth and a floor made from another mod's honey. Content for a mechanic the
+  // rules do not know. Measured: 9 more mods with a suggestion, 5 right, gameplay
+  // 0.71/0.41 -> 0.70/0.43.
+  if (strong.size === 0 && (a?.Assemblies ?? 0) === 0 && concreteCounted.length > 0) add(strong, "gameplay");
 
   return [...strong.entries()]
     .sort((x, y) => y[1] - x[1])

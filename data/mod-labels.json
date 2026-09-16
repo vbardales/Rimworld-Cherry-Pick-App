@@ -695,6 +695,14 @@
       "works16": false,
       "updated": "2026-09-16T09:50:28.915Z"
     },
+    "alphabees.retexture": {
+      "categories": [
+        "textures"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:11:33.966Z"
+    },
     "alt4s.adjustablefpoison": {
       "categories": [
         "engine"
@@ -831,12 +839,11 @@
     },
     "andrewraphaellukasik.allowdeadanimals": {
       "categories": [
-        "gameplay",
-        "animals",
-        "food"
+        "engine"
       ],
       "works16": false,
-      "updated": "2026-09-05T20:03:51.456Z"
+      "starred": false,
+      "updated": "2026-09-16T21:10:32.124Z"
     },
     "andromeda.busywork": {
       "categories": [
@@ -3271,6 +3278,14 @@
       "starred": false,
       "updated": "2026-09-16T18:41:08.971Z"
     },
+    "cucumpear.kibble": {
+      "categories": [
+        "food"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:07:20.852Z"
+    },
     "cucumpear.stonetweaks": {
       "categories": [
         "gameplay"
@@ -3293,6 +3308,17 @@
       ],
       "works16": false,
       "updated": "2026-09-14T21:42:35.322Z"
+    },
+    "cyanobot.alphamemesstuffed": {
+      "categories": [
+        "textures",
+        "ideology",
+        "structure",
+        "furniture"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:13:59.546Z"
     },
     "cyanobot.buildfromchunk": {
       "categories": [
@@ -4484,10 +4510,11 @@
     },
     "duz.almosttherefork": {
       "categories": [
-        "gameplay"
+        "engine"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:44:42.187Z"
+      "starred": false,
+      "updated": "2026-09-16T21:10:45.630Z"
     },
     "dws.jptsoftwarmbeds.dlcfix": {
       "categories": [
@@ -4843,10 +4870,11 @@
     "euclidean.alphageneslite": {
       "categories": [
         "races",
-        "biotech"
+        "armor"
       ],
       "works16": false,
-      "updated": "2026-09-15T13:06:50.368Z"
+      "starred": false,
+      "updated": "2026-09-16T21:13:35.181Z"
     },
     "euclidean.s16.core": {
       "categories": [
@@ -6197,10 +6225,11 @@
     },
     "heartray.alliedideologies": {
       "categories": [
-        "ideology"
+        "gameplay"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:44:10.654Z"
+      "starred": false,
+      "updated": "2026-09-16T21:09:20.405Z"
     },
     "heatherathebyne.childrenlearnoncaravan": {
       "categories": [
@@ -6867,6 +6896,14 @@
       ],
       "works16": false,
       "updated": "2026-09-06T10:17:37.071Z"
+    },
+    "jhe2.moplantgen": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:07:24.196Z"
     },
     "jia.relationstablanguage": {
       "categories": [
@@ -7628,6 +7665,14 @@
       "works16": true,
       "updated": "2026-09-09T22:42:30.270Z"
     },
+    "klausgunniharold.alltheanimals": {
+      "categories": [
+        "animals"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:06:22.089Z"
+    },
     "klutzspecter.morestuff.moredryads": {
       "categories": [
         "gameplay"
@@ -7814,6 +7859,14 @@
       ],
       "reviewed": true,
       "updated": "2026-09-04T17:47:22.151Z"
+    },
+    "kupa.alphagenesintegrated": {
+      "categories": [
+        "gameplay"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:12:40.982Z"
     },
     "kura.extragems": {
       "categories": [
@@ -8310,6 +8363,14 @@
       ],
       "works16": false,
       "updated": "2026-09-05T22:09:51.847Z"
+    },
+    "lucius.alphagenesfa": {
+      "categories": [
+        "textures"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:12:36.616Z"
     },
     "lucius.cherryscroll": {
       "categories": [
@@ -11501,10 +11562,11 @@
     },
     "ninagoblin.alliesarehelpful": {
       "categories": [
-        "gameplay"
+        "engine"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:44:17.723Z"
+      "starred": false,
+      "updated": "2026-09-16T21:09:24.261Z"
     },
     "ninagoblin.nooneleftbehind": {
       "categories": [
@@ -12311,11 +12373,12 @@
     },
     "phil42.allergies": {
       "categories": [
-        "gameplay",
-        "medical"
+        "medical",
+        "biotech"
       ],
       "works16": false,
-      "updated": "2026-09-05T20:03:42.970Z"
+      "starred": false,
+      "updated": "2026-09-16T21:08:44.456Z"
     },
     "phomor.craftingqualityrebalanced": {
       "categories": [
@@ -13118,11 +13181,11 @@
     },
     "redram.allowprisonerstoeatcorpses": {
       "categories": [
-        "gameplay",
-        "food"
+        "engine"
       ],
       "works16": false,
-      "updated": "2026-09-05T20:03:50.349Z"
+      "starred": false,
+      "updated": "2026-09-16T21:10:35.618Z"
     },
     "reel.facialanims": {
       "categories": [
@@ -14121,26 +14184,65 @@
     },
     "sarg.alphaanimals": {
       "categories": [
-        "animals"
+        "animals",
+        "armor",
+        "medical",
+        "structure"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:44:55.132Z"
+      "starred": false,
+      "updated": "2026-09-16T21:10:51.848Z"
+    },
+    "sarg.alphabiomes": {
+      "categories": [
+        "plants",
+        "medical",
+        "structure",
+        "furniture"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:11:46.945Z"
     },
     "sarg.alphabooks": {
       "categories": [
         "furniture",
-        "gameplay"
+        "armor"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:45:04.816Z"
+      "starred": false,
+      "updated": "2026-09-16T21:11:52.498Z"
     },
     "sarg.alphacrafts": {
       "categories": [
-        "gameplay",
+        "food"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:12:30.040Z"
+    },
+    "sarg.alphagenes": {
+      "categories": [
+        "races",
+        "medical",
+        "armor",
+        "apparel"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:12:34.112Z"
+    },
+    "sarg.alphamemes": {
+      "categories": [
+        "textures",
+        "ideology",
+        "children",
+        "structure",
         "furniture"
       ],
       "works16": false,
-      "updated": "2026-09-05T15:45:11.377Z"
+      "starred": false,
+      "updated": "2026-09-16T21:13:53.636Z"
     },
     "sarg.alpharandom": {
       "categories": [
@@ -14156,6 +14258,17 @@
       ],
       "works16": false,
       "updated": "2026-09-04T18:22:04.780Z"
+    },
+    "sarg.rimbees": {
+      "categories": [
+        "structure",
+        "food",
+        "furniture",
+        "animals"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-16T21:10:56.412Z"
     },
     "sargoskar.racetotherim": {
       "categories": [
@@ -16396,10 +16509,11 @@
     },
     "unlimitedhugs.allowtool": {
       "categories": [
-        "engine"
+        "gameplay"
       ],
       "works16": false,
-      "updated": "2026-09-04T18:41:38.665Z"
+      "starred": false,
+      "updated": "2026-09-16T21:10:40.532Z"
     },
     "unlimitedhugs.hugslib": {
       "categories": [
@@ -18288,10 +18402,11 @@
     },
     "z4k97b.altarsinthroneroom": {
       "categories": [
-        "ideology"
+        "gameplay"
       ],
       "works16": true,
-      "updated": "2026-09-04T18:40:54.347Z"
+      "starred": false,
+      "updated": "2026-09-16T21:11:28.858Z"
     },
     "zal.19thcentury": {
       "categories": [
