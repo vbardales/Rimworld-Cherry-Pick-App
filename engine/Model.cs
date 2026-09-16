@@ -106,6 +106,16 @@ public sealed class DefEntry
     public List<string> Products { get; set; } = new();   // RecipeDef -> what it makes
     public string? AddsHediff { get; set; }      // RecipeDef -> hediff it applies
 
+    // <thingCategories> and, for an apparel, <apparel><layers>. Neither feeds the
+    // dependency closure -- they exist only to guess what a mod is FOR, in the
+    // pickers background category suggestion. Read as declared on THIS def only:
+    // many mods put them on an abstract base instead and let concrete items
+    // inherit through ParentName, so the picker side counts every def, abstract
+    // included, rather than resolving the chain here the way TechLevel and
+    // ArchitectCategory do.
+    public List<string> ThingCategories { get; set; } = new();
+    public List<string> ApparelLayers { get; set; } = new();
+
     // Defs this one appears to own: the hediff a food grants, the thought it
     // leaves. The tie is only made if NOBODY ELSE claims them — a hediff shared by
     // five items belongs to all five, therefore to none, and merging them would

@@ -4,6 +4,19 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
 import { CATEGORIES, isSorted, key, labelOf, type CategoryId, type ModLabel } from "@/lib/labels";
+import { TECH_LEVELS, type ModAnalysis, type TechLevel } from "@/lib/techLevels";
+
+// Display labels for TECH_LEVELS, in French like every other string the
+// interface shows — see lib/modAnalysis.ts for the engine-facing enum names.
+const TECH_LABELS: Record<TechLevel, string> = {
+  Animal: "animal",
+  Neolithic: "neolithique",
+  Medieval: "medieval",
+  Industrial: "industriel",
+  Spacer: "spatial",
+  Ultra: "ultra",
+  Archotech: "archotech",
+};
 import { workshopUrl } from "@/lib/steam";
 
 type ModRow = {
@@ -81,6 +94,15 @@ export default function Home() {
   // mod peut etre etoile et pas encore classe, ou classe et jamais etoile.
   const [etoiles, setEtoiles] = useState(false);
 
+  // The mods minimum tech level among its defs, read from the background scan —
+  // never the disk, never inside a page request: see /api/analysis and
+  // lib/modAnalysis.ts. "not yet scanned" and "scanned, nothing found" are two
+  // distinct states: the first is a missing entry, the second an entry whose
+  // minTechLevel is null.
+  const [analysis, setAnalysis] = useState<Record<string, ModAnalysis>>({});
+  const [job, setJob] = useState<{ total: number; done: number; queued: number; running: boolean } | null>(null);
+  const [techFilter, setTechFilter] = useState<TechLevel | "unscanned" | "">("");
+
   // Dossiers Workshop videes par le moteur a la derniere lecture — residus
   // Steam sans meme un About.xml. Montre une fois, puis efface : il n'y a rien
   // a en faire, juste a savoir que c'est arrive.
@@ -142,6 +164,7 @@ export default function Home() {
       if (typeof kept.casse === "boolean") setCasse(kept.casse);
       if (typeof kept.depsManquantes === "boolean") setDepsManquantes(kept.depsManquantes);
       if (typeof kept.etoiles === "boolean") setEtoiles(kept.etoiles);
+      if (typeof kept.techFilter === "string") setTechFilter(kept.techFilter);
       // Labels come and go. A category that no longer exists would filter the list
       // down to nothing, with no visible reason — so only the known ones survive.
       if (Array.isArray(kept.only)) {
@@ -157,11 +180,11 @@ export default function Home() {
   useEffect(() => {
     if (!restored) return;
     try {
-      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only, casse, depsManquantes, etoiles }));
+      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only, casse, depsManquantes, etoiles, techFilter }));
     } catch {
       // private window, or storage refused: the tool works, it just forgets
     }
-  }, [restored, scope, q, sift, only, casse, depsManquantes, etoiles]);
+  }, [restored, scope, q, sift, only, casse, depsManquantes, etoiles, techFilter]);
 
   // Le classement se lit avec la liste, et sa panne se voit.
   //
@@ -184,6 +207,32 @@ export default function Home() {
       })
       .catch((e) => setError("classement illisible — les etiquettes manquent : " + String(e)));
   }, [restored, relire]);
+
+  // The background scan, read on its own — never the source of a visible error.
+  //
+  // It runs independently of this page (see /api/analysis and lib/modAnalysis.ts):
+  // reading it rarely fails, and when it does a mod simply stays "not yet
+  // scanned" instead of showing its real level — not the same urgency as an
+  // unreadable classification. Polled every fifteen seconds while the scan
+  // progresses, so the progress line and the filter catch up with the real
+  // state without a manual refresh.
+  useEffect(() => {
+    if (!restored) return;
+    let alive = true;
+    const readAnalysis = () => {
+      fetch("/api/analysis")
+        .then((r) => r.json())
+        .then((d) => {
+          if (!alive || d.error) return;
+          setAnalysis(d.mods ?? {});
+          setJob(d.job ?? null);
+        })
+        .catch(() => { /* the background scan keeps going even if this read fails */ });
+    };
+    readAnalysis();
+    const id = setInterval(readAnalysis, 15_000);
+    return () => { alive = false; clearInterval(id); };
+  }, [restored]);
 
   useEffect(() => {
     // Nothing is fetched before the controls are restored: the scope decides what
@@ -225,7 +274,7 @@ export default function Home() {
   }, [restored, scope, relire]);
 
   // Changer de filtre, c'est repartir du haut : le plafond retombe avec la liste.
-  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only, casse, depsManquantes, etoiles]);
+  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only, casse, depsManquantes, etoiles, techFilter]);
 
   // Ce que le tri a deja couvert, compte sur l'ensemble et non sur la page.
   //
@@ -343,6 +392,29 @@ export default function Home() {
       });
   }, []);
 
+  // Forces one mod through scanOneNow, bypassing the background jobs own pace
+  // and its cache — see /api/analysis/scan and lib/modAnalysis.ts. A row shows
+  // this while its own scan is in flight, never a global spinner: the corpus
+  // keeps moving behind it regardless.
+  const [scanningNow, setScanningNow] = useState<Set<string>>(new Set());
+  const forceScan = useCallback((packageId: string, path: string) => {
+    setScanningNow((prev) => new Set(prev).add(packageId));
+    fetch("/api/analysis/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageId, path }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) throw new Error(d.error ?? `HTTP ${r.status}`);
+        if (d.analysis) setAnalysis((prev) => ({ ...prev, [key(packageId)]: d.analysis }));
+      })
+      .catch((e) => setError(`scan manuel echoue pour ${packageId} : ${String(e)}`))
+      .finally(() => {
+        setScanningNow((prev) => { const n = new Set(prev); n.delete(packageId); return n; });
+      });
+  }, []);
+
   // Tout le filtrage se fait ici, sur la liste complete tenue en memoire.
   //
   // Il partait au serveur tant que la reponse etait bornee a deux cents lignes :
@@ -369,6 +441,36 @@ export default function Home() {
       return { texte: c.toLowerCase(), valide: false };
     }
   }, [q]);
+
+  function sameList(a?: CategoryId[], b?: CategoryId[]): boolean {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  // The suggestions from the background scan, kept as their own state with a
+  // reference that only moves when the CONTENT actually changed.
+  //
+  // /api/analysis is polled every fifteen seconds and hands back a brand new
+  // object every time, JSON-parsed from scratch — so analysis[id].suggested is a
+  // fresh array reference even when nothing about it moved. Deriving a rows
+  // suggested list straight from analysis during render would therefore break
+  // every rows memoisation on every poll: exactly the cost the row-level memo
+  // exists to avoid. This effect does the value comparison once, outside render,
+  // and only touches the entries that changed.
+  const [suggestedByMod, setSuggestedByMod] = useState<Record<string, CategoryId[] | undefined>>({});
+  useEffect(() => {
+    setSuggestedByMod((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const [id, a] of Object.entries(analysis)) {
+        if (!sameList(prev[id], a.suggested)) { next[id] = a.suggested; changed = true; }
+      }
+      return changed ? next : prev;
+    });
+  }, [analysis]);
 
   const shown = useMemo(() => {
     return rows.filter((m) => {
@@ -399,6 +501,21 @@ export default function Home() {
       if (casse && (!m.DeadBefore16 || l.works16)) return false;
       if (depsManquantes && m.MissingDependencies.length === 0) return false;
       if (etoiles && !l.starred) return false;
+      // The tech level comes from the background scan, not from what the mod
+      // declares. "not yet scanned" and "scanned, no level found" are not the
+      // same thing: the first is a missing entry in analysis, the second an
+      // entry whose minTechLevel is null.
+      //
+      // Cumulative, not exact, and a floor rather than a ceiling: picking
+      // "medieval" means "at least medieval" — the mods worth a second look once
+      // a colony has outgrown neolithic tools, not a narrow slice stuck at
+      // exactly one level.
+      if (techFilter) {
+        const a = analysis[key(m.PackageId)];
+        if (techFilter === "unscanned") { if (a) return false; }
+        else if (!a || a.minTechLevel === null) return false;
+        else if (TECH_LEVELS.indexOf(a.minTechLevel) < TECH_LEVELS.indexOf(techFilter)) return false;
+      }
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
       if (sift === "todo") return true;    // rien d'etiquete ici : le filtre par etiquette ne s'applique pas
@@ -407,7 +524,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, motif, labels, sift, only, casse, depsManquantes, etoiles, leaving, folding]);
+  }, [rows, motif, labels, sift, only, casse, depsManquantes, etoiles, leaving, folding, analysis, techFilter]);
 
   return (
     <main className="wrap">
@@ -443,6 +560,21 @@ export default function Home() {
           <option value="todo">a trier ({counts.todo})</option>
           <option value="done">tries ({counts.sorted})</option>
           </select>
+        {/* The mods minimum tech level, read from the background scan (see
+            lib/modAnalysis.ts) — never computed here, and never waited for: a
+            mod the scan has not reached yet simply stays "not yet scanned"
+            instead of blocking the list. */}
+        <select
+          value={techFilter}
+          onChange={(e) => setTechFilter(e.target.value as typeof techFilter)}
+          title="Niveau technique minimal trouve parmi les defs du mod (scan de fond) : n'affiche que ce qui atteint au moins le niveau choisi."
+        >
+          <option value="">tous niveaux techniques</option>
+          {TECH_LEVELS.map((t) => (
+            <option key={t} value={t}>{TECH_LABELS[t]}</option>
+          ))}
+          <option value="unscanned">pas encore scanne</option>
+        </select>
         {/* Un filtre a part, parce que ce n'est pas la meme question.
             Le menu dit ou on en est du tri ; celui-ci dit ce qui reste a faire
             tourner. Un mod peut etre trie et casse, ou intact et jamais regarde. */}
@@ -504,6 +636,17 @@ export default function Home() {
 
       {error && <p className="err">{error}</p>}
 
+      {/* Progress of the background scan, shown only while it is actually behind:
+          a mod install a whole corpus of a few thousand never fully clears
+          during a normal session, so this stays out of the way the instant it
+          catches up rather than sitting there as permanent clutter. */}
+      {job && job.total > 0 && job.done < job.total && (
+        <p className="purge">
+          scan de fond : {job.done}/{job.total} mods
+          {job.queued > 0 ? ` (${job.queued} en attente)` : ""}
+        </p>
+      )}
+
       {purges.length > 0 && (
         <p className="purge">
           {purges.length} dossier{purges.length > 1 ? "s" : ""} Workshop vide
@@ -519,12 +662,16 @@ export default function Home() {
             key={m.PackageId}
             mod={m}
             label={labelOf(labels, m.PackageId)}
+            suggested={suggestedByMod[key(m.PackageId)]}
+            minTechLevel={analysis[key(m.PackageId)]?.minTechLevel}
             leaving={leaving.includes(m.PackageId)}
             folding={folding.includes(m.PackageId)}
             onChange={patchLabel}
             onStar={toggleStar}
             onToggleActive={toggleActive}
             activating={activationEnCours.has(m.PackageId)}
+            onForceScan={forceScan}
+            scanning={scanningNow.has(m.PackageId)}
           />
         ))}
       </ul>
@@ -570,18 +717,37 @@ export default function Home() {
 // mod vient de la reponse du serveur, le label du magasin, et onChange d'un
 // useCallback.
 const Ligne = memo(function Ligne({
-  mod, label, leaving, folding, onChange, onStar, onToggleActive, activating,
+  mod, label, suggested, minTechLevel, leaving, folding, onChange, onStar, onToggleActive, activating,
+  onForceScan, scanning,
 }: {
   mod: ModRow;
   label: ModLabel;
+  // The background scans guess for this mod, threaded down as its OWN prop
+  // rather than pre-merged into label — see the effect that builds
+  // suggestedByMod in Home. Its reference only moves when the guess itself
+  // changes, so React.memo can skip this row on every unrelated poll; merging
+  // it into label here, inside a useMemo, keeps that same stability for the
+  // object Labeler actually reads.
+  suggested?: CategoryId[];
+  // undefined: no analysis entry at all — the background scan has not reached
+  // this mod yet. null: scanned, and genuinely nothing declares a tech level.
+  // A primitive, unlike suggested, so no reference-stability trick is needed:
+  // React.memo compares it by value on its own.
+  minTechLevel?: TechLevel | null;
   leaving: boolean;
   folding: boolean;
   onChange: (packageId: string, label: ModLabel) => void;
   onStar: (packageId: string, cur: ModLabel) => void;
   onToggleActive: (packageId: string, on: boolean) => void;
   activating: boolean;
+  onForceScan: (packageId: string, path: string) => void;
+  scanning: boolean;
 }) {
   const steam = workshopUrl(mod.Path);
+  const labelWithSuggestions = useMemo(
+    () => (suggested && suggested.length > 0 ? { ...label, suggested } : label),
+    [label, suggested],
+  );
   return (
     <li
       data-pid={mod.PackageId}
@@ -630,6 +796,27 @@ const Ligne = memo(function Ligne({
               dependance manquante
             </em>
           )}
+          {/* Never a scan failure to worry about — just the background jobs own
+              pace not having reached this mod yet out of the corpus. The force-
+              scan button next to the star is the escape hatch. */}
+          {minTechLevel === undefined && (
+            <em className="tag unscanned" title="Le scan de fond n'a pas encore atteint ce mod.">
+              pas encore scanne
+            </em>
+          )}
+          {/* The actual result once the scan HAS reached this mod — the piece
+              that was missing before: the "not yet scanned" tag only ever said
+              what was absent, never what was found. Neutral styling (plain
+              .tag, no colour) on purpose: this is read-only metadata from the
+              defs themselves, not a classification anyone chose. */}
+          {minTechLevel !== undefined && (
+            <em
+              className="tag niveau"
+              title="Niveau technique minimal trouve parmi les defs du mod (scan de fond)."
+            >
+              {minTechLevel === null ? "niveau technique : aucun" : TECH_LABELS[minTechLevel]}
+            </em>
+          )}
         </span>
       </Link>
       {/* Space reserved even with no page: a local mod has none, and a magnifier
@@ -652,6 +839,26 @@ const Ligne = memo(function Ligne({
       >
         {label.starred ? "★" : "☆"}
       </button>
+      {/* Forces this ONE mod through the background jobs analysis right now,
+          bypassing both its queue position and scanMod's own cache — see
+          /api/analysis/scan. Reads as a manual escape hatch, not a repeat of
+          the automatic scan: a mod already analyzed can still be re-scanned,
+          for instance right after editing its XML by hand. */}
+      <button
+        type="button"
+        className={`rescan${scanning ? " busy" : ""}`}
+        disabled={scanning}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onForceScan(mod.PackageId, mod.Path); }}
+        title={
+          scanning
+            ? "scan en cours..."
+            : minTechLevel === undefined
+              ? "pas encore scanne : lancer le scan maintenant"
+              : "relancer le scan de ce mod (ignore le cache)"
+        }
+      >
+        {scanning ? "…" : "⟳"}
+      </button>
       {/* Bascule ModsConfig.xml, exactement comme la case a cocher de RimSort.
           Reserve meme si le mod n'a pas de packageId : le jeu ne peut de toute
           facon pas l'activer, et le bouton desactive le dit mieux qu'une
@@ -672,7 +879,7 @@ const Ligne = memo(function Ligne({
       <Labeler
         packageId={mod.PackageId}
         path={mod.Path}
-        label={label}
+        label={labelWithSuggestions}
         onChange={onChange}
         compact
         dead={mod.DeadBefore16}

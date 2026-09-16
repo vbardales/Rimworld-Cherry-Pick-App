@@ -301,6 +301,18 @@ public static class Scanner
         // from "consumes that".
         entry.Race = ((string?)el.Element("race"))?.Trim();
         entry.AddsHediff = ((string?)el.Element("addsHediff"))?.Trim();
+
+        // Read only for the pickers category guess -- see the fields comment in
+        // Model.cs. Declared directly on most defs, so no inheritance to resolve.
+        var thingCategories = el.Element("thingCategories");
+        if (thingCategories is not null)
+            entry.ThingCategories = thingCategories.Elements("li")
+                .Select(li => li.Value.Trim()).Where(v => v.Length > 0).ToList();
+        var apparelLayers = el.Element("apparel")?.Element("layers");
+        if (apparelLayers is not null)
+            entry.ApparelLayers = apparelLayers.Elements("li")
+                .Select(li => li.Value.Trim()).Where(v => v.Length > 0).ToList();
+
         var products = el.Element("products");
         if (products is not null)
             entry.Products = products.Elements()

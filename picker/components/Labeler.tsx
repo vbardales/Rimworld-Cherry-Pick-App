@@ -78,6 +78,13 @@ export const Labeler = memo(function Labeler({
     send({ categories: has ? label.categories.filter((c) => c !== id) : [...label.categories, id] });
   };
 
+  // Everything the background scan offered that has not, yet, been ticked. A
+  // click promotes it through the exact same send() a manual tick uses — the
+  // suggestion carries no separate write path to fall out of step with.
+  const suggestions = (label.suggested ?? []).filter(
+    (id) => !label.categories.includes(id) && CATEGORIES.some((c) => c.id === id),
+  );
+
   return (
     <div className={`labeler${compact ? " compact" : ""}${busy ? " busy" : ""}`}>
       {rate && (
@@ -114,6 +121,21 @@ export const Labeler = memo(function Labeler({
             }
           >
             {c.label}
+          </button>
+        );
+      })}
+      {suggestions.map((id) => {
+        const c = CATEGORIES.find((cat) => cat.id === id)!;
+        return (
+          <button
+            type="button"
+            key={`suggere-${id}`}
+            data-cat={id}
+            className="chip suggere"
+            onClick={() => toggle(id)}
+            title={`suggere depuis les defs du mod — cliquer pour confirmer « ${c.label} »`}
+          >
+            {c.label} ?
           </button>
         );
       })}

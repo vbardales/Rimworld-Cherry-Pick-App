@@ -170,6 +170,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .labeler [data-cat=props]    { --c: #2c4a7c; }
 .labeler [data-cat=biotech]  { --c: #1f8f6b; }
 .labeler [data-cat=children] { --c: #c46a9a; }
+.labeler [data-cat=lewd]     { --c: #e0629e; }
 @media (prefers-color-scheme: dark) {
   .labeler [data-cat=engine]   { --c: #f07ab0; }
   .labeler [data-cat=gameplay] { --c: #8ed97a; }
@@ -186,6 +187,7 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
   .labeler [data-cat=ideology] { --c: #f0788f; }
   .labeler [data-cat=biotech]  { --c: #5fd4ab; }
   .labeler [data-cat=children] { --c: #f0a0c4; }
+  .labeler [data-cat=lewd]     { --c: #f8aed8; }
   .labeler [data-cat=armor]    { --c: #a3b4cc; }
   .labeler [data-cat=structure] { --c: #b0aa9e; }
   .labeler [data-cat=vehicles] { --c: #d08ce0; }
@@ -365,9 +367,27 @@ input[type="search"].bancal { border-color: var(--warn, #b8860b); }
 .tag.nopid { color: var(--bad); border-color: var(--bad); }
 
 /* A dependency declared in About.xml that is not installed anywhere the game
-   would look — not merely inactive. Same red as "no packageId": the game cannot
-   satisfy it either. */
-.tag.missing { color: var(--bad); border-color: var(--bad); }
+   would look — not merely inactive. Amber rather than the same red as "no
+   packageId": the mod itself is fine, only fetching one more thing is needed —
+   not the dead end "nopid"/"dead" mean. */
+.tag.missing { color: var(--warn, #8a5a00); border-color: var(--warn, #8a5a00); }
+@media (prefers-color-scheme: dark) { .tag.missing { color: #e0a94a; border-color: #e0a94a; } }
+
+/* Not a warning, not a failure — just the background scan (lib/modAnalysis.ts)
+   not having reached this mod yet. Same neutral look as the plain source/version
+   tags, on purpose: nothing here asks for attention, unlike "dead"/"missing". */
+.tag.unscanned { color: var(--dim); border-style: dashed; }
+
+/* Forces one mod through the scan right now instead of waiting on the queue —
+   see the .rescan button next to the star. Same small round shape as .star, so
+   the two read as a pair of per-row actions rather than one button standing out. */
+.rescan {
+  font: inherit; font-size: 13px; line-height: 1; padding: 0 3px;
+  border: none; background: transparent; cursor: pointer; color: var(--line);
+}
+.rescan:hover { color: var(--accent); }
+.rescan.busy { color: var(--dim); cursor: default; animation: rescan-spin 1s linear infinite; }
+@keyframes rescan-spin { to { transform: rotate(360deg); } }
 
 /* Marked as particular. A star, not a category: it says nothing about what the
    mod is for, so it sits apart from the labeler's chips, always the same size

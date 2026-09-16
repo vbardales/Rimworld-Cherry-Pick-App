@@ -29,6 +29,7 @@ const CATEGORY_COLOR: Record<CategoryId, string> = {
   props: "#2c4a7c",
   biotech: "#1f8f6b",
   children: "#c46a9a",
+  lewd: "#e0629e",
 };
 
 // A mod can carry several categories, RimSort's colour is one hex string per

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listMods, pruneState } from "@/lib/cherrypick";
+import { ensureJobStarted } from "@/lib/modAnalysis";
 import { readStore } from "@/lib/labelStore";
 import { isSorted, key, EMPTY, type CategoryId } from "@/lib/labels";
 
@@ -15,6 +16,9 @@ import { isSorted, key, EMPTY, type CategoryId } from "@/lib/labels";
 // stay for anything else calling this route, and because a capped answer is still
 // the right shape for a search box that queries as it types.
 export async function GET(req: NextRequest) {
+  // Kicks off the background tech-level/category scan on first use — a
+  // boolean check once its already running, never awaited into this request.
+  ensureJobStarted();
   const scope = req.nextUrl.searchParams.get("scope") === "all" ? "all" : "active";
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim().toLowerCase();
   const sift = req.nextUrl.searchParams.get("sift") ?? "all";
