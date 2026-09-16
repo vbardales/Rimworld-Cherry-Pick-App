@@ -212,6 +212,15 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   for (const [c, n] of weak) {
     if (strong.has(c)) add(strong, c, n);
   }
+  // Buildings and nothing else to go on: furniture. BuildingBase alone is
+  // furniture only 39% of the time — a workbench mod is gameplay, an arcade
+  // cabinet joy — so it never competes with a real signal, and a JobDef or a
+  // WorkGiverDef next to the building says the building is a means, not the
+  // point. Measured: furniture 0.84/0.39 -> 0.78/0.46, gameplay unchanged.
+  const buildings = mod.defs.filter((d) =>
+    d.DefType === "ThingDef" && !d.IsAbstract &&
+    [d.ParentName, ...(d.ParentChain ?? []).map((p) => p.Name)].includes("BuildingBase")).length;
+  if (strong.size === 0 && buildings > 0 && !weak.has("gameplay")) add(strong, "furniture", buildings);
   if (strong.size === 0 && weak.has("gameplay")) add(strong, "gameplay", weak.get("gameplay")!);
 
   // A race mod ships its own faction to spawn the race in — and is still filed
