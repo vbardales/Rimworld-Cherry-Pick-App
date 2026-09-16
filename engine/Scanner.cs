@@ -136,6 +136,7 @@ public static class Scanner
                 {
                     mod.Name = ((string?)meta.Element("name") ?? mod.Id).Trim();
                     mod.PackageId = ((string?)meta.Element("packageId") ?? "").Trim();
+                    mod.Description = ((string?)meta.Element("description") ?? "").Trim();
                     // Two spellings, and both are in use: <author> is the old
                     // one, a single line where several names are separated by
                     // hand; <authors> is the list the game reads today. Mods

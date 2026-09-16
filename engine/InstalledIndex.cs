@@ -23,13 +23,23 @@ public static class InstalledIndex
         public string Name { get; set; } = "";
         public string Author { get; set; } = "";
         public List<string> SupportedVersions { get; set; } = new();
+        public string Description { get; set; } = "";
+        public List<string> DeclaredDependencies { get; set; } = new();
     }
 
     sealed class Cache
     {
-        public int Version { get; set; } = 3;   // 2: entries carry the author. 3: UTF-16 About files read
+        public int Version { get; set; } = 4;   // 2: author. 3: UTF-16 About files read. 4: description + deps
         public List<Entry> Entries { get; set; } = new();
     }
+
+    // Steam residue: a Workshop folder left behind with nothing in it at all,
+    // usually after an unsubscribe that raced a download. It carries no About.xml
+    // and never will, so it is not a mod waiting to be read — it is litter, and it
+    // silently pads every "N mods installed" count until it is gone. Removed only
+    // when truly empty: a folder mid-download still has files in it, and those are
+    // left alone.
+    public static List<string> Pruned { get; } = new();
 
     static string CachePath =>
         Path.Combine(
@@ -49,7 +59,17 @@ public static class InstalledIndex
             foreach (var dir in Directory.EnumerateDirectories(root))
             {
                 var about = Path.Combine(dir, "About", "About.xml");
-                if (!File.Exists(about)) continue;
+                if (!File.Exists(about))
+                {
+                    // Not "no About yet" — nothing at all. A folder that is still
+                    // downloading has partial files in it; this one has none.
+                    if (!Directory.EnumerateFileSystemEntries(dir).Any())
+                    {
+                        try { Directory.Delete(dir); Pruned.Add(dir); }
+                        catch { /* in use, or a race with Steam: leave it, try next time */ }
+                    }
+                    continue;
+                }
 
                 var stamp = File.GetLastWriteTimeUtc(about).Ticks;
                 Entry entry;
@@ -88,6 +108,8 @@ public static class InstalledIndex
                         Name = info.Name,
                         Author = info.Author,
                         SupportedVersions = info.SupportedVersions,
+                        Description = info.Description,
+                        DeclaredDependencies = info.DeclaredDependencies,
                     };
                 }
 
@@ -105,6 +127,8 @@ public static class InstalledIndex
                         Name = entry.Name,
                         Author = entry.Author,
                         SupportedVersions = entry.SupportedVersions,
+                        Description = entry.Description,
+                        DeclaredDependencies = entry.DeclaredDependencies,
                         // An empty list is not a dead mod: the official DLC
                         // declare no version at all. Without this guard, Core and
                         // Royalty would be reported as outdated.
@@ -146,7 +170,7 @@ public static class InstalledIndex
         {
             if (!File.Exists(CachePath)) return map;
             var cache = JsonSerializer.Deserialize<Cache>(File.ReadAllText(CachePath));
-            if (cache is null || cache.Version != 3) return map;
+            if (cache is null || cache.Version != 4) return map;
             foreach (var e in cache.Entries) map[e.Path] = e;
         }
         catch { /* unreadable cache: rebuild it, quietly */ }

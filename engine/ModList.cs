@@ -78,6 +78,9 @@ public static class ModList
                     Active = true,
                     SupportedVersions = info.SupportedVersions,
                     DeadBefore16 = info.DeadBefore16,
+                    Description = info.Description,
+                    DeclaredDependencies = info.DeclaredDependencies,
+                    MissingDependencies = MissingOf(info, index),
                 });
             }
             else
@@ -88,6 +91,12 @@ public static class ModList
         return result;
     }
 
+    // Declared but not installed anywhere the game would look — not merely
+    // inactive. This is the check that would have caught the 2026-09-11 incident:
+    // a loadAfter reaching a mod that is not on disk at all, not just switched off.
+    static List<string> MissingOf(ModInfo info, Dictionary<string, ModInfo> index) =>
+        info.DeclaredDependencies.Where(d => !index.ContainsKey(d)).ToList();
+
     // Every installed mod, active or not. Same index as Resolve, which is only a
     // filter of it against ModsConfig.xml. The picker must be able to inspect a
     // mod that is not loaded — that is even the common case when looking for
@@ -95,7 +104,8 @@ public static class ModList
     public static List<ActiveMod> All(string gameDir, string modsConfigPath)
     {
         var active = new HashSet<string>(ReadActivePackageIds(modsConfigPath), StringComparer.OrdinalIgnoreCase);
-        return IndexInstalled(ModRoots(gameDir)).Values
+        var index = IndexInstalled(ModRoots(gameDir));
+        return index.Values
             .Select(info => new ActiveMod
             {
                 PackageId = info.PackageId,
@@ -107,9 +117,39 @@ public static class ModList
                 Active = active.Contains(info.PackageId),
                 SupportedVersions = info.SupportedVersions,
                 DeadBefore16 = info.DeadBefore16,
+                Description = info.Description,
+                DeclaredDependencies = info.DeclaredDependencies,
+                MissingDependencies = MissingOf(info, index),
             })
             .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    // Turns a mod on or off in ModsConfig.xml, exactly as RimSort or the game's
+    // own mod list would. A mod being switched off is simply removed from
+    // <activeMods> — RimWorld itself does not remember where it was in the load
+    // order once dropped, so restoring that order is not this tool's job either.
+    // A mod being switched on is appended at the end, the same place a freshly
+    // ticked mod lands in RimSort: load order is a separate, deliberate act.
+    public static void SetActive(string modsConfigPath, string packageId, bool on)
+    {
+        var doc = XmlFile.Load(modsConfigPath);
+        var active = doc.Root?.Element("activeMods");
+        if (active is null) throw new InvalidOperationException("ModsConfig.xml has no <activeMods>.");
+
+        var existing = active.Elements("li")
+            .FirstOrDefault(e => string.Equals(e.Value.Trim(), packageId, StringComparison.OrdinalIgnoreCase));
+
+        if (on)
+        {
+            if (existing is null) active.Add(new System.Xml.Linq.XElement("li", packageId));
+        }
+        else
+        {
+            existing?.Remove();
+        }
+
+        doc.Save(modsConfigPath);
     }
 
     static string SourceOf(string gameDir, string path)

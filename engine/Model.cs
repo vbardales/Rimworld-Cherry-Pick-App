@@ -12,6 +12,11 @@ public sealed class ModInfo
     public string Path { get; set; } = "";
     public List<string> SupportedVersions { get; set; } = new();
 
+    // The <description> of About.xml, as written by the mod's author. Shown on
+    // hover in the list: it is the one piece of context that answers "what does
+    // this actually do" without opening the mod's own page.
+    public string Description { get; set; } = "";
+
     // Dependencies declared in About.xml. The picker has to be able to say which
     // ones become useless once the selection is made.
     public List<string> DeclaredDependencies { get; set; } = new();
@@ -193,4 +198,13 @@ public sealed class ActiveMod
     public bool Active { get; set; }        // present in ModsConfig.xml
     public List<string> SupportedVersions { get; set; } = new();
     public bool DeadBefore16 { get; set; }
+
+    public string Description { get; set; } = "";
+
+    // Declared in About.xml, and which of those are not installed at all — not
+    // "not active", installed: a declared dependency that is merely inactive is
+    // the modlist's business, not the mod's. An installed-but-inactive one is
+    // therefore absent from this list on purpose.
+    public List<string> DeclaredDependencies { get; set; } = new();
+    public List<string> MissingDependencies { get; set; } = new();
 }

@@ -44,10 +44,13 @@ switch (verb)
         return CmdScan(true);
     case "close":
         return CmdClose();
+    case "toggle":
+        return CmdToggle();
     default:
         Console.WriteLine("cherrypick list [--all] [--json]    - la modlist active, ou tous les mods installes");
         Console.WriteLine("cherrypick scan <packageId|chemin>  - l'inventaire d'un mod, en JSON");
         Console.WriteLine("cherrypick view <packageId|chemin>  - la meme chose, en page HTML a parcourir");
+        Console.WriteLine("cherrypick toggle <packageId> <on|off> - active ou desactive un mod dans ModsConfig.xml");
         Console.WriteLine();
         Console.WriteLine("Variables : RIMWORLD_DIR pour un jeu installe ailleurs.");
         return verb == "help" ? 0 : 2;
@@ -65,9 +68,19 @@ int CmdList()
         : ModList.Resolve(gameDir, cfg);
     var wantJson = args.Contains("--json");
 
-    if (wantJson) { Console.WriteLine(JsonSerializer.Serialize(mods, json)); return 0; }
+    if (wantJson)
+    {
+        // Pruned folders are reported alongside the list, not as a side channel:
+        // the caller asked for a list and got one that is now shorter than the
+        // folder count on disk, for a reason worth showing once.
+        var payload = new { mods, pruned = InstalledIndex.Pruned };
+        Console.WriteLine(JsonSerializer.Serialize(payload, json));
+        return 0;
+    }
 
     Console.WriteLine($"{mods.Count} mods actifs — {cfg}");
+    if (InstalledIndex.Pruned.Count > 0)
+        Console.WriteLine($"{InstalledIndex.Pruned.Count} dossier(s) vide(s) supprime(s) (residus Steam)");
     Console.WriteLine();
     foreach (var m in mods)
     {
@@ -76,6 +89,19 @@ int CmdList()
         Console.WriteLine($"  {m.PackageId,-46} {m.Source,-9} {versions,-24}{flag}");
         Console.WriteLine($"    {m.Name}");
     }
+    return 0;
+}
+
+int CmdToggle()
+{
+    if (args.Length < 3 || (args[2] != "on" && args[2] != "off"))
+    {
+        Console.Error.WriteLine("Usage : cherrypick toggle <packageId> <on|off>");
+        return 2;
+    }
+    var cfg = ModList.FindModsConfig();
+    if (cfg is null) { Console.Error.WriteLine("ModsConfig.xml introuvable."); return 1; }
+    ModList.SetActive(cfg, args[1], args[2] == "on");
     return 0;
 }
 
