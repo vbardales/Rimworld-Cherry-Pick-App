@@ -52,6 +52,11 @@ export type ModLabel = {
   // on every pass through the list, and gets tested twice.
   works16?: boolean;
 
+  // Marked as particular: worth remembering on its own, apart from what it is
+  // FOR. A star says nothing about whether the mod has been sorted — it survives
+  // a category being cleared, and does not by itself count as sorting one.
+  starred?: boolean;
+
   updated: string;
 };
 
@@ -67,7 +72,7 @@ export function isSorted(l: ModLabel): boolean {
 
 export type LabelStore = { version: 1; mods: Record<string, ModLabel> };
 
-export const EMPTY: ModLabel = { categories: [], works16: false, updated: "" };
+export const EMPTY: ModLabel = { categories: [], works16: false, starred: false, updated: "" };
 
 // Le packageId, ramene a une forme unique.
 //

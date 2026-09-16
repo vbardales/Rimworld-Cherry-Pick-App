@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listMods } from "@/lib/cherrypick";
+import { listMods, pruneState } from "@/lib/cherrypick";
 import { readStore } from "@/lib/labelStore";
 import { isSorted, key, EMPTY, type CategoryId } from "@/lib/labels";
 
@@ -68,6 +68,10 @@ export async function GET(req: NextRequest) {
       labels: capped
         ? Object.fromEntries(mods.slice(0, limit).map((m) => [key(m.PackageId), labelOf(m.PackageId)]))
         : undefined,
+      // Empty Workshop folders the engine deleted while building this answer —
+      // reported once, alongside the list, rather than through a side channel
+      // nothing would think to check.
+      pruned: pruneState.last,
     });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

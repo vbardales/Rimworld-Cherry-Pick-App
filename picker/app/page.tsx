@@ -16,6 +16,9 @@ type ModRow = {
   Active: boolean;
   SupportedVersions: string[];
   DeadBefore16: boolean;
+  Description: string;
+  DeclaredDependencies: string[];
+  MissingDependencies: string[];
 };
 
 type Sift = "all" | "todo" | "done";
@@ -65,6 +68,23 @@ export default function Home() {
   // « tourne en 1.6 » dement cette deduction un mod a la fois, et ce filtre est ce
   // qui reste a verifier — la pile de portages possibles, sans ceux deja essayes.
   const [casse, setCasse] = useState(false);
+
+  // Ne montrer que ce qui manque vraiment une dependance.
+  //
+  // « Manque » veut dire absente du disque, pas seulement inactive : une
+  // dependance installee mais eteinte est l'affaire de la modlist, pas du mod.
+  // Le moteur fait deja cette distinction (ModList.MissingOf) ; ici on ne fait
+  // que la lire.
+  const [depsManquantes, setDepsManquantes] = useState(false);
+
+  // Les mods marques d'une etoile. Une marque a part, orthogonale au tri : un
+  // mod peut etre etoile et pas encore classe, ou classe et jamais etoile.
+  const [etoiles, setEtoiles] = useState(false);
+
+  // Dossiers Workshop videes par le moteur a la derniere lecture — residus
+  // Steam sans meme un About.xml. Montre une fois, puis efface : il n'y a rien
+  // a en faire, juste a savoir que c'est arrive.
+  const [purges, setPurges] = useState<string[]>([]);
 
   // Le retour en haut ne s'affiche qu'une fois la barre de filtres hors de vue.
   //
@@ -120,6 +140,8 @@ export default function Home() {
       if (["all", "todo", "done"].includes(kept.sift)) setSift(kept.sift);
       if (typeof kept.q === "string") setQ(kept.q);
       if (typeof kept.casse === "boolean") setCasse(kept.casse);
+      if (typeof kept.depsManquantes === "boolean") setDepsManquantes(kept.depsManquantes);
+      if (typeof kept.etoiles === "boolean") setEtoiles(kept.etoiles);
       // Labels come and go. A category that no longer exists would filter the list
       // down to nothing, with no visible reason — so only the known ones survive.
       if (Array.isArray(kept.only)) {
@@ -135,11 +157,11 @@ export default function Home() {
   useEffect(() => {
     if (!restored) return;
     try {
-      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only, casse }));
+      localStorage.setItem(KEEP, JSON.stringify({ scope, q, sift, only, casse, depsManquantes, etoiles }));
     } catch {
       // private window, or storage refused: the tool works, it just forgets
     }
-  }, [restored, scope, q, sift, only, casse]);
+  }, [restored, scope, q, sift, only, casse, depsManquantes, etoiles]);
 
   // Le classement se lit avec la liste, et sa panne se voit.
   //
@@ -187,6 +209,7 @@ export default function Home() {
           if (d.error) throw new Error(d.error);
           setRows(d.mods);
           setLu(new Date());
+          if (Array.isArray(d.pruned) && d.pruned.length > 0) setPurges(d.pruned);
         })
         .catch((e) => {
           // Une lecture abandonnee n'est pas une panne : elle a ete remplacee.
@@ -202,7 +225,7 @@ export default function Home() {
   }, [restored, scope, relire]);
 
   // Changer de filtre, c'est repartir du haut : le plafond retombe avec la liste.
-  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only, casse]);
+  useEffect(() => { setVisibles(PAS); }, [scope, q, sift, only, casse, depsManquantes, etoiles]);
 
   // Ce que le tri a deja couvert, compte sur l'ensemble et non sur la page.
   //
@@ -211,7 +234,9 @@ export default function Home() {
   const counts = useMemo(() => {
     const sorted = rows.filter((m) => isSorted(labelOf(labels, m.PackageId))).length;
     const ko = rows.filter((m) => m.DeadBefore16 && !labelOf(labels, m.PackageId).works16).length;
-    return { total: rows.length, sorted, todo: rows.length - sorted, ko };
+    const manquantes = rows.filter((m) => m.MissingDependencies.length > 0).length;
+    const etoilees = rows.filter((m) => labelOf(labels, m.PackageId).starred).length;
+    return { total: rows.length, sorted, todo: rows.length - sorted, ko, manquantes, etoilees };
   }, [rows, labels]);
 
   const cancelLeaving = useCallback((packageId: string) => {
@@ -221,7 +246,12 @@ export default function Home() {
     setFolding((prev) => (prev.includes(packageId) ? prev.filter((x) => x !== packageId) : prev));
   }, []);
 
-  // A label sends the mod out of the list after a delay.
+  // A label sends the mod out of the list after a delay — but only under "to
+  // sort", the one view a label actually empties. Under "sorted and unsorted" or
+  // "sorted", labelling changes nothing about whether the row belongs, so there
+  // is nothing to fold: scheduling the animation anyway made the row fade, fold
+  // to nothing, then snap back open the instant the timer cleared it, since
+  // `shown` had kept it in the list the whole time.
   //
   // The departure is decided on the LABELS, not on the "sorted" state: the server
   // derives sorting from the labels, so its reply always comes back sorted, and
@@ -235,6 +265,7 @@ export default function Home() {
     // Removing every label cancels the departure: it is the only way to do it, and
     // it is enough — a cancel button at the end of the row would shift the labels.
     if (label.categories.length === 0) { cancelLeaving(packageId); return; }
+    if (sift !== "todo") return;
 
     const t = timers.current.get(packageId);
     if (t) clearTimeout(t);
@@ -261,11 +292,55 @@ export default function Home() {
         setFolding((prev) => prev.filter((x) => x !== packageId));
       }, FOLD_MS));
     }, HOLD_MS));
-  }, [cancelLeaving]);
+  }, [cancelLeaving, sift]);
 
   useEffect(() => {
     const map = timers.current;
     return () => { for (const t of map.values()) clearTimeout(t); map.clear(); };
+  }, []);
+
+  // A star never sends the mod away, whatever the current filter: it is not a
+  // classification, and disappearing on a click that only marks a mod as
+  // particular would be the same surprise the sift guard above exists to avoid.
+  const toggleStar = useCallback((packageId: string, cur: ModLabel) => {
+    const optimiste: ModLabel = { ...cur, starred: !cur.starred, updated: new Date().toISOString() };
+    setLabels((prev) => ({ ...prev, [key(packageId)]: optimiste }));
+    fetch("/api/labels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageId, starred: optimiste.starred }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) throw new Error(d.error ?? `HTTP ${r.status}`);
+        if (d.label) setLabels((prev) => ({ ...prev, [key(packageId)]: d.label }));
+      })
+      .catch(() => setLabels((prev) => ({ ...prev, [key(packageId)]: cur })));
+  }, []);
+
+  // Turns a mod on or off in ModsConfig.xml. Optimistic for the same reason every
+  // other click on this page is: the file write takes a moment, and a button
+  // that waits for it feels broken long before it actually fails.
+  const [activationEnCours, setActivationEnCours] = useState<Set<string>>(new Set());
+  const toggleActive = useCallback((packageId: string, on: boolean) => {
+    setRows((prev) => prev.map((m) => (m.PackageId === packageId ? { ...m, Active: on } : m)));
+    setActivationEnCours((prev) => new Set(prev).add(packageId));
+    fetch("/api/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageId, on }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) throw new Error(d.error ?? `HTTP ${r.status}`);
+      })
+      .catch(() => {
+        setRows((prev) => prev.map((m) => (m.PackageId === packageId ? { ...m, Active: !on } : m)));
+        setError(`activation non enregistree pour ${packageId}`);
+      })
+      .finally(() => {
+        setActivationEnCours((prev) => { const n = new Set(prev); n.delete(packageId); return n; });
+      });
   }, []);
 
   // Tout le filtrage se fait ici, sur la liste complete tenue en memoire.
@@ -322,6 +397,8 @@ export default function Home() {
       // « Tourne en 1.6 » l'emporte sur ce que le mod declare : c'est une
       // verification faite a la main, la declaration n'est qu'une presomption.
       if (casse && (!m.DeadBefore16 || l.works16)) return false;
+      if (depsManquantes && m.MissingDependencies.length === 0) return false;
+      if (etoiles && !l.starred) return false;
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
       if (sift === "todo") return true;    // rien d'etiquete ici : le filtre par etiquette ne s'applique pas
@@ -330,7 +407,7 @@ export default function Home() {
       if (only.length > 0 && !only.some((c) => l.categories.includes(c))) return false;
       return true;
     });
-  }, [rows, motif, labels, sift, only, casse, leaving, folding]);
+  }, [rows, motif, labels, sift, only, casse, depsManquantes, etoiles, leaving, folding]);
 
   return (
     <main className="wrap">
@@ -371,6 +448,14 @@ export default function Home() {
             tourner. Un mod peut etre trie et casse, ou intact et jamais regarde. */}
         <button className={casse ? "on" : ""} onClick={() => setCasse((v) => !v)}>
           ne tourne pas en 1.6 ({counts.ko})
+        </button>
+        {/* Manquante veut dire absente du disque, pas seulement inactive : voir
+            ModList.MissingOf cote moteur, qui fait deja la difference. */}
+        <button className={depsManquantes ? "on" : ""} onClick={() => setDepsManquantes((v) => !v)}>
+          dependance manquante ({counts.manquantes})
+        </button>
+        <button className={etoiles ? "on" : ""} onClick={() => setEtoiles((v) => !v)}>
+          ★ etoiles ({counts.etoilees})
         </button>
         <span className="tally">
           {busy
@@ -419,6 +504,15 @@ export default function Home() {
 
       {error && <p className="err">{error}</p>}
 
+      {purges.length > 0 && (
+        <p className="purge">
+          {purges.length} dossier{purges.length > 1 ? "s" : ""} Workshop vide
+          {purges.length > 1 ? "s" : ""} supprime{purges.length > 1 ? "s" : ""} (residu Steam, sans About.xml)
+          {" "}
+          <button className="ghost" onClick={() => setPurges([])}>ok</button>
+        </p>
+      )}
+
       <ul className="mods">
         {shown.slice(0, visibles).map((m) => (
           <Ligne
@@ -428,6 +522,9 @@ export default function Home() {
             leaving={leaving.includes(m.PackageId)}
             folding={folding.includes(m.PackageId)}
             onChange={patchLabel}
+            onStar={toggleStar}
+            onToggleActive={toggleActive}
+            activating={activationEnCours.has(m.PackageId)}
           />
         ))}
       </ul>
@@ -473,13 +570,16 @@ export default function Home() {
 // mod vient de la reponse du serveur, le label du magasin, et onChange d'un
 // useCallback.
 const Ligne = memo(function Ligne({
-  mod, label, leaving, folding, onChange,
+  mod, label, leaving, folding, onChange, onStar, onToggleActive, activating,
 }: {
   mod: ModRow;
   label: ModLabel;
   leaving: boolean;
   folding: boolean;
   onChange: (packageId: string, label: ModLabel) => void;
+  onStar: (packageId: string, cur: ModLabel) => void;
+  onToggleActive: (packageId: string, on: boolean) => void;
+  activating: boolean;
 }) {
   const steam = workshopUrl(mod.Path);
   return (
@@ -488,7 +588,13 @@ const Ligne = memo(function Ligne({
       className={`${isSorted(label) ? "sorted" : ""}${leaving ? " leaving" : ""}${folding ? " folding" : ""}`}
     >
       <Link href={`/mod/${encodeURIComponent(mod.PackageId)}?path=${encodeURIComponent(mod.Path)}`}>
-        <span className="name">{mod.Name || mod.PackageId}</span>{" "}
+        {/* La description d'About.xml, au survol seulement : elle peut faire
+            plusieurs paragraphes, et il n'y a pas de place pour elle dans la
+            ligne elle-meme. `title` est le seul survol qui ne coute rien — pas
+            d'etat, pas de positionnement a calculer. */}
+        <span className="name" title={mod.Description || undefined}>
+          {mod.Name || mod.PackageId}
+        </span>{" "}
         <span className="pid">{mod.PackageId}</span>{" "}
         {/* L'auteur, quand About.xml le donne.
             C'est la seule identite qui reste aux mods d'avant 1.0 : pas de
@@ -514,6 +620,16 @@ const Ligne = memo(function Ligne({
               sans packageId
             </em>
           )}
+          {/* Absente du disque, pas seulement eteinte — voir ModList.MissingOf
+              cote moteur. */}
+          {mod.MissingDependencies.length > 0 && (
+            <em
+              className="tag missing"
+              title={`Declare mais absente : ${mod.MissingDependencies.join(", ")}`}
+            >
+              dependance manquante
+            </em>
+          )}
         </span>
       </Link>
       {/* Space reserved even with no page: a local mod has none, and a magnifier
@@ -528,8 +644,34 @@ const Ligne = memo(function Ligne({
       >
         🔍
       </a>
+      <button
+        type="button"
+        className={`star${label.starred ? " on" : ""}`}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onStar(mod.PackageId, label); }}
+        title={label.starred ? "retirer l'etoile" : "marquer comme particulier"}
+      >
+        {label.starred ? "★" : "☆"}
+      </button>
+      {/* Bascule ModsConfig.xml, exactement comme la case a cocher de RimSort.
+          Reserve meme si le mod n'a pas de packageId : le jeu ne peut de toute
+          facon pas l'activer, et le bouton desactive le dit mieux qu'une
+          absence. */}
+      <button
+        type="button"
+        className={`activer${mod.Active ? " on" : ""}`}
+        disabled={activating || mod.PackageId.includes(":")}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleActive(mod.PackageId, !mod.Active); }}
+        title={
+          mod.PackageId.includes(":")
+            ? "sans packageId : le jeu ne peut pas l'activer"
+            : mod.Active ? "desactiver" : "activer"
+        }
+      >
+        {mod.Active ? "activé" : "activer"}
+      </button>
       <Labeler
         packageId={mod.PackageId}
+        path={mod.Path}
         label={label}
         onChange={onChange}
         compact

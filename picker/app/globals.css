@@ -346,3 +346,48 @@ input[type="search"].bancal { border-color: var(--warn, #b8860b); }
    l'activer. La clef affichee est fabriquee depuis son dossier, elle ne sert qu'a
    nous. Il n'y a rien a en tirer sans le reconstruire. */
 .tag.nopid { color: var(--bad); border-color: var(--bad); }
+
+/* A dependency declared in About.xml that is not installed anywhere the game
+   would look — not merely inactive. Same red as "no packageId": the game cannot
+   satisfy it either. */
+.tag.missing { color: var(--bad); border-color: var(--bad); }
+
+/* Marked as particular. A star, not a category: it says nothing about what the
+   mod is for, so it sits apart from the labeler's chips, always the same size
+   and colour whether on or off — only filled or outline changes. */
+.star {
+  font: inherit; font-size: 14px; line-height: 1; padding: 0 2px;
+  border: none; background: transparent; cursor: pointer; color: var(--line);
+}
+.star:hover { color: var(--warn, #8a5a00); }
+.star.on { color: var(--warn, #8a5a00); }
+@media (prefers-color-scheme: dark) { .star:hover, .star.on { color: #e0a94a; } }
+
+/* Turns a mod on or off in ModsConfig.xml — the same switch RimSort's own
+   checkbox flips. Text rather than an icon: a checkbox here would read as
+   "select this row", which is not what it does. */
+.activer {
+  font: inherit; font-size: 11px; padding: 1px 7px; border-radius: 10px;
+  border: 1px solid var(--line); background: transparent; color: var(--dim);
+  cursor: pointer; white-space: nowrap;
+}
+.activer.on { color: var(--accent); border-color: var(--accent); }
+.activer:disabled { opacity: .5; cursor: default; }
+
+/* A category guessed from the mod's own defs, offered but not yet confirmed.
+   Dashed rather than solid: the same visual family as a real category chip,
+   but visibly provisional — a click promotes it to a real, solid one, exactly
+   like ticking it by hand. */
+.chip.suggere {
+  border-style: dashed; color: var(--c); opacity: .75;
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+}
+.chip.suggere:hover { opacity: 1; }
+
+/* What the engine cleaned up on this read: Workshop folders with nothing in
+   them at all. Shown once, then gone — there is nothing to act on, only
+   something worth having seen happen instead of happening silently. */
+.purge {
+  font-size: 12px; color: var(--dim); border: 1px dashed var(--line);
+  border-radius: 8px; padding: 6px 10px; margin: 0 0 10px;
+}

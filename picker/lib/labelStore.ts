@@ -21,6 +21,7 @@ function fusionner(mods: Record<string, ModLabel>): Record<string, ModLabel> {
     sortie[k] = !deja ? l : {
       categories: [...new Set([...deja.categories, ...l.categories])],
       works16: deja.works16 || l.works16,
+      starred: deja.starred || l.starred,
       updated: deja.updated > l.updated ? deja.updated : l.updated,
     };
   }
@@ -47,26 +48,28 @@ let queue: Promise<unknown> = Promise.resolve();
 
 export function writeLabel(
   packageId: string,
-  patch: { categories?: CategoryId[]; works16?: boolean },
+  patch: { categories?: CategoryId[]; works16?: boolean; starred?: boolean },
 ): Promise<ModLabel> {
   const task = queue.then(async () => {
     const store = await readStore();
     const id = key(packageId);
     const cur: ModLabel = store.mods[id] ?? { categories: [], updated: "" };
     const works16 = patch.works16 ?? cur.works16 ?? false;
+    const starred = patch.starred ?? cur.starred ?? false;
 
     const categories = patch.categories
       ? [...new Set(patch.categories.filter((c) => KNOWN.has(c)))]
       : cur.categories;
-    const next: ModLabel = { categories, works16, updated: new Date().toISOString() };
+    const next: ModLabel = { categories, works16, starred, updated: new Date().toISOString() };
 
     // A mod with no label has no business in the file: it is simply unsorted, like
     // the thousands that never appeared in it. Keeping it would grow the
     // classification by an empty entry on every cancelled click.
     //
-    // Unless it carries the 1.6 flag: that is not a classification but the result
-    // of a test in game, and losing it would cost running the test again.
-    if (categories.length === 0 && !works16) delete store.mods[id];
+    // Unless it carries the 1.6 flag, or a star: neither is a classification —
+    // one is the result of a test in game, the other a deliberate mark — and
+    // losing either would cost redoing it.
+    if (categories.length === 0 && !works16 && !starred) delete store.mods[id];
     else store.mods[id] = next;
 
     await fs.mkdir(path.dirname(FILE), { recursive: true });

@@ -22,9 +22,14 @@ import { CATEGORIES, type CategoryId, type ModLabel } from "@/lib/labels";
 // onChange vient d'un useCallback, et label est l'objet du magasin — une
 // nouvelle identite n'apparait que pour le mod qu'on vient de modifier.
 export const Labeler = memo(function Labeler({
-  packageId, label, onChange, compact = false, dead = false,
+  packageId, path, label, onChange, compact = false, dead = false,
 }: {
   packageId: string;
+  // The mod's folder, sent along on a category change only — never stored in
+  // the label file itself, which stays keyed by packageId. It exists purely so
+  // the server can find the same mod in RimSort's own database, which is keyed
+  // by that folder path and knows nothing of packageId.
+  path?: string;
   label: ModLabel;
   onChange: (packageId: string, label: ModLabel) => void;
   compact?: boolean;
@@ -55,7 +60,9 @@ export const Labeler = memo(function Labeler({
     fetch("/api/labels", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ packageId, ...patch }),
+      // path rides along only when categories move: that is the one case
+      // RimSort's own colour needs to change.
+      body: JSON.stringify({ packageId, ...patch, ...(patch.categories ? { path } : {}) }),
     })
       .then(async (r) => {
         const d = await r.json().catch(() => ({}));

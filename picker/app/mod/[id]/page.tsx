@@ -448,6 +448,7 @@ export default function ModPage({
         )}
         <Labeler
           packageId={mod.PackageId}
+          path={mod.Path}
           label={label}
           onChange={(_, l) => setLabel(l)}
           dead={mod.DeadBefore16}

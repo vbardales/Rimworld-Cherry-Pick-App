@@ -55,6 +55,9 @@ export type ModRow = {
   Active: boolean;
   SupportedVersions: string[];
   DeadBefore16: boolean;
+  Description: string;
+  DeclaredDependencies: string[];
+  MissingDependencies: string[];
 };
 
 // execFile's default output buffer is too small: a big mod's inventory goes well
@@ -86,6 +89,15 @@ type Held = { at: number; stamp: string; mods: ModRow[] };
 const held = new Map<string, Held>();
 const TTL = 60_000;
 
+// Folders removed on the last `list`, because they were pure Steam residue: no
+// About.xml, and nothing else in them either. Kept for the page to say what it
+// just did, since a silent cleanup is one nobody would believe happened.
+//
+// An object, not a bare exported `let`: reassigning a `let` binding after import
+// is unreliable across the CJS/ESM interop Next.js does for server code, a
+// mutable field on a shared object is not.
+export const pruneState: { last: string[] } = { last: [] };
+
 async function stampOf(scope: "active" | "all"): Promise<string> {
   // The engine's date is part of the stamp for both scopes. Recompiling it is the
   // one thing that changes the answer without any game file moving, and the held
@@ -111,9 +123,17 @@ export async function listMods(scope: "active" | "all"): Promise<ModRow[]> {
   const args = ["list", "--json"];
   if (scope === "all") args.push("--all");
   const { stdout } = await run(DOTNET, [DLL, ...args], { maxBuffer: MAX, windowsHide: true });
-  const mods = JSON.parse(stdout) as ModRow[];
-  held.set(scope, { at: Date.now(), stamp, mods });
-  return mods;
+  const payload = JSON.parse(stdout) as { mods: ModRow[]; pruned?: string[] };
+  pruneState.last = payload.pruned ?? [];
+  held.set(scope, { at: Date.now(), stamp, mods: payload.mods });
+  return payload.mods;
+}
+
+// Turns a mod on or off in ModsConfig.xml. Invalidates nothing itself: the "active"
+// scope's cache is already keyed on that file's own modification date, so the
+// write invalidates it on its own, the same way an external tool changing it does.
+export async function setActive(packageId: string, on: boolean): Promise<void> {
+  await run(DOTNET, [DLL, "toggle", packageId, on ? "on" : "off"], { windowsHide: true });
 }
 
 // A mod's inventory is cached on disk and revalidated against the folder's
