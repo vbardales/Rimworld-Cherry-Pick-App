@@ -589,11 +589,12 @@
     },
     "ancientbld.core": {
       "categories": [
+        "structure",
         "furniture"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T12:55:25.908Z"
+      "updated": "2026-09-16T17:42:00.946Z"
     },
     "ancot.yuranfacialanimation": {
       "categories": [
@@ -2931,13 +2932,6 @@
       "works16": false,
       "updated": "2026-09-05T22:25:09.846Z"
     },
-    "cruelmoose.uc": {
-      "categories": [
-        "furniture"
-      ],
-      "works16": false,
-      "updated": "2026-09-15T12:27:02.594Z"
-    },
     "cruesoe.basicdropdownsreplacestuffpatch": {
       "categories": [
         "engine"
@@ -3003,7 +2997,7 @@
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T15:10:08.907Z"
+      "updated": "2026-09-16T17:42:12.510Z"
     },
     "cucumpear.cooties": {
       "categories": [
@@ -3786,12 +3780,11 @@
     },
     "dizzyeevee.friendsforever": {
       "categories": [
-        "biotech",
         "medical"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T14:35:52.423Z"
+      "updated": "2026-09-16T17:42:26.375Z"
     },
     "dizzyioeuy.bedding": {
       "categories": [
