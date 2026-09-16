@@ -17,6 +17,9 @@ export type TechDef = {
   DefName?: string | null;
   IsAbstract?: boolean;
   TechLevel?: string | null;
+  // Set when TechLevel was inherited from a base rather than written on the
+  // def itself — see Inherited.cs in the engine.
+  TechLevelFrom?: string | null;
   ArchitectCategory?: string | null;
   ParentName?: string | null;
   ParentChain?: { Name: string }[];
@@ -52,7 +55,13 @@ export function techRange(defs: TechDef[], vanillaResearch: Record<string, strin
   for (const d of defs) {
     if (!obtainable(d)) continue;
     const gates = d.Refs?.Research ?? [];
-    if (gates.length === 0) { steps.push("start"); continue; }
+    // Nothing to research. A level the author wrote on the def itself still
+    // places it — a tribal headband marked Neolithic reads as neolithic — but
+    // an inherited one is the generic default this reading exists to avoid.
+    if (gates.length === 0) {
+      steps.push(isLevel(d.TechLevel) && !d.TechLevelFrom ? d.TechLevel : "start");
+      continue;
+    }
     const levels = gates.map((g) => research[g]).filter(isLevel);
     if (levels.length === 0) continue;
     steps.push(levels.reduce((a, b) => (rank(b) > rank(a) ? b : a)));
