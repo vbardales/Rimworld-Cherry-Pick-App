@@ -446,15 +446,15 @@ export default function Home() {
         {/* Un filtre a part, parce que ce n'est pas la meme question.
             Le menu dit ou on en est du tri ; celui-ci dit ce qui reste a faire
             tourner. Un mod peut etre trie et casse, ou intact et jamais regarde. */}
-        <button className={casse ? "on" : ""} onClick={() => setCasse((v) => !v)}>
+        <button className={`filtre${casse ? " on" : ""}`} onClick={() => setCasse((v) => !v)}>
           ne tourne pas en 1.6 ({counts.ko})
         </button>
         {/* Manquante veut dire absente du disque, pas seulement inactive : voir
             ModList.MissingOf cote moteur, qui fait deja la difference. */}
-        <button className={depsManquantes ? "on" : ""} onClick={() => setDepsManquantes((v) => !v)}>
+        <button className={`filtre${depsManquantes ? " on" : ""}`} onClick={() => setDepsManquantes((v) => !v)}>
           dependance manquante ({counts.manquantes})
         </button>
-        <button className={etoiles ? "on" : ""} onClick={() => setEtoiles((v) => !v)}>
+        <button className={`filtre${etoiles ? " on" : ""}`} onClick={() => setEtoiles((v) => !v)}>
           ★ etoiles ({counts.etoilees})
         </button>
         <span className="tally">

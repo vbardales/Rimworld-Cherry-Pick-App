@@ -48,6 +48,23 @@ input[type=search] { min-width: 260px; }
 }
 .seg button.on { background: var(--accent); color: #fff; }
 
+/* A standalone toggle in the filter bar — "dead before 1.6", "missing
+   dependency", "starred". Unset, it read exactly like plain text with a border:
+   the `.on` class was applied on click but nothing in the sheet answered to it,
+   so a filter that WAS active looked identical to one that was not. Same
+   contrast family as a lit category chip, strong enough to read at a glance
+   among a dozen other controls. */
+.filtre {
+  font: inherit; font-size: 12.5px; padding: 5px 10px; border-radius: 6px;
+  border: 1px solid var(--line); background: transparent; color: var(--dim);
+  cursor: pointer; white-space: nowrap;
+}
+.filtre:hover { border-color: var(--accent); color: var(--fg); }
+.filtre.on {
+  border-color: var(--accent); color: #fff; font-weight: 600;
+  background: var(--accent);
+}
+
 .mods { list-style: none; padding: 0; margin: 0; }
 .mods li { border-bottom: 1px solid var(--line); }
 .mods a { display: flex; gap: 12px; align-items: baseline; padding: 8px 4px; flex-wrap: nowrap; overflow: hidden; }
