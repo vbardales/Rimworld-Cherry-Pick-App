@@ -1,10 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { listMods, scanMod, type ModRow } from "./cherrypick";
+import { GAME_DIR, listMods, scanMod, type ModRow } from "./cherrypick";
 import { key } from "./labels";
 import { suggestCategories, type AssetSignals, type DefSignals } from "./categoryRules";
-import { ANALYSIS_RULE_VERSION, TECH_LEVELS, type ModAnalysis, type TechLevel } from "./techLevels";
+import { ANALYSIS_RULE_VERSION, type ModAnalysis } from "./techLevels";
+import { techRange, type TechDef } from "./techRules";
 
 // A background reading of the whole corpus: minimum tech level and a guess at
 // what a mod is FOR, computed from the same `scan` the engine already knows how
@@ -26,23 +27,35 @@ const FILE = path.join(CACHE_DIR, "mod-analysis.json");
 
 // What a scan looks like once it comes back from `dotnet cherrypick scan`,
 // serialized straight from engine/Model.cs. Only the fields read here.
-type DefLike = DefSignals & { TechLevel?: string | null };
+type DefLike = DefSignals & TechDef;
 type InventoryLike = {
   Defs?: DefLike[];
   Assets?: AssetSignals;
   Mods?: { DeclaredDependencies?: string[]; Name?: string; PackageId?: string }[];
 };
 
-function computeMinTechLevel(defs: DefLike[]): TechLevel | null {
-  let min: number | null = null;
-  for (const d of defs) {
-    const t = d.TechLevel;
-    if (!t || t === "Undefined") continue;
-    const idx = TECH_LEVELS.indexOf(t as TechLevel);
-    if (idx < 0) continue;
-    if (min === null || idx < min) min = idx;
-  }
-  return min === null ? null : TECH_LEVELS[min];
+// Every research project of Core and the DLC, with its level: what a mod's
+// content is gated behind is mostly vanilla research. Read once per process
+// through the same scanMod cache as any mod, and retried on the next mod if
+// the game folder could not be read.
+let vanillaResearch: Promise<Record<string, string | null>> | null = null;
+
+function loadVanillaResearch(): Promise<Record<string, string | null>> {
+  vanillaResearch ??= (async () => {
+    const map: Record<string, string | null> = {};
+    const data = path.join(GAME_DIR, "Data");
+    for (const e of await fs.readdir(data, { withFileTypes: true })) {
+      if (!e.isDirectory()) continue;
+      const inv = (await scanMod(`ludeon.data.${e.name}`, path.join(data, e.name))) as InventoryLike;
+      for (const d of inv.Defs ?? [])
+        if (d.DefType === "ResearchProjectDef" && d.DefName) map[d.DefName] = d.TechLevel ?? null;
+    }
+    return map;
+  })().catch((e) => {
+    vanillaResearch = null;
+    throw e;
+  });
+  return vanillaResearch;
 }
 
 // The category guess itself lives in categoryRules.ts: pure, so it can be
@@ -198,7 +211,7 @@ async function analyzeOne(m: ModRow): Promise<void> {
   const defs = inv.Defs ?? [];
 
   const entry: ModAnalysis = {
-    minTechLevel: computeMinTechLevel(defs),
+    tech: techRange(defs, await loadVanillaResearch()),
     suggested: suggestedFor(inv),
     scannedAt: new Date().toISOString(),
     folderStamp,
@@ -223,7 +236,7 @@ export async function scanOneNow(packageId: string, modPath: string): Promise<Mo
   const defs = inv.Defs ?? [];
 
   const entry: ModAnalysis = {
-    minTechLevel: computeMinTechLevel(defs),
+    tech: techRange(defs, await loadVanillaResearch()),
     suggested: suggestedFor(inv),
     scannedAt: new Date().toISOString(),
     folderStamp,

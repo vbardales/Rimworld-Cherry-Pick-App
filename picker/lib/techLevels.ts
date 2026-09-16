@@ -16,18 +16,31 @@ export const TECH_LEVELS = [
 ] as const;
 export type TechLevel = (typeof TECH_LEVELS)[number];
 
-// Bumped whenever categoryRules.ts or computeMinTechLevel in modAnalysis.ts
+// "start" is content a colony has from day one: nothing to research first.
+export type TechStep = "start" | TechLevel;
+
+export type TechRange = {
+  floor: TechStep;
+  ceiling: TechStep;
+  // "research": read from what the mod's content is gated behind — the reliable
+  // reading. "declared": the mod has nothing to build, craft or sow, so this is
+  // the <techLevel> its defs carry, mostly inherited defaults. See techRules.ts.
+  source: "research" | "declared";
+};
+
+// Bumped whenever categoryRules.ts or techRules.ts
 // changes in a way that would give a DIFFERENT answer for defs already on
 // disk. A folder's mtime cannot catch that — the mod has not moved, the rule
 // has — so an entry whose ruleVersion is behind is treated as stale and
 // requeued, the same as a folder that changed. Bump this on every heuristic
 // fix from now on.
-export const ANALYSIS_RULE_VERSION = 8;
+export const ANALYSIS_RULE_VERSION = 10;
 
 export type ModAnalysis = {
-  // null means "scanned, and genuinely nothing declares a tech level" — not the
-  // same thing as "not scanned yet", which is simply the absence of a key.
-  minTechLevel: TechLevel | null;
+  // null means scanned, and the mod has no tech level to speak of — nothing
+  // to obtain and nothing declared. Not the same as "not scanned yet", which is
+  // simply the absence of a key.
+  tech: TechRange | null;
 
   // A guess, never a classification: see labels.ts's ModLabel.suggested for why
   // it is kept structurally apart from the categories a person actually ticked.

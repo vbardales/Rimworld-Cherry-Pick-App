@@ -123,6 +123,14 @@ public sealed class DefEntry
     // up suggesting it alongside actual elf/dwarf mods.
     public string? RaceIntelligence { get; set; }
 
+    // Whether a colony can actually obtain this def: made at a bench
+    // (<recipeMaker> declared on the def itself) or sown (<plant><sowTags>).
+    // Read by the picker's tech-level range, which only counts content a player
+    // can build, craft or grow — loot, animals and motes say nothing about what
+    // a mod asks of a colony's research.
+    public bool Craftable { get; set; }
+    public bool Sowable { get; set; }
+
     // Defs this one appears to own: the hediff a food grants, the thought it
     // leaves. The tie is only made if NOBODY ELSE claims them — a hediff shared by
     // five items belongs to all five, therefore to none, and merging them would

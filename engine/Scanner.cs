@@ -333,6 +333,8 @@ public static class Scanner
             entry.ApparelLayers = apparelLayers.Elements("li")
                 .Select(li => li.Value.Trim()).Where(v => v.Length > 0).ToList();
         entry.RaceIntelligence = ((string?)el.Element("race")?.Element("intelligence"))?.Trim();
+        entry.Craftable = el.Element("recipeMaker") is not null;
+        entry.Sowable = el.Element("plant")?.Element("sowTags") is not null;
 
         var products = el.Element("products");
         if (products is not null)
@@ -384,7 +386,7 @@ public static class Scanner
             if (ResearchTags.Contains(tag)) { refs.Research.Add(v); continue; }
 
             var parentTag = node.Parent?.Name.LocalName;
-            if (tag == "li" && parentTag == "researchPrerequisites") { refs.Research.Add(v); continue; }
+            if (tag == "li" && parentTag is "researchPrerequisites" or "sowResearchPrerequisites") { refs.Research.Add(v); continue; }
 
             if (!LooksLikeDefName(v)) continue;
 

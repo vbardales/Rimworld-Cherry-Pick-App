@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Labeler } from "@/components/Labeler";
 import { CATEGORIES, isSorted, key, labelOf, type CategoryId, type ModLabel } from "@/lib/labels";
-import { TECH_LEVELS, type ModAnalysis, type TechLevel } from "@/lib/techLevels";
+import { TECH_LEVELS, type ModAnalysis, type TechLevel, type TechStep } from "@/lib/techLevels";
 
 // Display labels for TECH_LEVELS, in French like every other string the
 // interface shows — see lib/modAnalysis.ts for the engine-facing enum names.
@@ -17,6 +17,19 @@ const TECH_LABELS: Record<TechLevel, string> = {
   Ultra: "ultra",
   Archotech: "archotech",
 };
+
+const stepLabel = (s: TechStep) => (s === "start" ? "depart" : TECH_LABELS[s]);
+
+// The row's tech tag, as a plain string so a memoised row compares it by value.
+// undefined: not scanned yet — or scanned under a rule too old to have a range,
+// which the job is already requeuing.
+function techTagOf(a: ModAnalysis | undefined): string | undefined {
+  if (!a || !("tech" in a)) return undefined;
+  if (a.tech === null) return "sans objet";
+  const { floor, ceiling, source } = a.tech;
+  const span = floor === ceiling ? stepLabel(floor) : `${stepLabel(floor)} → ${stepLabel(ceiling)}`;
+  return source === "declared" ? `${span} (declare)` : span;
+}
 import { workshopUrl } from "@/lib/steam";
 
 type ModRow = {
@@ -101,7 +114,7 @@ export default function Home() {
   // minTechLevel is null.
   const [analysis, setAnalysis] = useState<Record<string, ModAnalysis>>({});
   const [job, setJob] = useState<{ total: number; done: number; queued: number; running: boolean } | null>(null);
-  const [techFilter, setTechFilter] = useState<TechLevel | "unscanned" | "">("");
+  const [techFilter, setTechFilter] = useState<TechLevel | "unscanned" | "none" | "">("");
 
   // Dossiers Workshop videes par le moteur a la derniere lecture — residus
   // Steam sans meme un About.xml. Montre une fois, puis efface : il n'y a rien
@@ -501,20 +514,16 @@ export default function Home() {
       if (casse && (!m.DeadBefore16 || l.works16)) return false;
       if (depsManquantes && m.MissingDependencies.length === 0) return false;
       if (etoiles && !l.starred) return false;
-      // The tech level comes from the background scan, not from what the mod
-      // declares. "not yet scanned" and "scanned, no level found" are not the
-      // same thing: the first is a missing entry in analysis, the second an
-      // entry whose minTechLevel is null.
-      //
-      // Cumulative, not exact, and a floor rather than a ceiling: picking
-      // "medieval" means "at least medieval" — the mods worth a second look once
-      // a colony has outgrown neolithic tools, not a narrow slice stuck at
-      // exactly one level.
+      // Read on the CEILING of the mod's range: "at least medieval" means the
+      // mod brings something a colony cannot have before medieval research,
+      // even if it also brings a bucket available from day one.
       if (techFilter) {
         const a = analysis[key(m.PackageId)];
-        if (techFilter === "unscanned") { if (a) return false; }
-        else if (!a || a.minTechLevel === null) return false;
-        else if (TECH_LEVELS.indexOf(a.minTechLevel) < TECH_LEVELS.indexOf(techFilter)) return false;
+        const scanned = !!a && "tech" in a;
+        if (techFilter === "unscanned") { if (scanned) return false; }
+        else if (techFilter === "none") { if (!scanned || a.tech !== null) return false; }
+        else if (!scanned || a.tech === null) return false;
+        else if (a.tech.ceiling === "start" || TECH_LEVELS.indexOf(a.tech.ceiling) < TECH_LEVELS.indexOf(techFilter)) return false;
       }
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
@@ -567,12 +576,13 @@ export default function Home() {
         <select
           value={techFilter}
           onChange={(e) => setTechFilter(e.target.value as typeof techFilter)}
-          title="Niveau technique minimal trouve parmi les defs du mod (scan de fond) : n'affiche que ce qui atteint au moins le niveau choisi."
+          title="Niveau technique issu des recherches qui conditionnent le contenu du mod (scan de fond) : n'affiche que les mods qui apportent au moins un contenu de ce niveau."
         >
           <option value="">tous niveaux techniques</option>
           {TECH_LEVELS.map((t) => (
             <option key={t} value={t}>{TECH_LABELS[t]}</option>
           ))}
+          <option value="none">sans objet</option>
           <option value="unscanned">pas encore scanne</option>
         </select>
         {/* Un filtre a part, parce que ce n'est pas la meme question.
@@ -663,7 +673,7 @@ export default function Home() {
             mod={m}
             label={labelOf(labels, m.PackageId)}
             suggested={suggestedByMod[key(m.PackageId)]}
-            minTechLevel={analysis[key(m.PackageId)]?.minTechLevel}
+            techTag={techTagOf(analysis[key(m.PackageId)])}
             leaving={leaving.includes(m.PackageId)}
             folding={folding.includes(m.PackageId)}
             onChange={patchLabel}
@@ -717,7 +727,7 @@ export default function Home() {
 // mod vient de la reponse du serveur, le label du magasin, et onChange d'un
 // useCallback.
 const Ligne = memo(function Ligne({
-  mod, label, suggested, minTechLevel, leaving, folding, onChange, onStar, onToggleActive, activating,
+  mod, label, suggested, techTag, leaving, folding, onChange, onStar, onToggleActive, activating,
   onForceScan, scanning,
 }: {
   mod: ModRow;
@@ -733,7 +743,7 @@ const Ligne = memo(function Ligne({
   // this mod yet. null: scanned, and genuinely nothing declares a tech level.
   // A primitive, unlike suggested, so no reference-stability trick is needed:
   // React.memo compares it by value on its own.
-  minTechLevel?: TechLevel | null;
+  techTag?: string;
   leaving: boolean;
   folding: boolean;
   onChange: (packageId: string, label: ModLabel) => void;
@@ -799,7 +809,7 @@ const Ligne = memo(function Ligne({
           {/* Never a scan failure to worry about — just the background jobs own
               pace not having reached this mod yet out of the corpus. The force-
               scan button next to the star is the escape hatch. */}
-          {minTechLevel === undefined && (
+          {techTag === undefined && (
             <em className="tag unscanned" title="Le scan de fond n'a pas encore atteint ce mod.">
               pas encore scanne
             </em>
@@ -809,12 +819,12 @@ const Ligne = memo(function Ligne({
               what was absent, never what was found. Neutral styling (plain
               .tag, no colour) on purpose: this is read-only metadata from the
               defs themselves, not a classification anyone chose. */}
-          {minTechLevel !== undefined && (
+          {techTag !== undefined && (
             <em
               className="tag niveau"
-              title="Niveau technique minimal trouve parmi les defs du mod (scan de fond)."
+              title="Du contenu le plus accessible au plus avance, d'apres les recherches qui le conditionnent. « depart » : rien a rechercher. « declare » : le mod n'a rien a construire, fabriquer ou semer, c'est le niveau inscrit dans ses defs. « sans objet » : ni l'un ni l'autre."
             >
-              {minTechLevel === null ? "niveau technique : aucun" : TECH_LABELS[minTechLevel]}
+              {techTag}
             </em>
           )}
         </span>
@@ -852,7 +862,7 @@ const Ligne = memo(function Ligne({
         title={
           scanning
             ? "scan en cours..."
-            : minTechLevel === undefined
+            : techTag === undefined
               ? "pas encore scanne : lancer le scan maintenant"
               : "relancer le scan de ce mod (ignore le cache)"
         }
