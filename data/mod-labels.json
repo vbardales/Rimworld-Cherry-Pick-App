@@ -263,21 +263,19 @@
     },
     "adaptive.storage.framework": {
       "categories": [
-        "furniture",
         "engine"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T12:29:00.734Z"
+      "updated": "2026-09-16T19:32:43.038Z"
     },
     "adaptive.storage.neolithic": {
       "categories": [
-        "furniture",
-        "gameplay"
+        "furniture"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T15:05:22.831Z"
+      "updated": "2026-09-16T19:32:50.259Z"
     },
     "add.hapu": {
       "categories": [
@@ -1193,14 +1191,6 @@
       ],
       "works16": false,
       "updated": "2026-09-15T15:02:37.857Z"
-    },
-    "astryl.adaptiveworkpriorities": {
-      "categories": [
-        "gameplay",
-        "engine"
-      ],
-      "works16": false,
-      "updated": "2026-09-14T12:19:16.886Z"
     },
     "astryl.comforts": {
       "categories": [
@@ -2918,10 +2908,11 @@
     },
     "creeeesp.adaptivestoragebuildings": {
       "categories": [
-        "furniture"
+        "engine"
       ],
       "works16": false,
-      "updated": "2026-09-14T12:17:30.663Z"
+      "starred": false,
+      "updated": "2026-09-16T19:32:35.093Z"
     },
     "creeper.betterinfocard": {
       "categories": [
@@ -10669,12 +10660,11 @@
     },
     "nelim.adaptivestorageneolithic": {
       "categories": [
-        "furniture",
-        "gameplay"
+        "furniture"
       ],
       "works16": false,
       "starred": false,
-      "updated": "2026-09-16T15:05:24.407Z"
+      "updated": "2026-09-16T19:32:59.391Z"
     },
     "nelim.animalrebalance": {
       "categories": [
@@ -11228,7 +11218,8 @@
         "engine"
       ],
       "works16": false,
-      "updated": "2026-09-14T12:17:26.539Z"
+      "starred": false,
+      "updated": "2026-09-16T19:19:11.274Z"
     },
     "nuker1110.maskup": {
       "categories": [
