@@ -535,6 +535,75 @@ export default function Home() {
     });
   }, [rows, motif, labels, sift, only, casse, depsManquantes, etoiles, leaving, folding, analysis, techFilter]);
 
+  // Where the list was, kept across reloads and trips to a mod sheet.
+  //
+  // Scrolled down four hundred mods, one opens a sheet, comes back, and the list
+  // restarts at sixty rows, at the top. So the first row on screen is remembered
+  // with how many rows were drawn, under the filters they were drawn for: back
+  // on the same filters, the list opens far enough to show that row and scrolls
+  // to it. A row, not a pixel offset — labels fold rows away, and an offset would
+  // land on a different mod.
+  const POS = "cherrypick:list:pos";
+  const filterSig = JSON.stringify({ scope, q, sift, only, casse, depsManquantes, etoiles, techFilter });
+  const posPending = useRef(true);
+  const [scrollTo, setScrollTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!restored || busy || rows.length === 0 || !posPending.current) return;
+    posPending.current = false;
+    try {
+      const saved = JSON.parse(localStorage.getItem(POS) ?? "null");
+      if (!saved || saved.sig !== filterSig || typeof saved.anchor !== "string") return;
+      const index = shown.findIndex((m) => m.PackageId === saved.anchor);
+      if (index < 0) return;
+      const needed = Math.min(Math.max(Number(saved.visibles) || PAS, Math.ceil((index + 1) / PAS) * PAS), shown.length);
+      // Deferred: the rows are drawn from this state, and scrolling has to wait for
+      // them. A timer rather than an animation frame, which a background tab never
+      // runs — coming back to the tab would otherwise find the list at the top.
+      setTimeout(() => {
+        setVisibles(needed);
+        setScrollTo(saved.anchor);
+      }, 0);
+    } catch {
+      // nothing stored, or unreadable: the list opens at the top
+    }
+  }, [restored, busy, rows, shown, filterSig]);
+
+  useEffect(() => {
+    if (!scrollTo) return;
+    const timer = setTimeout(() => {
+      const row = document.querySelector<HTMLElement>(`.mods li[data-pid="${CSS.escape(scrollTo)}"]`);
+      if (!row) return;
+      row.scrollIntoView({ block: "start" });
+      setScrollTo(null);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [scrollTo, visibles]);
+
+  const posState = useRef({ visibles, filterSig });
+  useEffect(() => { posState.current = { visibles, filterSig }; }, [visibles, filterSig]);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const save = () => {
+      timer = null;
+      if (posPending.current) return;
+      const rowsOnPage = document.querySelectorAll<HTMLElement>(".mods li[data-pid]");
+      const top = [...rowsOnPage].find((r) => r.getBoundingClientRect().bottom > 0);
+      try {
+        localStorage.setItem(POS, JSON.stringify({
+          anchor: top?.dataset.pid ?? null,
+          visibles: posState.current.visibles,
+          sig: posState.current.filterSig,
+        }));
+      } catch {
+        // storage refused: the list simply forgets where it was
+      }
+    };
+    const onScroll = () => { if (!timer) timer = setTimeout(save, 300); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (timer) clearTimeout(timer); };
+  }, []);
+
   return (
     <main className="wrap">
       <header>

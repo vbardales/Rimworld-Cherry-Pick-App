@@ -16,6 +16,7 @@ export type TechDef = {
   DefType?: string;
   DefName?: string | null;
   IsAbstract?: boolean;
+  AbstractName?: string | null;
   Key?: string;
   Label?: string | null;
   TechLevel?: string | null;
@@ -133,6 +134,24 @@ function requirementsOf(d: TechDef): { name: string; level: TechLevel; from: nul
   return out;
 }
 
+// A recipe's products, its own or those of the first abstract recipe of the mod
+// it inherits them from: a pack of bench variants often names its product once,
+// on a shared base (Agave Syrup's MakeSyrupBase).
+function productsOf(r: TechDef, defs: TechDef[]): string[] {
+  if ((r.Products ?? []).length > 0) return r.Products!;
+  const byName = new Map(defs.filter((d) => d.AbstractName).map((d) => [d.AbstractName!, d]));
+  const seen = new Set<string>();
+  let parent = r.ParentName ?? null;
+  while (parent && !seen.has(parent)) {
+    seen.add(parent);
+    const base = byName.get(parent);
+    if (!base) break;
+    if ((base.Products ?? []).length > 0) return base.Products!;
+    parent = base.ParentName ?? null;
+  }
+  return [];
+}
+
 export type TechItem = {
   key: string;
   label: string;
@@ -159,16 +178,17 @@ export function techItems(defs: TechDef[], vanillaResearch: Record<string, strin
   const research: Record<string, string | null> = { ...vanillaResearch };
   for (const d of defs) if (d.DefType === "ResearchProjectDef" && d.DefName) research[d.DefName] = d.TechLevel ?? null;
 
-  // What a research-gated recipe makes is obtainable too, and only as early as
-  // that recipe: a brain fragment grown at a machine behind spacer research is
-  // not loot. Recipes without research are ignored for the same reason they
-  // are not counted themselves.
+  // What a recipe makes is obtainable, and only as early as its easiest recipe: a
+  // brain fragment grown behind spacer research is not loot, and agave syrup
+  // distilled at a campfire with no research is day-one food. A recipe with no
+  // research still does not count ITSELF (see obtainable) — only what it makes.
   const madeBy = new Map<string, { name: string; from: string | null }[]>();
   for (const r of defs) {
     if (r.DefType !== "RecipeDef" || r.IsAbstract) continue;
     const g = gatesOf(r);
-    if (g.length === 0) continue;
-    for (const p of r.Products ?? []) if (!madeBy.has(p)) madeBy.set(p, g);
+    for (const p of productsOf(r, defs)) {
+      if (!madeBy.has(p) || g.length === 0) madeBy.set(p, g);
+    }
   }
 
   const items: TechItem[] = [];
@@ -230,7 +250,7 @@ export type UnobtainableItem = { key: string; label: string; defName: string | n
 
 export function unobtainableItems(defs: TechDef[]): UnobtainableItem[] {
   const products = new Set(
-    defs.filter((r) => r.DefType === "RecipeDef" && !r.IsAbstract && gatesOf(r).length > 0).flatMap((r) => r.Products ?? []),
+    defs.filter((r) => r.DefType === "RecipeDef" && !r.IsAbstract).flatMap((r) => productsOf(r, defs)),
   );
   return defs
     .filter((d) => !obtainable(d) && !d.IsAbstract && d.DefType === "ThingDef" && isLevel(d.TechLevel) && !products.has(d.DefName ?? ""))

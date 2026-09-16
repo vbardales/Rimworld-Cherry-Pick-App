@@ -33,7 +33,7 @@ type InventoryLike = {
   Defs?: DefLike[];
   Assets?: AssetSignals;
   Mods?: { DeclaredDependencies?: string[]; Name?: string; PackageId?: string }[];
-  Patches?: unknown[];
+  Patches?: { TargetDefs?: string[] }[];
 };
 
 // Every research project of Core and the DLC, with its level: what a mod's
@@ -45,19 +45,35 @@ let vanillaResearch: Promise<Record<string, string | null>> | null = null;
 export function loadVanillaResearch(): Promise<Record<string, string | null>> {
   vanillaResearch ??= (async () => {
     const map: Record<string, string | null> = {};
-    const data = path.join(GAME_DIR, "Data");
-    for (const e of await fs.readdir(data, { withFileTypes: true })) {
-      if (!e.isDirectory()) continue;
-      const inv = (await scanMod(`ludeon.data.${e.name}`, path.join(data, e.name))) as InventoryLike;
-      for (const d of inv.Defs ?? [])
-        if (d.DefType === "ResearchProjectDef" && d.DefName) map[d.DefName] = d.TechLevel ?? null;
-    }
+    for (const d of (await loadVanillaDefs()).values())
+      if (d.DefType === "ResearchProjectDef" && d.DefName) map[d.DefName] = d.TechLevel ?? null;
     return map;
   })().catch((e) => {
     vanillaResearch = null;
     throw e;
   });
   return vanillaResearch;
+}
+
+// Every def of Core and the DLC by defName, read through the same scan cache:
+// research levels come from it, and so does what a patches-only mod is about.
+let vanillaDefs: Promise<Map<string, DefLike>> | null = null;
+
+function loadVanillaDefs(): Promise<Map<string, DefLike>> {
+  vanillaDefs ??= (async () => {
+    const map = new Map<string, DefLike>();
+    const data = path.join(GAME_DIR, "Data");
+    for (const e of await fs.readdir(data, { withFileTypes: true })) {
+      if (!e.isDirectory()) continue;
+      const inv = (await scanMod(`ludeon.data.${e.name}`, path.join(data, e.name))) as InventoryLike;
+      for (const d of inv.Defs ?? []) if (d.DefName) map.set(d.DefName, d);
+    }
+    return map;
+  })().catch((e) => {
+    vanillaDefs = null;
+    throw e;
+  });
+  return vanillaDefs;
 }
 
 // The category guess itself lives in categoryRules.ts: pure, so it can be
@@ -72,10 +88,43 @@ async function dependencyCategoriesOf(inv: InventoryLike): Promise<CategoryId[]>
   if (deps.length === 0) return [];
   const labels = (await readStore()).mods;
   const analyses = await loadStore();
-  return [...new Set(deps.flatMap((d) => {
+  const out = new Set<CategoryId>();
+  for (const d of deps) {
     const confirmed = labels[key(d)]?.categories ?? [];
-    return confirmed.length > 0 ? confirmed : (analyses[key(d)]?.suggested ?? []);
-  }))];
+    const suggested = analyses[key(d)]?.suggested;
+    const cats = confirmed.length > 0 ? confirmed : suggested ?? await suggestionOfUnscanned(d);
+    for (const c of cats) out.add(c);
+  }
+  return [...out];
+}
+
+// A dependency the background job has not reached yet: the job runs in no
+// particular order, and a child scanned before its parent found nothing to take.
+// Its own suggestion is computed on the spot from its cached scan — one level
+// only, its own dependencies are not followed.
+async function suggestionOfUnscanned(packageId: string): Promise<CategoryId[]> {
+  try {
+    const dep = (await listMods("all")).find((m) => key(m.PackageId) === key(packageId));
+    if (!dep) return [];
+    const inv = (await scanMod(dep.PackageId, dep.Path)) as InventoryLike;
+    return suggestCategories({
+      defs: inv.Defs ?? [],
+      assets: inv.Assets,
+      dependencies: inv.Mods?.[0]?.DeclaredDependencies ?? [],
+      name: inv.Mods?.[0]?.Name,
+      packageId: inv.Mods?.[0]?.PackageId,
+      patchCount: inv.Patches?.length ?? 0,
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function patchTargetsOf(inv: InventoryLike): Promise<DefLike[]> {
+  const names = [...new Set((inv.Patches ?? []).flatMap((p) => p.TargetDefs ?? []))];
+  if (names.length === 0) return [];
+  const vanilla = await loadVanillaDefs().catch(() => new Map<string, DefLike>());
+  return names.map((n) => vanilla.get(n)).filter((d): d is DefLike => !!d);
 }
 
 async function suggestedFor(inv: InventoryLike) {
@@ -87,6 +136,7 @@ async function suggestedFor(inv: InventoryLike) {
     packageId: inv.Mods?.[0]?.PackageId,
     patchCount: inv.Patches?.length ?? 0,
     dependencyCategories: await dependencyCategoriesOf(inv),
+    patchTargets: await patchTargetsOf(inv),
   });
 }
 

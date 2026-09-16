@@ -107,6 +107,10 @@ export default function ModPage({
 
   const [rescanning, setRescanning] = useState(false);
   const [label, setLabel] = useState<ModLabel>(EMPTY);
+  // The background scan's guess for this mod, shown as dashed chips like on the
+  // list. Fetched with the inventory, and refreshed on the spot server-side when
+  // it is missing or older than the current rules.
+  const [suggested, setSuggested] = useState<ModLabel["suggested"]>(undefined);
   const [restored, setRestored] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [applied, setApplied] = useState<string | null>(null);
@@ -129,6 +133,9 @@ export default function ModPage({
       .then(() => fetch(`/api/tech?id=${encodeURIComponent(id)}&path=${encodeURIComponent(modPath)}`))
       .then((r) => r.json())
       .then((d) => { if (!d.error) setTechDetail(d); })
+      .then(() => fetch(`/api/analysis?packageId=${encodeURIComponent(id)}&path=${encodeURIComponent(modPath)}`))
+      .then((r) => r.json())
+      .then((d) => { if (!d.error) setSuggested(d.analysis?.suggested ?? []); })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setRescanning(false));
   }, [id, modPath]);
@@ -463,7 +470,7 @@ export default function ModPage({
         <Labeler
           packageId={mod.PackageId}
           path={mod.Path}
-          label={label}
+          label={suggested && suggested.length > 0 ? { ...label, suggested } : label}
           onChange={(_, l) => setLabel(l)}
           dead={mod.DeadBefore16}
         />

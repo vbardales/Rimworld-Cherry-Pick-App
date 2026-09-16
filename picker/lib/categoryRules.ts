@@ -54,6 +54,8 @@ export type ModSignals = {
   // scan suggested. Read only for a mod made of patches and nothing else.
   patchCount?: number;
   dependencyCategories?: CategoryId[];
+  // The vanilla defs its patches target, for a mod made of patches only.
+  patchTargets?: DefSignals[];
 };
 
 // A retexture or a music pack says so in its name. Measured on 1,960 labelled
@@ -65,6 +67,21 @@ export type ModSignals = {
 // Measured: precision 0.68, recall 0.52, where nothing found it before; the
 // misses left in the triage are mostly pregnancy and contraception mods.
 const CHILDHOOD_WORDS = /adopt|pregnan|orphan|\bchild|children|childhood|infant|toddler|newborn|nursery|daycare|\bcrib|growth ?moment|breastfe|lactat/i;
+
+// The last resort: words in the mod's own name, read only when nothing in its
+// content spoke — a compatibility patch aimed at other mods' items has nothing
+// else. Measured: 7 more mods with a right suggestion, precision unchanged.
+const NAME_WORDS: [RegExp, CategoryId][] = [
+  [/apparel|cloth|outfit|hat\b|hair/i, "apparel"],
+  [/\brace|xenotype|alien/i, "races"],
+  [/animal|pet\b|beast|creature/i, "animals"],
+  [/weapon|\bgun|armou?r|melee/i, "armor"],
+  [/furniture|storage|shelf/i, "furniture"],
+  [/\bfood|meal|cook|drink/i, "food"],
+  [/medic|surgery|health/i, "medical"],
+  [/\bplant|crop|farm|garden/i, "plants"],
+  [/faction|raider|pirate/i, "factions"],
+];
 
 const TEXTURE_NAME = /textur|retex|music|song|soundtrack|(?:^|[^a-z])ost(?:[^a-z]|$)/i;
 
@@ -81,7 +98,7 @@ const ANIMAL_BASES = new Set(["AnimalThingBase", "AnimalKindBase", "EggFertBase"
 const WEAPON_BASE = /^Base(Bullet|Weapon|MeleeWeapon|HumanMakeableGun|MakeableGun|Gun|Projectile|Grenade)/;
 const APPAREL_BASE = /^(Apparel|Hat|ArmorHelmet|NobleHat|ArmorSmithable|ArmorMachineable).*Base$/;
 const MEDICAL_BASES = new Set([
-  "AddictionBase", "DrugToleranceBase", "DrugAddictionNeedBase", "SurgeryFlesh",
+  "MedicineBase", "AddictionBase", "DrugToleranceBase", "DrugAddictionNeedBase", "SurgeryFlesh",
   "ImplantHediffBase", "BodyPartBionicBase", "BodyPartProstheticBase",
   "BodyPartProstheticMakeableBase", "BodyPartArchotechBase",
 ]);
@@ -161,6 +178,9 @@ function defHits(d: DefSignals): Hit[] {
   if (inherits((b) => b === "PlantBase" || b === "PlantBaseNonEdible" || b === "TreeBase" || b === "BushBase")) s("plants");
   else if (cat(/^PlantMatter$/)) w("plants");
   if (cat(/^(Foods|FoodMeals|FoodRaw|MeatRaw)/)) s("food");
+  // A meal or a drink says so in its base: MealBase, MealCooked... Measured: food
+  // 0.76/0.33 -> 0.67/0.42.
+  if (type === "ThingDef" && inherits((b) => /^Meal/.test(b) || b === "DrinkBase" || b === "PastryBase")) s("food");
 
   // retextures & music
   if (type === "SongDef") s("textures");
@@ -275,6 +295,10 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   const onlyOwnTypes = counted.length > 0
     && counted.every((d) => (d.DefType ?? "").includes(".") || UI_TYPES.has(d.DefType ?? ""));
   if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && (counted.length === 0 || onlyOwnTypes)) add(strong, "engine");
+  // A translation: languages and nothing else — engine and UI, by direct
+  // instruction; no such mod in the triage to measure it on.
+  if (strong.size === 0 && a && counted.length === 0 && (a.Assemblies ?? 0) === 0 && (a.Languages ?? 0) > 0
+      && (a.Textures ?? 0) + (a.Sounds ?? 0) + (a.AssetBundles ?? 0) === 0) add(strong, "engine");
 
   // A DLL next to a few vanilla defs no rule recognises — two hediffs, a thought —
   // is C# behaviour hung on them: a gameplay mechanic. Measured: 18 more mods
@@ -286,6 +310,29 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   // Measured: patches-only mods 12 right in 15; widened to every mod left with no
   // signal, 10 more mods with a right suggestion and no loss of precision.
   if (strong.size === 0 && (a?.Assemblies ?? 0) === 0) for (const c of mod.dependencyCategories ?? []) add(strong, c);
+
+  // Patches on vanilla defs and nothing else: the mod is about what it patches,
+  // and it is almost always a tweak of it. Measured on the 54 such mods of the
+  // triage: the targets' categories plus gameplay put at least one right in 44,
+  // precision 0.52, recall 0.67 — targets alone were right in 24.
+  const onlyPatches = counted.length === 0 && (a?.Assemblies ?? 0) === 0 && (mod.patchCount ?? 0) > 0;
+  if (strong.size === 0 && onlyPatches && (mod.patchTargets ?? []).length > 0) {
+    for (const d of mod.patchTargets!) for (const h of defHits(d)) if (h.strong) add(strong, h.cat);
+    add(strong, "gameplay");
+  }
+
+  // Nothing but recipes, and nothing else said what they serve: a production
+  // tweak — synthread and hyperweave made another way. Not measured: five such
+  // mods in the triage, too few to learn from; surgeries already read as medical
+  // through their base, dependency-bound recipes take their dependency's category.
+  const concreteCounted = counted.filter((d) => !d.IsAbstract);
+  if (strong.size === 0 && concreteCounted.length > 0 && concreteCounted.every((d) => d.DefType === "RecipeDef")) add(strong, "gameplay");
+
+  // Last resort, the mod's name: nothing in its content spoke.
+  if (strong.size === 0) {
+    const text = `${mod.name ?? ""} ${mod.packageId ?? ""}`;
+    for (const [re, c] of NAME_WORDS) if (re.test(text)) add(strong, c);
+  }
 
   return [...strong.entries()]
     .sort((x, y) => y[1] - x[1])
