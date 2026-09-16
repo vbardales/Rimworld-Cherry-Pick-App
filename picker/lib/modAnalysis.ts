@@ -2,7 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { GAME_DIR, listMods, scanMod, type ModRow } from "./cherrypick";
-import { key } from "./labels";
+import { key, type CategoryId } from "./labels";
+import { readStore } from "./labelStore";
 import { suggestCategories, type AssetSignals, type DefSignals } from "./categoryRules";
 import { ANALYSIS_RULE_VERSION, type ModAnalysis } from "./techLevels";
 import { techRange, type TechDef } from "./techRules";
@@ -32,6 +33,7 @@ type InventoryLike = {
   Defs?: DefLike[];
   Assets?: AssetSignals;
   Mods?: { DeclaredDependencies?: string[]; Name?: string; PackageId?: string }[];
+  Patches?: unknown[];
 };
 
 // Every research project of Core and the DLC, with its level: what a mod's
@@ -60,13 +62,31 @@ export function loadVanillaResearch(): Promise<Record<string, string | null>> {
 
 // The category guess itself lives in categoryRules.ts: pure, so it can be
 // measured against the triage in data/mod-labels.json without the engine.
-function suggestedFor(inv: InventoryLike) {
+// Frameworks every other mod depends on say nothing about what a patch is for.
+const FRAMEWORK_DEPENDENCY = /^(brrainz\.harmony|ludeon\.|unlimitedhugs\.hugslib|oskarpotocki\.vanillafactionsexpanded\.core|erdelf\.humanoidalienraces)/i;
+
+// The categories of a mod's dependencies: confirmed labels first, else the
+// dependency's own suggestion. Only consulted for a patches-only mod.
+async function dependencyCategoriesOf(inv: InventoryLike): Promise<CategoryId[]> {
+  const deps = (inv.Mods?.[0]?.DeclaredDependencies ?? []).filter((d) => !FRAMEWORK_DEPENDENCY.test(d));
+  if (deps.length === 0) return [];
+  const labels = (await readStore()).mods;
+  const analyses = await loadStore();
+  return [...new Set(deps.flatMap((d) => {
+    const confirmed = labels[key(d)]?.categories ?? [];
+    return confirmed.length > 0 ? confirmed : (analyses[key(d)]?.suggested ?? []);
+  }))];
+}
+
+async function suggestedFor(inv: InventoryLike) {
   return suggestCategories({
     defs: inv.Defs ?? [],
     assets: inv.Assets,
     dependencies: inv.Mods?.[0]?.DeclaredDependencies ?? [],
     name: inv.Mods?.[0]?.Name,
     packageId: inv.Mods?.[0]?.PackageId,
+    patchCount: inv.Patches?.length ?? 0,
+    dependencyCategories: await dependencyCategoriesOf(inv),
   });
 }
 
@@ -234,7 +254,7 @@ async function analyzeOne(m: ModRow): Promise<void> {
 
   const entry: ModAnalysis = {
     tech: techRange(defs, await loadVanillaResearch()),
-    suggested: suggestedFor(inv),
+    suggested: await suggestedFor(inv),
     scannedAt: new Date().toISOString(),
     folderStamp,
     ruleVersion: ANALYSIS_RULE_VERSION,
@@ -259,7 +279,7 @@ export async function scanOneNow(packageId: string, modPath: string): Promise<Mo
 
   const entry: ModAnalysis = {
     tech: techRange(defs, await loadVanillaResearch()),
-    suggested: suggestedFor(inv),
+    suggested: await suggestedFor(inv),
     scannedAt: new Date().toISOString(),
     folderStamp,
     ruleVersion: ANALYSIS_RULE_VERSION,

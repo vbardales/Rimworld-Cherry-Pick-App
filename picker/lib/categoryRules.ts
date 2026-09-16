@@ -17,6 +17,8 @@ import type { CategoryId } from "./labels";
 
 export type DefSignals = {
   DefType?: string;
+  DefName?: string | null;
+  Label?: string | null;
   IsAbstract?: boolean;
   AbstractName?: string | null;
   ParentName?: string | null;
@@ -47,12 +49,24 @@ export type ModSignals = {
   // The mod's display name and packageId, read for a handful of words only.
   name?: string;
   packageId?: string;
+  // How many patch files the mod carries, and the categories of the mods it
+  // declares as dependencies — what a person confirmed for them, else what the
+  // scan suggested. Read only for a mod made of patches and nothing else.
+  patchCount?: number;
+  dependencyCategories?: CategoryId[];
 };
 
 // A retexture or a music pack says so in its name. Measured on 1,960 labelled
 // mods: 0.91 precision, and 42% of "textures" caught — most of them mods that
 // have no def at all to read.
-const TEXTURE_NAME = /textur|retex|music|song|soundtrack|ost/i;
+// Childhood said in words. No def type or base marks it — a relationship, a
+// thought, a backstory is about children only by what it is called. Read in the
+// mod's name, or in at least 30% of its concrete defs' names and labels.
+// Measured: precision 0.68, recall 0.52, where nothing found it before; the
+// misses left in the triage are mostly pregnancy and contraception mods.
+const CHILDHOOD_WORDS = /adopt|pregnan|orphan|\bchild|children|childhood|infant|toddler|newborn|nursery|daycare|\bcrib|growth ?moment|breastfe|lactat/i;
+
+const TEXTURE_NAME = /textur|retex|music|song|soundtrack|(?:^|[^a-z])ost(?:[^a-z]|$)/i;
 
 // A strong signal suggests its category on its own. A weak one (a bare
 // HediffDef, a JobDef) is right often enough to back a category something else
@@ -149,7 +163,7 @@ function defHits(d: DefSignals): Hit[] {
   if (cat(/^(Foods|FoodMeals|FoodRaw|MeatRaw)/)) s("food");
 
   // retextures & music
-  if (type === "ThingStyleDef" || type === "SongDef") s("textures");
+  if (type === "SongDef") s("textures");
 
   // childhood itself
   // Every animal and every custom race defines its own life stages too — not
@@ -177,6 +191,13 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   const counted = mod.defs.filter((d) => !d.IsAbstract || (d.AbstractName && inheritedInMod.has(d.AbstractName)));
   for (const d of counted) for (const h of defHits(d)) add(h.strong ? strong : weak, h.cat);
 
+  // Styles are a retexture when they are a large part of what the mod is: a
+  // style pack. In a race or faction mod they are that people's look, one
+  // feature among many. Measured: textures 0.76/0.77 -> 0.82/0.73.
+  const styles = counted.filter((d) => d.DefType === "ThingStyleDef").length;
+  const concrete = counted.filter((d) => !d.IsAbstract).length;
+  if (styles > 0 && styles >= 0.3 * concrete) add(strong, "textures", styles);
+
   // Nearly every content mod grows something — the crop behind a food mod's
   // meal, the forage behind an animal mod's creature. A plants mod is one whose
   // things are MOSTLY plants: below this share of its concrete ThingDefs, the
@@ -196,6 +217,11 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   const peopleSignals = mod.defs.some((d) => d.DefType === "XenotypeDef" || d.DefType === "HeadTypeDef");
   if (genes > 0) add(strong, peopleSignals ? "races" : "biotech", genes);
   if (traits > 0) add(strong, "biotech", traits);
+
+  const concreteDefs = counted.filter((d) => !d.IsAbstract);
+  const childish = concreteDefs.filter((d) => CHILDHOOD_WORDS.test(`${d.DefName ?? ""} ${d.Label ?? ""}`)).length;
+  if (CHILDHOOD_WORDS.test(`${mod.name ?? ""} ${mod.packageId ?? ""}`) || (childish > 0 && childish >= 0.3 * concreteDefs.length))
+    add(strong, "children", Math.max(childish, 1));
 
   if (TEXTURE_NAME.test(`${mod.name ?? ""} ${mod.packageId ?? ""}`)) add(strong, "textures", 1000);
 
@@ -243,8 +269,23 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   // Its own def types only — settings lists, framework tables — say nothing a
   // player would build or meet: still behaviour or UI.
   // Counted on the defs that weigh: an unused template base is no content.
-  const onlyOwnTypes = counted.length > 0 && counted.every((d) => (d.DefType ?? "").includes("."));
+  // Vanilla def types that only shape the interface — a hotkey, a menu button,
+  // a column of the work tab — say nothing a pawn meets either.
+  const UI_TYPES = new Set(["KeyBindingDef", "KeyBindingCategoryDef", "MainButtonDef", "PawnTableDef", "PawnColumnDef"]);
+  const onlyOwnTypes = counted.length > 0
+    && counted.every((d) => (d.DefType ?? "").includes(".") || UI_TYPES.has(d.DefType ?? ""));
   if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && (counted.length === 0 || onlyOwnTypes)) add(strong, "engine");
+
+  // A DLL next to a few vanilla defs no rule recognises — two hediffs, a thought —
+  // is C# behaviour hung on them: a gameplay mechanic. Measured: 18 more mods
+  // with a right suggestion, gameplay 0.74/0.21 -> 0.69/0.28.
+  if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && counted.length > 0) add(strong, "gameplay");
+
+  // Nothing of its own to go on and no C#: patches, recipes for another mod's
+  // materials, balance tweaks. Such a mod is about the mod it depends on.
+  // Measured: patches-only mods 12 right in 15; widened to every mod left with no
+  // signal, 10 more mods with a right suggestion and no loss of precision.
+  if (strong.size === 0 && (a?.Assemblies ?? 0) === 0) for (const c of mod.dependencyCategories ?? []) add(strong, c);
 
   return [...strong.entries()]
     .sort((x, y) => y[1] - x[1])
