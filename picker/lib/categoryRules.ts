@@ -204,7 +204,9 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
     const media = (a.Textures ?? 0) + (a.AssetBundles ?? 0) + (a.Sounds ?? 0);
     const dll = a.Assemblies ?? 0;
     if (dll === 0 && media > 0 && defCount === 0) add(strong, "textures", 1000);
-    else if (dll === 0 && (a.Textures ?? 0) >= 8 * Math.max(defCount, 1)) add(strong, "textures", media);
+    // Only when the defs said nothing else: a creature with seventy coat
+    // variants is an animal mod, not a retexture.
+    else if (dll === 0 && strong.size === 0 && (a.Textures ?? 0) >= 8 * Math.max(defCount, 1)) add(strong, "textures", media);
   }
 
   // Only now can weak signals speak: to back a category already found, or —
@@ -229,7 +231,10 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
 
   // A DLL and nothing else to go on: most likely C# behaviour or UI. Right
   // less than half the time (0.43), so it never outranks a real signal.
-  if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && defCount === 0) add(strong, "engine");
+  // Its own def types only — settings lists, framework tables — say nothing a
+  // player would build or meet: still behaviour or UI.
+  const onlyOwnTypes = defCount > 0 && mod.defs.every((d) => (d.DefType ?? "").includes("."));
+  if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && (defCount === 0 || onlyOwnTypes)) add(strong, "engine");
 
   return [...strong.entries()]
     .sort((x, y) => y[1] - x[1])
