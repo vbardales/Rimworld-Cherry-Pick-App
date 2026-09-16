@@ -18,6 +18,7 @@ import type { CategoryId } from "./labels";
 export type DefSignals = {
   DefType?: string;
   IsAbstract?: boolean;
+  AbstractName?: string | null;
   ParentName?: string | null;
   // Every base up to the root, as the engine resolved it. The direct parent is
   // not enough: a mod routes its plants through its own VG_PlantDef, its guns
@@ -166,7 +167,15 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   const weak = new Map<CategoryId, number>();
   const add = (m: Map<CategoryId, number>, c: CategoryId, n = 1) => m.set(c, (m.get(c) ?? 0) + n);
 
-  for (const d of mod.defs) for (const h of defHits(d)) add(h.strong ? strong : weak, h.cat);
+  // An abstract base speaks for the concrete defs that inherit it — often the
+  // only place a mod writes its category. One that nothing in the mod inherits
+  // is a template for something else to fill in: a framework's base, or the
+  // shape a C# tool stamps onto buildings chosen in its settings.
+  const inheritedInMod = new Set(
+    mod.defs.filter((d) => !d.IsAbstract).flatMap((d) => [d.ParentName, ...(d.ParentChain ?? []).map((p) => p.Name)]),
+  );
+  const counted = mod.defs.filter((d) => !d.IsAbstract || (d.AbstractName && inheritedInMod.has(d.AbstractName)));
+  for (const d of counted) for (const h of defHits(d)) add(h.strong ? strong : weak, h.cat);
 
   // Nearly every content mod grows something — the crop behind a food mod's
   // meal, the forage behind an animal mod's creature. A plants mod is one whose
@@ -233,8 +242,9 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   // less than half the time (0.43), so it never outranks a real signal.
   // Its own def types only — settings lists, framework tables — say nothing a
   // player would build or meet: still behaviour or UI.
-  const onlyOwnTypes = defCount > 0 && mod.defs.every((d) => (d.DefType ?? "").includes("."));
-  if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && (defCount === 0 || onlyOwnTypes)) add(strong, "engine");
+  // Counted on the defs that weigh: an unused template base is no content.
+  const onlyOwnTypes = counted.length > 0 && counted.every((d) => (d.DefType ?? "").includes("."));
+  if (strong.size === 0 && a && (a.Assemblies ?? 0) > 0 && (counted.length === 0 || onlyOwnTypes)) add(strong, "engine");
 
   return [...strong.entries()]
     .sort((x, y) => y[1] - x[1])

@@ -36,7 +36,7 @@ export type TechRange = {
 // has — so an entry whose ruleVersion is behind is treated as stale and
 // requeued, the same as a folder that changed. Bump this on every heuristic
 // fix from now on.
-export const ANALYSIS_RULE_VERSION = 20;
+export const ANALYSIS_RULE_VERSION = 22;
 
 export type ModAnalysis = {
   // null means scanned, and the mod has no tech level to speak of — nothing

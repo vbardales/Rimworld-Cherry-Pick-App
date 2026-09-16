@@ -23,6 +23,7 @@ export type TechDef = {
   // def itself — see Inherited.cs in the engine.
   TechLevelFrom?: string | null;
   ArchitectCategory?: string | null;
+  ThingCategories?: string[];
   ParentName?: string | null;
   ParentChain?: { Name: string }[];
   Craftable?: boolean;
@@ -46,6 +47,15 @@ export type TechDef = {
 };
 
 const rank = (s: TechStep) => TECH_LEVELS.indexOf(s);
+
+// Placed from the Architect tab. The tab usually comes down from a base, and
+// when that base lives in a framework the scan did not read — Adaptive Storage
+// Framework's AdaptiveStorageBase — it stays empty. A minifiable building still
+// files itself under a Buildings* thing category of its own, which is enough.
+function isBuilding(d: TechDef): boolean {
+  if (d.DefType !== "ThingDef" && d.DefType !== "TerrainDef") return false;
+  return !!d.ArchitectCategory || (d.ThingCategories ?? []).some((c) => /^Buildings/.test(c));
+}
 const isLevel = (s: string | null | undefined): s is TechLevel => !!s && TECH_LEVELS.includes(s as TechLevel);
 
 // Content a player can build, craft or sow. A def that is only found, spawned
@@ -57,7 +67,7 @@ function obtainable(d: TechDef): boolean {
   // surgery is only as early as the bionic eye it consumes, which the mod places
   // elsewhere. Counted as day-one content, such recipes dragged every surgery mod down.
   if (d.DefType === "RecipeDef") return gatesOf(d).length > 0;
-  if ((d.DefType === "ThingDef" || d.DefType === "TerrainDef") && d.ArchitectCategory) return true;
+  if (isBuilding(d)) return true;
   if (d.Craftable || d.Sowable) return true;
   // recipeMaker is usually inherited from a vanilla base named that way —
   // unless the def removes it.
@@ -71,7 +81,7 @@ function gatesOf(d: TechDef): { name: string; from: string | null }[] {
   // it, at a bench — and a colony takes the earlier of the two, so the recipe's
   // research never delays the building. A Blahaj plush with no construction
   // research but a recipe asking for Complex Furniture is buildable on day one.
-  const building = (d.DefType === "ThingDef" || d.DefType === "TerrainDef") && !!d.ArchitectCategory;
+  const building = isBuilding(d);
   if (building) {
     const recipe = new Set(d.RecipeResearch ?? []);
     const own = (d.Refs?.Research ?? []).filter((name) => !recipe.has(name)).map((name) => ({ name, from: null }));
@@ -92,7 +102,7 @@ function gatesOf(d: TechDef): { name: string; from: string | null }[] {
 function howObtained(d: TechDef): TechItem["how"] {
   if (d.DefType === "RecipeDef") return "recipe";
   if (d.Sowable) return "sow";
-  if (d.ArchitectCategory && (d.DefType === "ThingDef" || d.DefType === "TerrainDef")) return "build";
+  if (isBuilding(d)) return "build";
   if (d.Craftable || (!d.RecipeMakerRemoved && [d.ParentName, ...(d.ParentChain ?? []).map((p) => p.Name)].some((b) => b && /Makeable/.test(b)))) return "craft";
   return "unlock";
 }
