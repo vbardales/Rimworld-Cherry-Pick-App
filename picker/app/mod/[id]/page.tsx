@@ -6,6 +6,16 @@ import { Labeler } from "@/components/Labeler";
 import { EMPTY, labelOf, type ModLabel } from "@/lib/labels";
 import { workshopId, workshopUrl } from "@/lib/steam";
 import { keyOf } from "@/lib/cherryKey";
+import type { TechRange, TechStep } from "@/lib/techLevels";
+import { proposedFix, type TechItem, type UnobtainableItem } from "@/lib/techRules";
+
+const STEP_LABEL: Record<TechStep, string> = {
+  start: "depart", Animal: "animal", Neolithic: "neolithique", Medieval: "medieval",
+  Industrial: "industriel", Spacer: "spatial", Ultra: "ultra", Archotech: "archotech",
+};
+const HOW_LABEL: Record<TechItem["how"], string> = {
+  build: "a construire", craft: "a fabriquer", sow: "a semer", recipe: "recette", unlock: "debloque",
+};
 
 type Def = {
   Key: string;
@@ -100,6 +110,7 @@ export default function ModPage({
   const [restored, setRestored] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [applied, setApplied] = useState<string | null>(null);
+  const [techDetail, setTechDetail] = useState<TechDetail | null>(null);
 
   // Read the mod again from its files.
   //
@@ -115,6 +126,9 @@ export default function ModPage({
     fetch(url)
       .then((r) => r.json())
       .then((d) => (d.error ? Promise.reject(new Error(d.error)) : setInv(d)))
+      .then(() => fetch(`/api/tech?id=${encodeURIComponent(id)}&path=${encodeURIComponent(modPath)}`))
+      .then((r) => r.json())
+      .then((d) => { if (!d.error) setTechDetail(d); })
       .catch((e) => setError(String(e)))
       .finally(() => setRescanning(false));
   }, [id, modPath]);
@@ -517,6 +531,8 @@ export default function ModPage({
         )}
       </div>
 
+      {techDetail && <TechPanel detail={techDetail} packageId={mod.PackageId} modName={mod.Name} />}
+
       {closure && <ClosurePanel c={closure} computing={computing} />}
 
       <table className="defs">
@@ -604,6 +620,147 @@ export default function ModPage({
         </>
       )}
     </main>
+  );
+}
+
+// Where the list's tech tag comes from: every item a colony can obtain, with
+// the research that gates it. Folded when long — a big mod lists hundreds.
+type TechDetail = { range: TechRange | null; items: TechItem[]; unobtainable?: UnobtainableItem[] };
+
+function TechPanel({ detail, packageId, modName }: {
+  detail: TechDetail;
+  packageId: string;
+  modName: string;
+}) {
+  const { range, items } = detail;
+  const unobtainable = detail.unobtainable ?? [];
+  const proposals = useMemo(
+    () => items.map((i) => ({ item: i, fix: proposedFix(i) })).filter((p) => p.fix !== null),
+    [items],
+  );
+
+  // Which corrections are ticked. Read back from the file already written for
+  // this mod when there is one — the sheet shows what is in place — otherwise
+  // every proposal starts ticked.
+  const [ticked, setTicked] = useState<Set<string> | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  useEffect(() => {
+    fetch(`/api/techfixes?packageId=${encodeURIComponent(packageId)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const names = Array.isArray(d.written) ? new Set<string>(d.written.map((w: { defName: string }) => w.defName)) : null;
+        setTicked(new Set(proposals.filter((p) => (names ? names.has(p.item.defName!) : true)).map((p) => p.item.defName!)));
+        if (names) setStatus(`${names.size} correction(s) deja ecrite(s) dans Nelim's Tech Level Fixes`);
+      })
+      .catch((e) => setStatus(`lecture impossible : ${String(e)}`));
+  }, [packageId, proposals]);
+
+  const toggle = (defName: string) =>
+    setTicked((prev) => {
+      const next = new Set(prev ?? []);
+      if (next.has(defName)) next.delete(defName); else next.add(defName);
+      return next;
+    });
+
+  const save = () => {
+    const fixes = proposals
+      .filter((p) => ticked?.has(p.item.defName!))
+      .map((p) => ({ defType: p.item.defType, defName: p.item.defName, from: p.fix!.from, to: p.fix!.to }));
+    setStatus("ecriture...");
+    fetch("/api/techfixes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageId, name: modName, fixes }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        setStatus(d.written === 0
+          ? "aucune correction : fichier retire"
+          : `${d.written} correction(s) ecrite(s) dans Mods/NelimTechLevelFixes/Patches/${d.file}`
+            + (d.refused?.length ? ` — ${d.refused.length} refusee(s)` : ""));
+      })
+      .catch((e) => setStatus(`echec : ${String(e)}`));
+  };
+  const summary = range === null
+    ? "sans objet"
+    : range.floor === range.ceiling
+      ? STEP_LABEL[range.floor]
+      : `${STEP_LABEL[range.floor]} → ${STEP_LABEL[range.ceiling]}`;
+  return (
+    <details className="panel tech" open={items.length + unobtainable.length > 0 && items.length + unobtainable.length <= 25}>
+      <summary>
+        niveau technique : <strong>{summary}</strong>
+        {range?.source === "declared" && " (declare dans les defs : rien a construire, fabriquer ou semer)"}
+        {items.length > 0 && <span className="sub"> — {items.length} contenu(s) obtenable(s)</span>}
+      </summary>
+      {items.length > 0 && (
+        <table className="techitems">
+          <tbody>
+            {items.map((i) => (
+              <tr key={i.key} className={i.step === null ? "unknown" : ""}>
+                <td className="lvl">{i.step === null ? "?" : STEP_LABEL[i.step]}</td>
+                <td>{i.label}</td>
+                <td className="sub">{HOW_LABEL[i.how]}</td>
+                <td className="fix">
+                  {(() => {
+                    const fix = proposedFix(i);
+                    if (!fix || !i.defName) return null;
+                    return (
+                      <label title="Corriger le techLevel de l'objet dans Nelim's Tech Level Fixes">
+                        <input
+                          type="checkbox"
+                          checked={ticked?.has(i.defName) ?? false}
+                          disabled={ticked === null}
+                          onChange={() => toggle(i.defName!)}
+                        />
+                        {" "}{fix.from ? STEP_LABEL[fix.from] : "aucun"} → {STEP_LABEL[fix.to]}
+                      </label>
+                    );
+                  })()}
+                </td>
+                <td className="sub">
+                  {i.gates.length > 0
+                    ? i.gates.map((g) => `${g.name} (${g.level ? STEP_LABEL[g.level] : "niveau inconnu"}${g.from ? `, herite de ${g.from}` : ""})`).join(", ")
+                    : "aucune recherche"}
+                  {i.objectWins && i.current && ` — l'objet est marque ${STEP_LABEL[i.current]}, plus tard`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {unobtainable.length > 0 && (
+        <>
+          <p className="sub">
+            {items.length > 0
+              ? "non obtenables — non comptes, puisque le mod a du contenu obtenable :"
+              : "non obtenables — ce sont eux qui donnent la fourchette, faute de contenu obtenable :"}
+          </p>
+          <table className="techitems">
+            <tbody>
+              {unobtainable.map((u) => (
+                <tr key={u.key} className={items.length > 0 ? "unknown" : ""}>
+                  <td className="lvl">{STEP_LABEL[u.level]}</td>
+                  <td>{u.label}</td>
+                  <td className="sub">
+                    {u.recipeRemoved ? "recette supprimee par le mod (butin, marchands)" : "ni construit, ni fabrique, ni seme"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+      {proposals.length > 0 && (
+        <p className="fixbar">
+          <button onClick={save} disabled={ticked === null}>
+            ecrire les corrections cochees ({ticked?.size ?? 0} / {proposals.length})
+          </button>
+          {status && <span className="sub"> {status}</span>}
+        </p>
+      )}
+    </details>
   );
 }
 

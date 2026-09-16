@@ -333,7 +333,14 @@ public static class Scanner
             entry.ApparelLayers = apparelLayers.Elements("li")
                 .Select(li => li.Value.Trim()).Where(v => v.Length > 0).ToList();
         entry.RaceIntelligence = ((string?)el.Element("race")?.Element("intelligence"))?.Trim();
-        entry.Craftable = el.Element("recipeMaker") is not null;
+        var recipeMaker = el.Element("recipeMaker");
+        entry.RecipeMakerRemoved = string.Equals((string?)recipeMaker?.Attribute("IsNull"), "True", StringComparison.OrdinalIgnoreCase);
+        entry.Craftable = recipeMaker is not null && !entry.RecipeMakerRemoved;
+        if (recipeMaker is not null)
+        {
+            entry.RecipeResearch = RecipeResearchOf(recipeMaker);
+            entry.RecipeMakerNoInherit = string.Equals((string?)recipeMaker.Attribute("Inherit"), "False", StringComparison.OrdinalIgnoreCase);
+        }
         entry.Sowable = el.Element("plant")?.Element("sowTags") is not null;
 
         var products = el.Element("products");
@@ -358,6 +365,11 @@ public static class Scanner
         Harvest(el, entry.Refs);
         return entry;
     }
+
+    public static List<string> RecipeResearchOf(XElement recipeMaker) =>
+        recipeMaker.Elements("researchPrerequisite").Select(e => e.Value.Trim())
+            .Concat(recipeMaker.Elements("researchPrerequisites").Elements("li").Select(e => e.Value.Trim()))
+            .Where(v => v.Length > 0).Distinct(StringComparer.Ordinal).ToList();
 
     // Walks a def's subtree and sorts everything that looks like a reference.
     // Values are kept as they are: it is the closure that will decide whether

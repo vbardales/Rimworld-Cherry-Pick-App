@@ -129,6 +129,22 @@ public sealed class DefEntry
     // can build, craft or grow — loot, animals and motes say nothing about what
     // a mod asks of a colony's research.
     public bool Craftable { get; set; }
+
+    // <recipeMaker IsNull="True"/>: the def deliberately removes the recipe its
+    // base would give it — loot or trader stock only. Without this, the element's
+    // mere presence read as "craftable", and an inherited *Makeable* base would
+    // too.
+    public bool RecipeMakerRemoved { get; set; }
+
+    // The research a recipeMaker asks for, and where it came from. A child's
+    // <recipeMaker> MERGES with its parent's, so a gun that only states its skill
+    // requirement still needs the Gunsmithing its base asks for. Own values are
+    // read in Scanner.ReadDef; the inherited ones are resolved in Inherited.cs
+    // and kept apart from Refs.Research, which the dependency closure reads.
+    public List<string> RecipeResearch { get; set; } = new();
+    public bool RecipeMakerNoInherit { get; set; }
+    public List<string> InheritedRecipeResearch { get; set; } = new();
+    public string? InheritedRecipeResearchFrom { get; set; }
     public bool Sowable { get; set; }
 
     // Defs this one appears to own: the hediff a food grants, the thought it

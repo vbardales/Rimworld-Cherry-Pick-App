@@ -43,6 +43,20 @@ public static class Inherited
             d.ArchitectCategoryFrom = catFrom;
 
             d.ParentChain = Chain(d, byName, core);
+
+            // Only a def that states no research of its own, and does not cut
+            // itself off from its base's recipe, inherits it.
+            if (d.RecipeResearch.Count == 0 && !d.RecipeMakerRemoved && !d.RecipeMakerNoInherit)
+            {
+                var (research, researchFrom) = Climb(d, byName, core,
+                    e => e.RecipeResearch.Count > 0 ? string.Join(",", e.RecipeResearch) : null,
+                    c => c.RecipeResearch);
+                if (research is not null)
+                {
+                    d.InheritedRecipeResearch = research.Split(',').ToList();
+                    d.InheritedRecipeResearchFrom = researchFrom;
+                }
+            }
         }
     }
 
@@ -124,6 +138,7 @@ public static class Inherited
         public string? ParentName;
         public string? TechLevel;
         public string? DesignationCategory;
+        public string? RecipeResearch;
     }
 
     // Reads only the ABSTRACT defs of the game — the ones carrying a Name
@@ -150,6 +165,8 @@ public static class Inherited
                     ParentName = ((string?)el.Attribute("ParentName"))?.Trim(),
                     TechLevel = ((string?)el.Element("techLevel"))?.Trim(),
                     DesignationCategory = ((string?)el.Element("designationCategory"))?.Trim(),
+                    RecipeResearch = el.Element("recipeMaker") is { } rm && Scanner.RecipeResearchOf(rm) is { Count: > 0 } r
+                        ? string.Join(",", r) : null,
                 };
             }
         }

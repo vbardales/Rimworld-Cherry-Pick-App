@@ -40,7 +40,7 @@ type InventoryLike = {
 // the game folder could not be read.
 let vanillaResearch: Promise<Record<string, string | null>> | null = null;
 
-function loadVanillaResearch(): Promise<Record<string, string | null>> {
+export function loadVanillaResearch(): Promise<Record<string, string | null>> {
   vanillaResearch ??= (async () => {
     const map: Record<string, string | null> = {};
     const data = path.join(GAME_DIR, "Data");
@@ -95,6 +95,23 @@ function scheduleFlush(): void {
   }, 3000);
 }
 
+// Windows refuses to replace a file another process holds open at that
+// instant — an antivirus scan or the search indexer on a freshly written
+// file is enough — and reports it as EPERM or EBUSY. The hold lasts a few
+// milliseconds, so a short wait almost always clears it.
+async function renameWithRetry(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await fs.rename(from, to);
+      return;
+    } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (attempt >= 5 || (code !== "EPERM" && code !== "EBUSY" && code !== "EACCES")) throw e;
+      await new Promise((r) => setTimeout(r, 50 * 2 ** attempt));
+    }
+  }
+}
+
 async function flushNow(): Promise<void> {
   if (!store) return;
   try {
@@ -108,7 +125,12 @@ async function flushNow(): Promise<void> {
     // away while the other still held a handle open on it.
     const tmp = `${FILE}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
     await fs.writeFile(tmp, JSON.stringify(store), "utf8");
-    await fs.rename(tmp, FILE);
+    try {
+      await renameWithRetry(tmp, FILE);
+    } catch (e) {
+      await fs.rm(tmp, { force: true });
+      throw e;
+    }
   } catch (e) {
     // A lost write here costs, at worst, one debounce window of analysis
     // results — the next scheduleFlush() tries again. Letting it throw instead
