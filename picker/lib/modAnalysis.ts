@@ -2,8 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { listMods, scanMod, type ModRow } from "./cherrypick";
-import { key, type CategoryId } from "./labels";
-import { TECH_LEVELS, type ModAnalysis, type TechLevel } from "./techLevels";
+import { key } from "./labels";
+import { suggestCategories, type AssetSignals, type DefSignals } from "./categoryRules";
+import { ANALYSIS_RULE_VERSION, TECH_LEVELS, type ModAnalysis, type TechLevel } from "./techLevels";
 
 // A background reading of the whole corpus: minimum tech level and a guess at
 // what a mod is FOR, computed from the same `scan` the engine already knows how
@@ -23,20 +24,14 @@ type AnalysisStore = Record<string, ModAnalysis>;
 const CACHE_DIR = path.join(os.tmpdir(), "cherrypick-scans");
 const FILE = path.join(CACHE_DIR, "mod-analysis.json");
 
-// What the shape of a def looks like once it comes back from `dotnet cherrypick
-// scan`, serialized straight from engine/Model.cs's DefEntry. Only the fields the
-// guess actually reads.
-type DefLike = {
-  IsAbstract?: boolean;
-  DefType?: string;
-  TechLevel?: string | null;
-  ArchitectCategory?: string | null;
-  Race?: string | null;
-  AddsHediff?: string | null;
-  ThingCategories?: string[];
-  ApparelLayers?: string[];
+// What a scan looks like once it comes back from `dotnet cherrypick scan`,
+// serialized straight from engine/Model.cs. Only the fields read here.
+type DefLike = DefSignals & { TechLevel?: string | null };
+type InventoryLike = {
+  Defs?: DefLike[];
+  Assets?: AssetSignals;
+  Mods?: { DeclaredDependencies?: string[] }[];
 };
-type InventoryLike = { Defs?: DefLike[] };
 
 function computeMinTechLevel(defs: DefLike[]): TechLevel | null {
   let min: number | null = null;
@@ -50,45 +45,14 @@ function computeMinTechLevel(defs: DefLike[]): TechLevel | null {
   return min === null ? null : TECH_LEVELS[min];
 }
 
-// What a single def suggests about what the mod is FOR. Deliberately permissive
-// — better to offer a wrong dashed chip that a glance dismisses than to stay
-// silent on a mod nobody has looked at yet.
-function guessCategoriesForDef(d: DefLike): CategoryId[] {
-  const out: CategoryId[] = [];
-  const type = d.DefType ?? "";
-  const arch = (d.ArchitectCategory ?? "").toLowerCase();
-  const cats = (d.ThingCategories ?? []).map((c) => c.toLowerCase());
-  const hasLayers = (d.ApparelLayers ?? []).length > 0;
-
-  if (d.Race) out.push("animals");
-  if (type === "PawnKindDef" && !d.Race) out.push("factions");
-  if (type === "FactionDef") out.push("factions");
-  if (type === "HediffDef" || (type === "RecipeDef" && d.AddsHediff)) out.push("medical");
-  if (type === "PlantDef") out.push("plants");
-  if (hasLayers || cats.includes("apparel")) out.push("apparel");
-  if (cats.some((c) => c.includes("weapon"))) out.push("armor");
-  if (cats.some((c) => c.includes("food") || c.includes("meals") || c.includes("drug"))) out.push("food");
-  if (cats.some((c) => c.includes("furniture")) || arch.includes("furniture")) out.push("furniture");
-  if (arch.includes("structure") || arch.includes("floor") || cats.includes("floors")) out.push("structure");
-  if (type.startsWith("Precept") || type.startsWith("Ideo") || type.startsWith("Ritual")) out.push("ideology");
-  if (type === "GeneDef" || type === "XenotypeDef" || type === "GenepackDef") out.push("biotech");
-  if (type === "ResearchProjectDef" || type === "TraitDef" || type === "IncidentDef") out.push("gameplay");
-  if (type === "VehicleDef" || cats.includes("vehicles")) out.push("vehicles");
-  if (type === "ThingStyleDef" || type === "StyleCategoryDef") out.push("textures");
-  return out;
-}
-
-// Aggregated over the whole mod: the categories its concrete defs point to most,
-// capped so a big mod does not end up wearing every chip at once.
-function computeSuggestedCategories(defs: DefLike[]): CategoryId[] {
-  const counts = new Map<CategoryId, number>();
-  for (const d of defs) {
-    for (const c of guessCategoriesForDef(d)) counts.set(c, (counts.get(c) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4)
-    .map(([c]) => c);
+// The category guess itself lives in categoryRules.ts: pure, so it can be
+// measured against the triage in data/mod-labels.json without the engine.
+function suggestedFor(inv: InventoryLike) {
+  return suggestCategories({
+    defs: inv.Defs ?? [],
+    assets: inv.Assets,
+    dependencies: inv.Mods?.[0]?.DeclaredDependencies ?? [],
+  });
 }
 
 // The store is held in memory once loaded, and mutated in place: a full
@@ -193,6 +157,12 @@ const REFILL_EVERY_MS = 10 * 60_000;
 
 async function isStale(a: ModAnalysis | undefined, modPath: string): Promise<boolean> {
   if (!a) return true;
+  // A fixed heuristic is exactly as much reason to redo a mod as a changed
+  // folder: the defs did not move, the rule reading them did. Without this,
+  // a corrected guess only ever reaches a mod the NEXT time its folder happens
+  // to change — which for most of the corpus is "never" — and the old, wrong
+  // suggestion sits there looking authoritative.
+  if (a.ruleVersion !== ANALYSIS_RULE_VERSION) return true;
   try {
     const dir = await fs.stat(modPath);
     return dir.mtimeMs > a.folderStamp;
@@ -227,9 +197,10 @@ async function analyzeOne(m: ModRow): Promise<void> {
 
   const entry: ModAnalysis = {
     minTechLevel: computeMinTechLevel(defs),
-    suggested: computeSuggestedCategories(defs),
+    suggested: suggestedFor(inv),
     scannedAt: new Date().toISOString(),
     folderStamp,
+    ruleVersion: ANALYSIS_RULE_VERSION,
   };
 
   const s = await loadStore();
@@ -251,9 +222,10 @@ export async function scanOneNow(packageId: string, modPath: string): Promise<Mo
 
   const entry: ModAnalysis = {
     minTechLevel: computeMinTechLevel(defs),
-    suggested: computeSuggestedCategories(defs),
+    suggested: suggestedFor(inv),
     scannedAt: new Date().toISOString(),
     folderStamp,
+    ruleVersion: ANALYSIS_RULE_VERSION,
   };
 
   const s = await loadStore();

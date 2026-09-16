@@ -151,8 +151,12 @@ export async function scanMod(id: string, modPath: string, refresh = false): Pro
   // sure way to start again from the files.
   if (!refresh) {
     try {
-      const [cached, dir] = await Promise.all([fs.stat(file), fs.stat(modPath)]);
-      if (cached.mtimeMs >= dir.mtimeMs) return JSON.parse(await fs.readFile(file, "utf8"));
+      // The engine's date counts too: a rebuilt engine returns a different
+      // inventory for an unchanged folder, and the old one would otherwise be
+      // served until the mod itself happens to change.
+      const [cached, dir, engine] = await Promise.all([fs.stat(file), fs.stat(modPath), fs.stat(DLL)]);
+      if (cached.mtimeMs >= dir.mtimeMs && cached.mtimeMs >= engine.mtimeMs)
+        return JSON.parse(await fs.readFile(file, "utf8"));
     } catch {
       // no cache, or mod not found: scan it
     }

@@ -118,8 +118,28 @@ public static class Scanner
         {
             ScanDefs(inv, mod, Path.Combine(modPath, root, "Defs"));
             ScanPatches(inv, mod, Path.Combine(modPath, root, "Patches"));
+            CountAssets(inv.Assets, Path.Combine(modPath, root));
         }
         return inv;
+    }
+
+    static readonly string[] ImageExt = { ".png", ".dds", ".jpg", ".jpeg", ".psd" };
+    static readonly string[] AudioExt = { ".ogg", ".wav", ".mp3" };
+
+    static void CountAssets(AssetCounts a, string root)
+    {
+        a.Assemblies += Count(Path.Combine(root, "Assemblies"), f => f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase));
+        a.Textures += Count(Path.Combine(root, "Textures"), f => ImageExt.Any(e => f.EndsWith(e, StringComparison.OrdinalIgnoreCase)));
+        a.Sounds += Count(Path.Combine(root, "Sounds"), f => AudioExt.Any(e => f.EndsWith(e, StringComparison.OrdinalIgnoreCase)));
+        a.Languages += Count(Path.Combine(root, "Languages"), _ => true);
+        a.AssetBundles += Count(Path.Combine(root, "AssetBundles"), _ => true);
+    }
+
+    static int Count(string dir, Func<string, bool> keep)
+    {
+        if (!Directory.Exists(dir)) return 0;
+        try { return Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories).Count(keep); }
+        catch { return 0; }
     }
 
     // About.xml: name, packageId, versions, declared dependencies.
@@ -312,6 +332,7 @@ public static class Scanner
         if (apparelLayers is not null)
             entry.ApparelLayers = apparelLayers.Elements("li")
                 .Select(li => li.Value.Trim()).Where(v => v.Length > 0).ToList();
+        entry.RaceIntelligence = ((string?)el.Element("race")?.Element("intelligence"))?.Trim();
 
         var products = el.Element("products");
         if (products is not null)

@@ -116,6 +116,13 @@ public sealed class DefEntry
     public List<string> ThingCategories { get; set; } = new();
     public List<string> ApparelLayers { get; set; } = new();
 
+    // <race><intelligence>: Animal, ToolUser, or Humanlike. Distinguishes a new
+    // animal species (a ThingDef with its own <race>, still just an animal)
+    // from a new playable people (same shape, but Humanlike) -- the picker
+    // guessed every ThingDef+race as "races" at first, and a rabbit mod ended
+    // up suggesting it alongside actual elf/dwarf mods.
+    public string? RaceIntelligence { get; set; }
+
     // Defs this one appears to own: the hediff a food grants, the thought it
     // leaves. The tie is only made if NOBODY ELSE claims them — a hediff shared by
     // five items belongs to all five, therefore to none, and merging them would
@@ -194,6 +201,21 @@ public sealed class Inventory
     // follow it.
     public string? OwnPrefix { get; set; }
     public int ForeignPrefixCount { get; set; }
+
+    // Files the mod ships outside Defs/ and Patches/, counted in its content
+    // roots only. A retexture, a music pack, a translation or a pure C# mod
+    // often has no def at all, so without these counts the mod is invisible to
+    // anything that tries to say what it is for.
+    public AssetCounts Assets { get; set; } = new();
+}
+
+public sealed class AssetCounts
+{
+    public int Assemblies { get; set; }     // Assemblies/*.dll
+    public int Textures { get; set; }       // Textures/ images
+    public int Sounds { get; set; }         // Sounds/ audio
+    public int Languages { get; set; }      // any file under Languages/
+    public int AssetBundles { get; set; }   // AssetBundles/ — textures packed for Unity
 }
 
 // One entry of RimWorld's active modlist.
