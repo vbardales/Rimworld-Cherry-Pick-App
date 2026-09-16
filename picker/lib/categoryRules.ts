@@ -17,7 +17,13 @@ import type { CategoryId } from "./labels";
 
 export type DefSignals = {
   DefType?: string;
+  IsAbstract?: boolean;
   ParentName?: string | null;
+  // Every base up to the root, as the engine resolved it. The direct parent is
+  // not enough: a mod routes its plants through its own VG_PlantDef, its guns
+  // through its own BaseGunEveCo — and every one of those still ends at
+  // PlantBase or BaseGun.
+  ParentChain?: { Name: string }[];
   ArchitectCategory?: string | null;
   ThingCategories?: string[];
   ApparelLayers?: string[];
@@ -37,12 +43,24 @@ export type ModSignals = {
   defs: DefSignals[];
   assets?: AssetSignals;
   dependencies?: string[];
+  // The mod's display name and packageId, read for a handful of words only.
+  name?: string;
+  packageId?: string;
 };
+
+// A retexture or a music pack says so in its name. Measured on 1,960 labelled
+// mods: 0.91 precision, and 42% of "textures" caught — most of them mods that
+// have no def at all to read.
+const TEXTURE_NAME = /textur|retex|music|song|soundtrack|ost/i;
 
 // A strong signal suggests its category on its own. A weak one (a bare
 // HediffDef, a JobDef) is right often enough to back a category something else
 // already pointed at, never enough to raise one alone.
 type Hit = { cat: CategoryId; strong: boolean };
+
+// Measured: 17 false positives -> 5 for 4 real plant mods lost, all of them
+// packs with 2 plants in 60 things — indistinguishable from a food mod's crop.
+const PLANT_SHARE = 0.2;
 
 const ANIMAL_BASES = new Set(["AnimalThingBase", "AnimalKindBase", "EggFertBase", "EggUnfertBase"]);
 const WEAPON_BASE = /^Base(Bullet|Weapon|MeleeWeapon|HumanMakeableGun|MakeableGun|Gun|Projectile|Grenade)/;
@@ -75,39 +93,42 @@ function defHits(d: DefSignals): Hit[] {
 
   const type = d.DefType ?? "";
   const parent = d.ParentName ?? "";
+  const bases = [parent, ...(d.ParentChain ?? []).map((p) => p.Name)].filter(Boolean);
+  const inherits = (test: (b: string) => boolean) => bases.some(test);
+  const inheritsFrom = (set: Set<string>) => inherits((b) => set.has(b));
   const arch = d.ArchitectCategory ?? "";
   const cats = d.ThingCategories ?? [];
   const cat = (re: RegExp) => cats.some((c) => re.test(c));
 
   // animals
-  if (ANIMAL_BASES.has(parent)) s("animals");
+  if (inheritsFrom(ANIMAL_BASES)) s("animals");
   else if (type === "ThingDef" && d.Race && d.RaceIntelligence !== "Humanlike") s("animals");
 
   // races — genes are handled at mod level, see modHits
   if (type === "HeadTypeDef" || type === "XenotypeDef" || type.includes("AlienRace")) s("races");
-  if (RACE_GENE_BASE.test(parent)) s("races");
+  if (inherits((b) => RACE_GENE_BASE.test(b))) s("races");
   if (type === "ThingDef" && d.Race && d.RaceIntelligence === "Humanlike") s("races");
 
   // weapons & armour
-  if (WEAPON_BASE.test(parent) || /Armou?r.*Base$/.test(parent)) s("armor");
+  if (inherits((b) => WEAPON_BASE.test(b) || /Armou?r.*Base$/.test(b))) s("armor");
   // Also how an animal's bite or a race's claws are described: backs a
   // weapons mod, never makes one.
   if (type === "DamageDef" || type === "ToolCapacityDef" || type === "ManeuverDef") w("armor");
   if (cat(/weapon|armor/i)) s("armor");
 
   // apparel & hair
-  if (APPAREL_BASE.test(parent) || (d.ApparelLayers ?? []).length > 0) s("apparel");
+  if (inherits((b) => APPAREL_BASE.test(b)) || (d.ApparelLayers ?? []).length > 0) s("apparel");
   if (type === "HairDef" || type === "BeardDef") s("apparel");
 
   // medical
-  if (MEDICAL_BASES.has(parent) || type === "ChemicalDef") s("medical");
+  if (inheritsFrom(MEDICAL_BASES) || type === "ChemicalDef") s("medical");
   if (type === "HediffDef") w("medical");
 
   // joy
   if (type === "JoyGiverDef" || type === "JoyKindDef" || arch === "Joy" || cat(/^Buildings(Joy|Art)$/)) s("joy");
 
   // factions
-  if (FACTION_BASES.has(parent) || type === "FactionDef" || type === "ScenarioDef" || type === "CultureDef") s("factions");
+  if (inheritsFrom(FACTION_BASES) || type === "FactionDef" || type === "ScenarioDef" || type === "CultureDef") s("factions");
 
   // ideology
   if (/^(HistoryEvent|Issue|Meme|Precept|StyleCategory|StyleItemCategory|PrisonerInteractionMode)Def$/.test(type)) s("ideology");
@@ -115,13 +136,15 @@ function defHits(d: DefSignals): Hit[] {
 
   // furniture, floors & walls
   if (arch === "Furniture" || cat(/furniture/i)) s("furniture");
-  if (arch === "Structure" || arch === "Floors" || parent === "RockBase" || parent === "TileStoneBase") s("structure");
+  if (arch === "Structure" || arch === "Floors" || inherits((b) => b === "RockBase" || b === "TileStoneBase")) s("structure");
 
   // plants & food
   // A crop is how a food mod gets its ingredient, and how an animal mod feeds
   // its creature: a plant base backs a plants mod, it does not make one.
-  if (cat(/^PlantMatter$/) || parent === "TreeBase" || parent === "BushBase") s("plants");
-  else if (/^(Rough)?Plant.*Base$/.test(parent)) w("plants");
+  // The growing thing itself, not its harvest: PlantFoodRawBase is the vegetable
+  // in the stockpile, which a food mod has too.
+  if (inherits((b) => b === "PlantBase" || b === "PlantBaseNonEdible" || b === "TreeBase" || b === "BushBase")) s("plants");
+  else if (cat(/^PlantMatter$/)) w("plants");
   if (cat(/^(Foods|FoodMeals|FoodRaw|MeatRaw)/)) s("food");
 
   // retextures & music
@@ -145,6 +168,17 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
 
   for (const d of mod.defs) for (const h of defHits(d)) add(h.strong ? strong : weak, h.cat);
 
+  // Nearly every content mod grows something — the crop behind a food mod's
+  // meal, the forage behind an animal mod's creature. A plants mod is one whose
+  // things are MOSTLY plants: below this share of its concrete ThingDefs, the
+  // plants only back the category, they do not raise it.
+  const things = mod.defs.filter((d) => d.DefType === "ThingDef" && !d.IsAbstract).length;
+  const plantDefs = strong.get("plants") ?? 0;
+  if (plantDefs > 0 && plantDefs < PLANT_SHARE * things) {
+    strong.delete("plants");
+    add(weak, "plants", plantDefs);
+  }
+
   // A gene next to a xenotype or a head type is part of a new people; a gene on
   // its own is the biotech mechanic. Measured: genes sit in "races" in the
   // triage, but a mod of loose genes is exactly what "biotech" is meant for.
@@ -153,6 +187,8 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
   const peopleSignals = mod.defs.some((d) => d.DefType === "XenotypeDef" || d.DefType === "HeadTypeDef");
   if (genes > 0) add(strong, peopleSignals ? "races" : "biotech", genes);
   if (traits > 0) add(strong, "biotech", traits);
+
+  if (TEXTURE_NAME.test(`${mod.name ?? ""} ${mod.packageId ?? ""}`)) add(strong, "textures", 1000);
 
   for (const dep of mod.dependencies ?? []) {
     const id = dep.toLowerCase();

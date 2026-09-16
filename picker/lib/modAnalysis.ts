@@ -30,7 +30,7 @@ type DefLike = DefSignals & { TechLevel?: string | null };
 type InventoryLike = {
   Defs?: DefLike[];
   Assets?: AssetSignals;
-  Mods?: { DeclaredDependencies?: string[] }[];
+  Mods?: { DeclaredDependencies?: string[]; Name?: string; PackageId?: string }[];
 };
 
 function computeMinTechLevel(defs: DefLike[]): TechLevel | null {
@@ -52,6 +52,8 @@ function suggestedFor(inv: InventoryLike) {
     defs: inv.Defs ?? [],
     assets: inv.Assets,
     dependencies: inv.Mods?.[0]?.DeclaredDependencies ?? [],
+    name: inv.Mods?.[0]?.Name,
+    packageId: inv.Mods?.[0]?.PackageId,
   });
 }
 
