@@ -342,6 +342,9 @@ public static class Scanner
             entry.RecipeMakerNoInherit = string.Equals((string?)recipeMaker.Attribute("Inherit"), "False", StringComparison.OrdinalIgnoreCase);
         }
         entry.Sowable = el.Element("plant")?.Element("sowTags") is not null;
+        entry.CostList = CostListOf(el);
+        entry.ConsumesPower = ConsumesPowerOf(el);
+        entry.ResearchPrerequisites = ResearchPrerequisitesOf(el);
 
         var products = el.Element("products");
         if (products is not null)
@@ -365,6 +368,18 @@ public static class Scanner
         Harvest(el, entry.Refs);
         return entry;
     }
+
+    public static List<string> CostListOf(XElement def) =>
+        def.Element("costList")?.Elements().Select(e => e.Name.LocalName).ToList() ?? new();
+
+    public static bool ConsumesPowerOf(XElement def) =>
+        def.Element("comps")?.Elements("li").Any(li =>
+            (string?)li.Attribute("Class") == "CompProperties_Power"
+            && ((string?)li.Element("compClass"))?.Trim() == "CompPowerTrader") ?? false;
+
+    public static List<string> ResearchPrerequisitesOf(XElement def) =>
+        def.Elements("researchPrerequisites").Elements("li").Select(e => e.Value.Trim())
+            .Where(v => v.Length > 0).Distinct(StringComparer.Ordinal).ToList();
 
     public static List<string> RecipeResearchOf(XElement recipeMaker) =>
         recipeMaker.Elements("researchPrerequisite").Select(e => e.Value.Trim())

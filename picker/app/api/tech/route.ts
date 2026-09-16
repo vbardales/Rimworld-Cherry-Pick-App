@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isUnderAllowedRoot, scanMod } from "@/lib/cherrypick";
+import { GONE_MESSAGE, isGone, isUnderAllowedRoot, scanMod } from "@/lib/cherrypick";
 import { loadVanillaResearch } from "@/lib/modAnalysis";
 import { techItems, techRange, unobtainableItems, type TechDef } from "@/lib/techRules";
 
@@ -10,6 +10,8 @@ export async function GET(req: NextRequest) {
   const modPath = req.nextUrl.searchParams.get("path");
   if (!id || !modPath) return NextResponse.json({ error: "id et path sont requis" }, { status: 400 });
   if (!isUnderAllowedRoot(modPath)) return NextResponse.json({ error: "chemin hors des racines de mods" }, { status: 403 });
+
+  if (await isGone(modPath)) return NextResponse.json({ error: GONE_MESSAGE }, { status: 404 });
 
   try {
     const inv = (await scanMod(id, modPath)) as { Defs?: TechDef[] };

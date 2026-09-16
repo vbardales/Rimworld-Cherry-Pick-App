@@ -10,7 +10,7 @@ import type { TechRange, TechStep } from "@/lib/techLevels";
 import { proposedFix, type TechItem, type UnobtainableItem } from "@/lib/techRules";
 
 const STEP_LABEL: Record<TechStep, string> = {
-  start: "depart", Animal: "animal", Neolithic: "neolithique", Medieval: "medieval",
+  Animal: "animal", Neolithic: "neolithique", Medieval: "medieval",
   Industrial: "industriel", Spacer: "spatial", Ultra: "ultra", Archotech: "archotech",
 };
 const HOW_LABEL: Record<TechItem["how"], string> = {
@@ -129,7 +129,7 @@ export default function ModPage({
       .then(() => fetch(`/api/tech?id=${encodeURIComponent(id)}&path=${encodeURIComponent(modPath)}`))
       .then((r) => r.json())
       .then((d) => { if (!d.error) setTechDetail(d); })
-      .catch((e) => setError(String(e)))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setRescanning(false));
   }, [id, modPath]);
 

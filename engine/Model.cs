@@ -144,6 +144,25 @@ public sealed class DefEntry
     public List<string> RecipeResearch { get; set; } = new();
     public bool RecipeMakerNoInherit { get; set; }
     public List<string> InheritedRecipeResearch { get; set; } = new();
+
+    // What the def costs (<costList> element names, as declared on the def) and
+    // whether it draws power. Read by the picker's tech reading: a stove with no
+    // research is still not a day-one building if it runs on electricity and
+    // costs industrial components.
+    public List<string> CostList { get; set; } = new();
+    public bool ConsumesPower { get; set; }
+
+    // <researchPrerequisites> as written on the def — what gates building it
+    // from the Architect tab, unlike the recipe's research above.
+    public List<string> ResearchPrerequisites { get; set; } = new();
+
+    // The same three, gathered up the parent chain. XML inheritance merges a
+    // child's lists and comps into its parent's, so a cannon whose abstract base
+    // names Mortars, a costList and a power comp needs all three. Kept apart
+    // from the def's own values so the sheet can say where each comes from.
+    public List<string> InheritedResearchPrerequisites { get; set; } = new();
+    public List<string> InheritedCostList { get; set; } = new();
+    public bool InheritedConsumesPower { get; set; }
     public string? InheritedRecipeResearchFrom { get; set; }
     public bool Sowable { get; set; }
 

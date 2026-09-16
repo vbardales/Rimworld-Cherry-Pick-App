@@ -167,6 +167,20 @@ export async function scanMod(id: string, modPath: string, refresh = false): Pro
   return JSON.parse(stdout);
 }
 
+// A mod unsubscribed since the list was last read from disk: the list still
+// shows it, its folder is gone. Said plainly rather than as the engine's error.
+export const GONE_MESSAGE =
+  "ce mod n'est plus sur le disque, sans doute desabonne depuis la derniere lecture de la liste : « relire le disque » la met a jour.";
+
+export async function isGone(modPath: string): Promise<boolean> {
+  try {
+    await fs.stat(modPath);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 // Extends a selection to everything it pulls in.
 //
 // The keys go through a file, never through the command line: a selection of

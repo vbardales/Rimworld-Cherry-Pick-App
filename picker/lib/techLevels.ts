@@ -16,8 +16,10 @@ export const TECH_LEVELS = [
 ] as const;
 export type TechLevel = (typeof TECH_LEVELS)[number];
 
-// "start" is content a colony has from day one: nothing to research first.
-export type TechStep = "start" | TechLevel;
+// A step on the range is a tech level. Content a colony has from day one —
+// nothing to research, nothing written, nothing required — sits at Animal, the
+// lowest level RimWorld has; a separate "start" only duplicated it.
+export type TechStep = TechLevel;
 
 export type TechRange = {
   floor: TechStep;
@@ -34,7 +36,7 @@ export type TechRange = {
 // has — so an entry whose ruleVersion is behind is treated as stale and
 // requeued, the same as a folder that changed. Bump this on every heuristic
 // fix from now on.
-export const ANALYSIS_RULE_VERSION = 16;
+export const ANALYSIS_RULE_VERSION = 20;
 
 export type ModAnalysis = {
   // null means scanned, and the mod has no tech level to speak of — nothing

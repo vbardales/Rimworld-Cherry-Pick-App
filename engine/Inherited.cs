@@ -44,6 +44,8 @@ public static class Inherited
 
             d.ParentChain = Chain(d, byName, core);
 
+            GatherUpChain(d, byName, core);
+
             // Only a def that states no research of its own, and does not cut
             // itself off from its base's recipe, inherits it.
             if (d.RecipeResearch.Count == 0 && !d.RecipeMakerRemoved && !d.RecipeMakerNoInherit)
@@ -58,6 +60,41 @@ public static class Inherited
                 }
             }
         }
+    }
+
+    // Walks the whole parent chain and unions what each base declares. Merging
+    // stops nowhere: Inherit="False" on a list is rare enough in practice that
+    // honouring it would cost more than the occasional extra requirement.
+    static void GatherUpChain(DefEntry d, Dictionary<string, DefEntry> byName, Dictionary<string, CoreBase> core)
+    {
+        var research = new HashSet<string>(StringComparer.Ordinal);
+        var costs = new HashSet<string>(StringComparer.Ordinal);
+        var power = false;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var parent = d.ParentName;
+        while (!string.IsNullOrWhiteSpace(parent) && seen.Add(parent))
+        {
+            if (byName.TryGetValue(parent, out var p))
+            {
+                research.UnionWith(p.ResearchPrerequisites);
+                costs.UnionWith(p.CostList);
+                power |= p.ConsumesPower;
+                parent = p.ParentName;
+            }
+            else if (core.TryGetValue(parent, out var cb))
+            {
+                research.UnionWith(cb.ResearchPrerequisites);
+                costs.UnionWith(cb.CostList);
+                power |= cb.ConsumesPower;
+                parent = cb.ParentName;
+            }
+            else break;
+        }
+        research.ExceptWith(d.ResearchPrerequisites);
+        costs.ExceptWith(d.CostList);
+        d.InheritedResearchPrerequisites = research.ToList();
+        d.InheritedCostList = costs.ToList();
+        d.InheritedConsumesPower = power && !d.ConsumesPower;
     }
 
     // The full chain, for display. Same walk as Climb, but we do not stop at the
@@ -139,6 +176,9 @@ public static class Inherited
         public string? TechLevel;
         public string? DesignationCategory;
         public string? RecipeResearch;
+        public List<string> ResearchPrerequisites = new();
+        public List<string> CostList = new();
+        public bool ConsumesPower;
     }
 
     // Reads only the ABSTRACT defs of the game — the ones carrying a Name
@@ -167,6 +207,9 @@ public static class Inherited
                     DesignationCategory = ((string?)el.Element("designationCategory"))?.Trim(),
                     RecipeResearch = el.Element("recipeMaker") is { } rm && Scanner.RecipeResearchOf(rm) is { Count: > 0 } r
                         ? string.Join(",", r) : null,
+                    ResearchPrerequisites = Scanner.ResearchPrerequisitesOf(el),
+                    CostList = Scanner.CostListOf(el),
+                    ConsumesPower = Scanner.ConsumesPowerOf(el),
                 };
             }
         }

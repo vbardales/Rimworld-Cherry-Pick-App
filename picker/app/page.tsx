@@ -18,7 +18,7 @@ const TECH_LABELS: Record<TechLevel, string> = {
   Archotech: "archotech",
 };
 
-const stepLabel = (s: TechStep) => (s === "start" ? "depart" : TECH_LABELS[s]);
+const stepLabel = (s: TechStep) => TECH_LABELS[s];
 
 // The row's tech tag, as a plain string so a memoised row compares it by value.
 // undefined: not scanned yet — or scanned under a rule too old to have a range,
@@ -523,7 +523,7 @@ export default function Home() {
         if (techFilter === "unscanned") { if (scanned) return false; }
         else if (techFilter === "none") { if (!scanned || a.tech !== null) return false; }
         else if (!scanned || a.tech === null) return false;
-        else if (a.tech.ceiling === "start" || TECH_LEVELS.indexOf(a.tech.ceiling) < TECH_LEVELS.indexOf(techFilter)) return false;
+        else if (TECH_LEVELS.indexOf(a.tech.ceiling) < TECH_LEVELS.indexOf(techFilter)) return false;
       }
       if (sift === "todo" && isSorted(l)) return false;
       if (sift === "done" && !isSorted(l)) return false;
@@ -822,7 +822,7 @@ const Ligne = memo(function Ligne({
           {techTag !== undefined && (
             <em
               className="tag niveau"
-              title="Du contenu le plus accessible au plus avance, d'apres les recherches qui le conditionnent. « depart » : rien a rechercher. « declare » : le mod n'a rien a construire, fabriquer ou semer, c'est le niveau inscrit dans ses defs. « sans objet » : ni l'un ni l'autre."
+              title="Du contenu le plus accessible au plus avance, d'apres les recherches qui le conditionnent. « animal » : rien a rechercher, rien a reunir. « declare » : le mod n'a rien a construire, fabriquer ou semer, c'est le niveau inscrit dans ses defs. « sans objet » : ni l'un ni l'autre."
             >
               {techTag}
             </em>

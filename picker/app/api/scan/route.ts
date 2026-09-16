@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { scanMod, isUnderAllowedRoot } from "@/lib/cherrypick";
+import { GONE_MESSAGE, isGone, scanMod, isUnderAllowedRoot } from "@/lib/cherrypick";
 
 // The inventory of ONE mod, on demand. The path is checked before any call: we
 // only scan what lives under a known mods root.
@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
   if (!isUnderAllowedRoot(modPath)) {
     return NextResponse.json({ error: "chemin hors des racines de mods" }, { status: 403 });
   }
+
+  if (await isGone(modPath)) return NextResponse.json({ error: GONE_MESSAGE }, { status: 404 });
 
   try {
     const refresh = req.nextUrl.searchParams.get("refresh") === "1";
