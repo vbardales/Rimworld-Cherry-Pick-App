@@ -134,6 +134,8 @@ tr.row-out td { background: color-mix(in srgb, var(--bad) 9%, transparent); opac
 .techitems td.lvl { white-space: nowrap; font-weight: 600; width: 1%; }
 .techitems tr.unknown { opacity: .55; }
 .techitems td.fix { white-space: nowrap; font-size: 12px; }
+.techitems td.fix select { font: inherit; font-size: 12px; }
+.techitems td.fix select.override { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .panel.tech .fixbar { margin: 10px 0 0; }
 .panel .counts { font-size: 14px; }
 .panel .sep { color: var(--dim); margin: 0 6px; }

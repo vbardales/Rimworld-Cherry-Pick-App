@@ -205,9 +205,12 @@ public static class Scanner
         var fromFile = ReadLoadFolders(path, conditional);
         if (fromFile.Count > 0) return fromFile;
 
-        // No LoadFolders: the game's default rule since 1.5 — the root, plus the
-        // highest version folder that is <= 1.6.
+        // No LoadFolders: the game's default rule — the root, Common/ when it
+        // exists, plus the highest version folder that is <= 1.6. Common/ was
+        // missing here, so a mod keeping all its defs there (Additional
+        // Recreation - Go) read as empty.
         var roots = new List<string> { "." };
+        if (Directory.Exists(Path.Combine(path, "Common"))) roots.Add("Common");
         var best = Directory.EnumerateDirectories(path)
             .Select(d => new DirectoryInfo(d).Name)
             .Where(n => Regex.IsMatch(n, @"^1\.\d+$"))
@@ -377,8 +380,12 @@ public static class Scanner
             (string?)li.Attribute("Class") == "CompProperties_Power"
             && ((string?)li.Element("compClass"))?.Trim() == "CompPowerTrader") ?? false;
 
+    // Both spellings: a building lists <researchPrerequisites>, a RecipeDef often
+    // names a single <researchPrerequisite> — and an abstract recipe base holding
+    // it is how a pack of bulk recipes shares one research.
     public static List<string> ResearchPrerequisitesOf(XElement def) =>
         def.Elements("researchPrerequisites").Elements("li").Select(e => e.Value.Trim())
+            .Concat(def.Elements("researchPrerequisite").Select(e => e.Value.Trim()))
             .Where(v => v.Length > 0).Distinct(StringComparer.Ordinal).ToList();
 
     public static List<string> RecipeResearchOf(XElement recipeMaker) =>

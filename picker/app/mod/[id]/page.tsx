@@ -6,7 +6,7 @@ import { Labeler } from "@/components/Labeler";
 import { EMPTY, labelOf, type ModLabel } from "@/lib/labels";
 import { workshopId, workshopUrl } from "@/lib/steam";
 import { keyOf } from "@/lib/cherryKey";
-import type { TechRange, TechStep } from "@/lib/techLevels";
+import { TECH_LEVELS, type TechLevel, type TechRange, type TechStep } from "@/lib/techLevels";
 import { proposedFix, type TechItem, type UnobtainableItem } from "@/lib/techRules";
 
 const STEP_LABEL: Record<TechStep, string> = {
@@ -633,39 +633,48 @@ function TechPanel({ detail, packageId, modName }: {
   modName: string;
 }) {
   const { range, items } = detail;
-  const unobtainable = detail.unobtainable ?? [];
-  const proposals = useMemo(
-    () => items.map((i) => ({ item: i, fix: proposedFix(i) })).filter((p) => p.fix !== null),
-    [items],
-  );
+  const unobtainable = useMemo(() => detail.unobtainable ?? [], [detail.unobtainable]);
 
-  // Which corrections are ticked. Read back from the file already written for
-  // this mod when there is one — the sheet shows what is in place — otherwise
-  // every proposal starts ticked.
-  const [ticked, setTicked] = useState<Set<string> | null>(null);
+  // Every ThingDef on the sheet can be given a level in Nelim's Tech Level
+  // Fixes, up or down: the reading only PROPOSES a value (the later of research,
+  // written level and requirements), the arbitration decides. A crate the rule
+  // leaves at Industrial because its author said so can still be set lower.
+  const rows = useMemo(() => [
+    ...items.filter((i) => i.defType === "ThingDef" && i.defName)
+      .map((i) => ({ defName: i.defName!, current: i.current, proposed: proposedFix(i)?.to ?? null })),
+    ...unobtainable.filter((u) => u.defName)
+      .map((u) => ({ defName: u.defName!, current: u.level as TechLevel | null, proposed: null as TechLevel | null })),
+  ], [items, unobtainable]);
+
+  // The level chosen per def, "" for unchanged. Read back from the file already
+  // written for this mod when there is one — the sheet shows what is in place —
+  // otherwise every proposal starts selected.
+  const [chosen, setChosen] = useState<Map<string, TechLevel | ""> | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   useEffect(() => {
     fetch(`/api/techfixes?packageId=${encodeURIComponent(packageId)}`)
       .then((r) => r.json())
       .then((d) => {
-        const names = Array.isArray(d.written) ? new Set<string>(d.written.map((w: { defName: string }) => w.defName)) : null;
-        setTicked(new Set(proposals.filter((p) => (names ? names.has(p.item.defName!) : true)).map((p) => p.item.defName!)));
-        if (names) setStatus(`${names.size} correction(s) deja ecrite(s) dans Nelim's Tech Level Fixes`);
+        const written = Array.isArray(d.written) ? new Map<string, string>(d.written.map((w: { defName: string; to: string }) => [w.defName, w.to])) : null;
+        setChosen(new Map(rows.map((r) => {
+          const w = written?.get(r.defName);
+          const level = written ? (w && (TECH_LEVELS as readonly string[]).includes(w) ? (w as TechLevel) : "") : (r.proposed ?? "");
+          return [r.defName, level];
+        })));
+        if (written) setStatus(`${written.size} correction(s) deja ecrite(s) dans Nelim's Tech Level Fixes`);
       })
       .catch((e) => setStatus(`lecture impossible : ${String(e)}`));
-  }, [packageId, proposals]);
+  }, [packageId, rows]);
 
-  const toggle = (defName: string) =>
-    setTicked((prev) => {
-      const next = new Set(prev ?? []);
-      if (next.has(defName)) next.delete(defName); else next.add(defName);
-      return next;
-    });
+  const pick = (defName: string, level: TechLevel | "") =>
+    setChosen((prev) => new Map(prev ?? []).set(defName, level));
+
+  const fixes = rows
+    .map((r) => ({ r, to: chosen?.get(r.defName) ?? "" }))
+    .filter(({ r, to }) => to !== "" && to !== r.current)
+    .map(({ r, to }) => ({ defType: "ThingDef", defName: r.defName, from: r.current, to }));
 
   const save = () => {
-    const fixes = proposals
-      .filter((p) => ticked?.has(p.item.defName!))
-      .map((p) => ({ defType: p.item.defType, defName: p.item.defName, from: p.fix!.from, to: p.fix!.to }));
     setStatus("ecriture...");
     fetch("/api/techfixes", {
       method: "POST",
@@ -682,6 +691,26 @@ function TechPanel({ detail, packageId, modName }: {
       })
       .catch((e) => setStatus(`echec : ${String(e)}`));
   };
+
+  const levelSelect = (defName: string | null, current: TechLevel | null, proposed: TechLevel | null) => {
+    if (!defName) return null;
+    const value = chosen?.get(defName) ?? "";
+    return (
+      <select
+        className={value !== "" && value !== current ? "override" : ""}
+        value={value}
+        disabled={chosen === null}
+        onChange={(e) => pick(defName, e.target.value as TechLevel | "")}
+        title="Niveau ecrit par Nelim's Tech Level Fixes — vers le haut ou vers le bas"
+      >
+        <option value="">inchange ({current ? STEP_LABEL[current] : "aucun"})</option>
+        {TECH_LEVELS.map((t) => (
+          <option key={t} value={t}>{STEP_LABEL[t]}{t === proposed ? " (propose)" : ""}</option>
+        ))}
+      </select>
+    );
+  };
+
   const summary = range === null
     ? "sans objet"
     : range.floor === range.ceiling
@@ -703,21 +732,7 @@ function TechPanel({ detail, packageId, modName }: {
                 <td>{i.label}</td>
                 <td className="sub">{HOW_LABEL[i.how]}</td>
                 <td className="fix">
-                  {(() => {
-                    const fix = proposedFix(i);
-                    if (!fix || !i.defName) return null;
-                    return (
-                      <label title="Corriger le techLevel de l'objet dans Nelim's Tech Level Fixes">
-                        <input
-                          type="checkbox"
-                          checked={ticked?.has(i.defName) ?? false}
-                          disabled={ticked === null}
-                          onChange={() => toggle(i.defName!)}
-                        />
-                        {" "}{fix.from ? STEP_LABEL[fix.from] : "aucun"} → {STEP_LABEL[fix.to]}
-                      </label>
-                    );
-                  })()}
+                  {i.defType === "ThingDef" && levelSelect(i.defName, i.current, proposedFix(i)?.to ?? null)}
                 </td>
                 <td className="sub">
                   {i.gates.length > 0
@@ -734,28 +749,29 @@ function TechPanel({ detail, packageId, modName }: {
         <>
           <p className="sub">
             {items.length > 0
-              ? "non obtenables — non comptes, puisque le mod a du contenu obtenable :"
-              : "non obtenables — ce sont eux qui donnent la fourchette, faute de contenu obtenable :"}
+              ? "non obtenables (butin, marchands) — comptes au niveau inscrit sur l'objet, grises si ce niveau est herite :"
+              : "non obtenables (butin, marchands) — ce sont eux qui donnent la fourchette :"}
           </p>
           <table className="techitems">
             <tbody>
               {unobtainable.map((u) => (
-                <tr key={u.key} className={items.length > 0 ? "unknown" : ""}>
+                <tr key={u.key} className={u.written ? "" : "unknown"}>
                   <td className="lvl">{STEP_LABEL[u.level]}</td>
                   <td>{u.label}</td>
                   <td className="sub">
                     {u.recipeRemoved ? "recette supprimee par le mod (butin, marchands)" : "ni construit, ni fabrique, ni seme"}
                   </td>
+                  <td className="fix">{levelSelect(u.defName, u.level, null)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </>
       )}
-      {proposals.length > 0 && (
+      {rows.length > 0 && (
         <p className="fixbar">
-          <button onClick={save} disabled={ticked === null}>
-            ecrire les corrections cochees ({ticked?.size ?? 0} / {proposals.length})
+          <button onClick={save} disabled={chosen === null}>
+            ecrire dans Nelim&apos;s Tech Level Fixes ({fixes.length})
           </button>
           {status && <span className="sub"> {status}</span>}
         </p>

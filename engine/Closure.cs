@@ -205,9 +205,17 @@ public static class Closure
             kept.SelectMany(d => new[] { d.DefName, d.AbstractName }).Where(s => s is { Length: > 0 })!,
             StringComparer.Ordinal);
 
+        // A patch aimed only at another mod's defs is not the selection's business:
+        // no pick made here can orphan it. Without this, every compatibility mod —
+        // patches and no defs of its own — read as nothing but orphans.
+        var ownNames = new HashSet<string>(
+            inv.Defs.SelectMany(d => new[] { d.DefName, d.AbstractName }).Where(s => s is { Length: > 0 })!,
+            StringComparer.Ordinal);
+
         foreach (var p in inv.Patches)
         {
             var relevant = p.TargetDefs.Count == 0
+                           || !p.TargetDefs.Any(t => ownNames.Contains(t))
                            || p.TargetDefs.Any(t => keptNames.Contains(t) || vanillaDefNames.Contains(t));
             if (relevant) result.KeptPatches.Add(p); else result.OrphanPatches.Add(p);
         }

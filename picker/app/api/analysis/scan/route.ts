@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GONE_MESSAGE, isGone } from "@/lib/cherrypick";
 import { scanOneNow } from "@/lib/modAnalysis";
 
 // A single mods forced rescan, asked for from the list — the one place the
@@ -13,6 +14,8 @@ export async function POST(req: NextRequest) {
     if (!packageId || !path) {
       return NextResponse.json({ error: "packageId ou path manquant" }, { status: 400 });
     }
+    // Uninstalled since the list was read: not a server failure.
+    if (await isGone(path)) return NextResponse.json({ error: GONE_MESSAGE }, { status: 404 });
 
     const analysis = await scanOneNow(packageId, path);
     return NextResponse.json({ packageId, analysis });

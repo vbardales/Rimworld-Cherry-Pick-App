@@ -1,5 +1,6 @@
-// Nelim's Tech Level Fixes: a generated mod that rewrites <techLevel> on the
-// items whose declared level contradicts the research that gates them.
+// Nelim's Tech Level Fixes: a generated mod that rewrites <techLevel> to the
+// level arbitrated on the mod sheet — up or down. The sheet proposes the level
+// the research reading gives; what is written is what was chosen.
 //
 // The game reads techLevel for more than a label — trader stock, faction gear,
 // and mods such as World Tech Level or Tech Level Enforcement filter on it. So a
@@ -81,7 +82,14 @@ export function fileOf(packageId: string): string {
   return `${packageId.replace(/[^A-Za-z0-9_.\-]/g, "_")}.xml`;
 }
 
-export function about(): string {
+// Every patch has to run after the mod it corrects, so each source mod is listed
+// in loadAfter. Not in modDependencies: an operation whose def is absent does
+// nothing, so a missing source mod is harmless and must not block loading.
+export function about(sources: string[] = []): string {
+  const ids = [...new Set(sources)].sort((a, b) => a.localeCompare(b));
+  const loadAfter = ids.length === 0
+    ? ""
+    : "\n  <loadAfter>\n" + ids.map((id) => `    <li>${id}</li>`).join("\n") + "\n  </loadAfter>";
   return `<?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <name>${MOD_NAME}</name>
@@ -89,12 +97,12 @@ export function about(): string {
   <author>Nelim</author>
   <supportedVersions>
     <li>1.6</li>
-  </supportedVersions>
-  <description>Rewrites the tech level of items whose declared level contradicts the research that gates them, for mods reviewed one by one with the cherrypick tool.
+  </supportedVersions>${loadAfter}
+  <description>Rewrites the tech level of items, to the level arbitrated for each one with the cherrypick tool, mod by mod.
 
 Every file under Patches/ is generated: one per source mod, named after its packageId. Deleting a file undoes that mod's corrections; deleting the folder undoes everything.
 
-Load this after the mods it corrects, so their own patches have already run.</description>
+It loads after the mods it corrects, listed in loadAfter, so their own patches have already run. None of them is required: a correction whose item is missing does nothing.</description>
 </ModMetaData>
 `;
 }
@@ -114,6 +122,20 @@ export async function readFixes(rimworld: string, packageId: string): Promise<{ 
   }
 }
 
+// The source packageIds of the files under Patches/, read from each file's
+// header: file names are sanitised and cannot give the packageId back.
+async function sourcesIn(folder: string): Promise<string[]> {
+  const dir = path.join(folder, "Patches");
+  const names = await fs.readdir(dir).catch(() => [] as string[]);
+  const ids: string[] = [];
+  for (const n of names.filter((f) => f.endsWith(".xml"))) {
+    const head = (await fs.readFile(path.join(dir, n), "utf8")).slice(0, 600);
+    const m = head.match(/Source : .*\(([^()\s]+)\)/);
+    if (m) ids.push(m[1]);
+  }
+  return ids;
+}
+
 export async function write(
   rimworld: string,
   source: { packageId: string; name: string },
@@ -125,7 +147,6 @@ export async function write(
 
   await fs.mkdir(path.join(folder, "About"), { recursive: true });
   await fs.mkdir(path.join(folder, "Patches"), { recursive: true });
-  await fs.writeFile(path.join(folder, "About", "About.xml"), about(), "utf8");
 
   // Nothing left for this mod: remove its file, and the mod with its last file
   // — a mod with only an About.xml loads nothing and the game says so at every
@@ -133,10 +154,15 @@ export async function write(
   if (kept.length === 0) {
     await fs.rm(file, { force: true });
     const left = await fs.readdir(path.join(folder, "Patches")).catch(() => []);
-    if (left.length === 0) await fs.rm(folder, { recursive: true, force: true });
-    return { folder, file, written: 0, refused };
+    if (left.length === 0) {
+      await fs.rm(folder, { recursive: true, force: true });
+      return { folder, file, written: 0, refused };
+    }
+  } else {
+    await fs.writeFile(file, render(source, fixes), "utf8");
   }
 
-  await fs.writeFile(file, render(source, fixes), "utf8");
+  // Rewritten on every change, from what Patches/ now holds.
+  await fs.writeFile(path.join(folder, "About", "About.xml"), about(await sourcesIn(folder)), "utf8");
   return { folder, file, written: kept.length, refused };
 }

@@ -93,10 +93,16 @@ function gatesOf(d: TechDef): { name: string; from: string | null }[] {
   }
   const own = (d.Refs?.Research ?? []).map((name) => ({ name, from: null }));
   const seen = new Set(own.map((g) => g.name));
-  const inherited = (d.InheritedRecipeResearch ?? [])
+  const inheritedRecipe = (d.InheritedRecipeResearch ?? [])
     .filter((name) => !seen.has(name))
     .map((name) => ({ name, from: d.InheritedRecipeResearchFrom ?? null }));
-  return [...own, ...inherited];
+  for (const g of inheritedRecipe) seen.add(g.name);
+  // A RecipeDef's own researchPrerequisite, inherited from an abstract recipe
+  // base — how a pack of bulk recipes shares one research.
+  const inheritedDirect = (d.InheritedResearchPrerequisites ?? [])
+    .filter((name) => !seen.has(name))
+    .map((name) => ({ name, from: d.ParentName ?? null }));
+  return [...own, ...inheritedRecipe, ...inheritedDirect];
 }
 
 function howObtained(d: TechDef): TechItem["how"] {
@@ -199,9 +205,9 @@ export function techItems(defs: TechDef[], vanillaResearch: Record<string, strin
   return items.sort((a, b) => (a.step === null ? 1 : 0) - (b.step === null ? 1 : 0) || rank(a.step ?? "Animal") - rank(b.step ?? "Animal"));
 }
 
-// The correction an item calls for: its research places it later than the
-// techLevel the game sees. Under the "later of the two" rule a correction can
-// only raise a level. Only ThingDefs carry a techLevel the game reads; a
+// The correction the reading PROPOSES for an item: its research places it later
+// than the techLevel the game sees. Under the "later of the two" rule a proposal
+// can only raise a level; the arbitration on the sheet can set any level. Only ThingDefs carry a techLevel the game reads; a
 // recipe or a floor has none to fix.
 export function proposedFix(i: TechItem): { from: TechLevel | null; to: TechLevel } | null {
   if (i.defType !== "ThingDef" || !i.defName || i.step === null) return null;
@@ -218,7 +224,9 @@ export function proposedFix(i: TechItem): { from: TechLevel | null; to: TechLeve
 // trader stock, a recipe removed on purpose. They do not place the mod unless
 // nothing else does, and then they are the only thing the range is made of, so
 // the sheet lists them rather than show a bare "declared".
-export type UnobtainableItem = { key: string; label: string; level: TechLevel; recipeRemoved: boolean };
+// `written`: the level is on the def itself, not inherited from a generic base —
+// only those count toward the range.
+export type UnobtainableItem = { key: string; label: string; defName: string | null; level: TechLevel; recipeRemoved: boolean; written: boolean };
 
 export function unobtainableItems(defs: TechDef[]): UnobtainableItem[] {
   const products = new Set(
@@ -229,14 +237,23 @@ export function unobtainableItems(defs: TechDef[]): UnobtainableItem[] {
     .map((d) => ({
       key: d.Key ?? d.DefName ?? "",
       label: d.Label || d.DefName || d.Key || "",
+      defName: d.DefName ?? null,
       level: d.TechLevel as TechLevel,
       recipeRemoved: !!d.RecipeMakerRemoved,
+      written: !d.TechLevelFrom,
     }))
     .sort((a, b) => rank(a.level) - rank(b.level));
 }
 
 export function techRange(defs: TechDef[], vanillaResearch: Record<string, string | null>): TechRange | null {
-  const steps = techItems(defs, vanillaResearch).map((i) => i.step).filter((s): s is TechStep => s !== null);
+  // What a colony can make, and also what the mod only hands out — loot on its
+  // raiders, trader stock — at the level written on it. A world filtered by tech
+  // level removes those too, so they belong to the mod's range: Advanced Raiders'
+  // ukuphila herb is Neolithic even though no colony can grow it.
+  const steps = [
+    ...techItems(defs, vanillaResearch).map((i) => i.step).filter((s): s is TechStep => s !== null),
+    ...unobtainableItems(defs).filter((u) => u.written).map((u) => u.level),
+  ];
   if (steps.length > 0) return range(steps, "research");
 
   // Nothing obtainable: fall back on what the concrete defs declare, flagged as
