@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readStore, writeLabel } from "@/lib/labelStore";
 import type { CategoryId } from "@/lib/labels";
-import { colorFor, syncRimSortColor } from "@/lib/rimsort";
+import { colorFor, syncRimSortColor, syncRimSortTags } from "@/lib/rimsort";
 
 export async function GET() {
   try {
@@ -24,13 +24,13 @@ export async function POST(req: NextRequest) {
 
     const label = await writeLabel(packageId, patch);
 
-    // RimSort's own colour, kept in step — but only when a category actually
+    // RimSort's own colour and tags, kept in step — but only when a category actually
     // moved, and only when the client sent the mod's folder along. Best-effort:
     // a mod being labelled must never fail, or stall, because RimSort happens to
     // have its database open.
     const modPath = typeof body.path === "string" ? body.path : "";
     if (patch.categories && modPath) {
-      void syncRimSortColor(modPath, colorFor(label));
+      void syncRimSortColor(modPath, colorFor(label)).then(() => syncRimSortTags(modPath, label.categories));
     }
 
     return NextResponse.json({ packageId, label });

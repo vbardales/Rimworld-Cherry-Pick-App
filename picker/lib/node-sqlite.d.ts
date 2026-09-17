@@ -9,6 +9,7 @@ declare module "node:sqlite" {
   export class DatabaseSync {
     constructor(path: string, options?: { readOnly?: boolean; timeout?: number });
     prepare(sql: string): StatementSync;
+    exec(sql: string): void;
     close(): void;
   }
   export class StatementSync {

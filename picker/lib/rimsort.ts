@@ -102,3 +102,77 @@ export async function syncRimSortColor(modPath: string, hex: string | null): Pro
     db?.close();
   }
 }
+
+// RimSort's tags, kept in step with the categories: one tag per category, named
+// as its chip reads here ("animaux", "moteur/UI"), so RimSort's tag filter finds
+// the same mods as the picker's category filter.
+//
+// Tags RimSort's user wrote by hand live in the same tables and are left alone:
+// only tags named after a category are ever unlinked from a mod.
+//
+// Three tables: mod_tags holds the names, tags_table links a mod's path (in a
+// column declared INTEGER, which SQLite keeps as text anyway) to a tag id.
+const CATEGORY_TAGS = new Map(CATEGORIES.map((c) => [c.id, c.label]));
+
+function writeTags(db: InstanceType<typeof DatabaseSync>, modPath: string, categories: CategoryId[]) {
+  const ours = [...CATEGORY_TAGS.values()];
+  db.prepare(
+    `DELETE FROM tags_table WHERE left_id = ?
+       AND right_id IN (SELECT id FROM mod_tags WHERE tag IN (${ours.map(() => "?").join(",")}))`,
+  ).run(modPath, ...ours);
+  const tags = categories.map((c) => CATEGORY_TAGS.get(c)).filter((t): t is string => !!t);
+  if (tags.length === 0) return;
+  // A tag table row pointing at a path RimSort has never seen would never show.
+  db.prepare(`INSERT OR IGNORE INTO auxiliary_metadata (path, db_time_touched) VALUES (?, ?)`).run(modPath, stamp());
+  const addTag = db.prepare(`INSERT OR IGNORE INTO mod_tags (tag) VALUES (?)`);
+  const link = db.prepare(`INSERT INTO tags_table (left_id, right_id) SELECT ?, id FROM mod_tags WHERE tag = ?`);
+  for (const t of tags) {
+    addTag.run(t);
+    link.run(modPath, t);
+  }
+}
+
+// RimSort writes its paths with backslashes; the same folder written with
+// forward slashes would be a second, invisible mod to it.
+const rimSortPath = (p: string) => path.win32.normalize(p);
+
+// Best-effort, like the colour: see syncRimSortColor.
+export async function syncRimSortTags(modPath: string, categories: CategoryId[]): Promise<boolean> {
+  const dbPath = await auxMetadataPath();
+  if (!dbPath) return false;
+  let db: InstanceType<typeof DatabaseSync> | null = null;
+  try {
+    db = new DatabaseSync(dbPath, { timeout: 2000 });
+    db.exec("BEGIN");
+    writeTags(db, rimSortPath(modPath), categories);
+    db.exec("COMMIT");
+    return true;
+  } catch {
+    try { db?.exec("ROLLBACK"); } catch { /* nothing open */ }
+    return false;
+  } finally {
+    db?.close();
+  }
+}
+
+// Every labelled mod at once, in one transaction: the catch-up for the labels
+// written before tags were synced, or while RimSort held the file. Unlike the
+// per-click sync, this one reports failure — it is asked for explicitly.
+export async function syncAllRimSortTags(
+  mods: { path: string; categories: CategoryId[] }[],
+): Promise<{ written: number }> {
+  const dbPath = await auxMetadataPath();
+  if (!dbPath) throw new Error("base RimSort introuvable (aux_metadata.db de l'instance courante)");
+  const db = new DatabaseSync(dbPath, { timeout: 5000 });
+  try {
+    db.exec("BEGIN");
+    for (const m of mods) writeTags(db, rimSortPath(m.path), m.categories);
+    db.exec("COMMIT");
+    return { written: mods.length };
+  } catch (e) {
+    try { db.exec("ROLLBACK"); } catch { /* nothing open */ }
+    throw e;
+  } finally {
+    db.close();
+  }
+}
