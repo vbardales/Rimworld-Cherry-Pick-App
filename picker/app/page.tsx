@@ -580,6 +580,27 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [scrollTo, visibles]);
 
+  // Jumps to the first untagged row of the CURRENT filtered view, not the raw
+  // list: under a category filter, "first untagged" should mean the first one
+  // still worth looking at through that filter, not one it would hide anyway.
+  //
+  // Reuses the same visibles-then-scrollTo pair the position restore above
+  // already drives, so the effect that measures the row and calls
+  // scrollIntoView is not duplicated here.
+  const [rienATrouver, setRienATrouver] = useState(false);
+  useEffect(() => {
+    if (!rienATrouver) return;
+    const t = setTimeout(() => setRienATrouver(false), 2500);
+    return () => clearTimeout(t);
+  }, [rienATrouver]);
+  const allerAuPremierNonTagge = useCallback(() => {
+    const index = shown.findIndex((m) => !isSorted(labelOf(labels, m.PackageId)));
+    if (index < 0) { setRienATrouver(true); return; }
+    const needed = Math.min(Math.max(visibles, Math.ceil((index + 1) / PAS) * PAS), shown.length);
+    setVisibles(needed);
+    setScrollTo(shown[index].PackageId);
+  }, [shown, labels, visibles]);
+
   const posState = useRef({ visibles, filterSig });
   useEffect(() => { posState.current = { visibles, filterSig }; }, [visibles, filterSig]);
   useEffect(() => {
@@ -684,6 +705,12 @@ export default function Home() {
               {" "}— lu a {lu.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
+        </button>
+        {/* Saute au premier non taggé de la vue actuelle, filtres compris — pas au
+            premier de la liste brute, qui pourrait ne meme pas etre affiche. */}
+        <button className="ghost" onClick={allerAuPremierNonTagge} disabled={busy}>
+          → premier non taggé
+          {rienATrouver && <span className="sub"> — rien a trouver ici</span>}
         </button>
       </div>
 
