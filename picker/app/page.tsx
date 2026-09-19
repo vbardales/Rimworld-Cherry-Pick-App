@@ -707,8 +707,11 @@ export default function Home() {
           )}
         </button>
         {/* Saute au premier non taggé de la vue actuelle, filtres compris — pas au
-            premier de la liste brute, qui pourrait ne meme pas etre affiche. */}
-        <button className="ghost" onClick={allerAuPremierNonTagge} disabled={busy}>
+            premier de la liste brute, qui pourrait ne meme pas etre affiche.
+            Flottant : on l'enchaine mod apres mod, et le bandeau est en haut de
+            page — le chercher demandait de remonter a chaque fois. Ancre au-dessus
+            de « revenir en haut », qui occupe deja le coin. */}
+        <button className="ghost flottant" onClick={allerAuPremierNonTagge} disabled={busy}>
           → premier non taggé
           {rienATrouver && <span className="sub"> — rien a trouver ici</span>}
         </button>

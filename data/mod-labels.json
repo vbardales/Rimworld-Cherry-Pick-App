@@ -518,6 +518,14 @@
       "starred": false,
       "updated": "2026-09-16T20:43:35.453Z"
     },
+    "aitranslation.pack": {
+      "categories": [
+        "engine"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-18T06:52:37.428Z"
+    },
     "akaio.universemusic": {
       "categories": [
         "textures"
@@ -2587,6 +2595,17 @@
       ],
       "works16": false,
       "updated": "2026-09-04T22:06:19.632Z"
+    },
+    "brrainz.zombieland": {
+      "categories": [
+        "armor",
+        "medical",
+        "animals",
+        "races"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-17T20:07:23.988Z"
     },
     "brunin.greenrim": {
       "categories": [
@@ -18829,6 +18848,14 @@
       ],
       "works16": false,
       "updated": "2026-09-14T12:05:37.353Z"
+    },
+    "workshop:3121982190": {
+      "categories": [
+        "apparel"
+      ],
+      "works16": false,
+      "starred": false,
+      "updated": "2026-09-17T19:52:21.800Z"
     },
     "workshop:691822594": {
       "categories": [

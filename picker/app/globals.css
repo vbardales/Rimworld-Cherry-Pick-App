@@ -352,6 +352,21 @@ input[type="search"].bancal { border-color: var(--warn, #b8860b); }
 .suite .plus { margin-top: 0; }
 .suite .tout { flex: 0 0 auto; color: var(--dim); }
 
+/* Aller au premier mod non etiquete.
+   Le geste du tri : on etiquette, on saute au suivant, sans fin. Le bouton suit
+   donc la page au lieu d'attendre dans le bandeau, juste au-dessus de « revenir
+   en haut » et aligne avec lui. Le fond est plein : il passe au-dessus des lignes. */
+.ghost.flottant {
+  position: fixed;
+  right: 20px;
+  bottom: 72px;
+  z-index: 5;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: 0 2px 10px rgb(0 0 0 / .18);
+}
+.ghost.flottant:disabled { opacity: .45; }
+
 /* Revenir en haut.
    Ancre en bas a droite, au-dessus de la liste, et assez petit pour ne jamais
    couvrir une etiquette : les puces d'une ligne vont jusqu'au bord droit. */
