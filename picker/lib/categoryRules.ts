@@ -245,6 +245,14 @@ export function suggestCategories(mod: ModSignals): CategoryId[] {
 
   if (TEXTURE_NAME.test(`${mod.name ?? ""} ${mod.packageId ?? ""}`)) add(strong, "textures", 1000);
 
+  // "for [NL] Facial Animation": the faces of a race, a xenotype or a DLC redrawn
+  // for that framework — a retexture, whatever else the mod also ships. Only
+  // without C#: the two such mods in the triage that are NOT textures are a
+  // compatibility patch and a performance patch, and both carry an assembly.
+  // Measured: unchanged overall, one engine false positive fewer.
+  if (/facial ?anim/i.test(`${mod.name ?? ""} ${mod.packageId ?? ""}`) && (mod.assets?.Assemblies ?? 0) === 0)
+    add(strong, "textures", 1000);
+
   for (const dep of mod.dependencies ?? []) {
     const id = dep.toLowerCase();
     for (const [prefix, c] of DEPENDENCY_HINTS) if (id.startsWith(prefix)) add(strong, c, 1000);
